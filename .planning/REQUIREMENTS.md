@@ -69,21 +69,21 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | EDIT-01 | Phase 1 | Pending |
-| EDIT-02 | Phase 5 | Pending |
-| EDIT-03 | Phase 5 | Pending |
+| PLSH-02 | Phase 1 | Pending |
 | INCHI-01 | Phase 2 | Pending |
 | INCHI-02 | Phase 3 | Pending |
-| INCHI-03 | Phase 4 | Pending |
-| INCHI-04 | Phase 4 | Pending |
 | EXPL-01 | Phase 3 | Pending |
 | EXPL-02 | Phase 3 | Pending |
 | EXPL-03 | Phase 3 | Pending |
+| PLSH-03 | Phase 3 | Pending |
+| INCHI-03 | Phase 4 | Pending |
+| INCHI-04 | Phase 4 | Pending |
 | MAP-01 | Phase 5 | Pending |
 | MAP-02 | Phase 5 | Pending |
+| EDIT-02 | Phase 5 | Pending |
+| EDIT-03 | Phase 5 | Pending |
 | MAP-03 | Phase 6 | Pending |
 | PLSH-01 | Phase 6 | Pending |
-| PLSH-02 | Phase 1 | Pending |
-| PLSH-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
@@ -92,4 +92,4 @@
 
 ---
 *Requirements defined: 2026-05-18*
-*Last updated: 2026-05-18 after initial definition*
+*Last updated: 2026-05-18 — traceability confirmed against ROADMAP.md*
