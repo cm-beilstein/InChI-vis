@@ -1,7 +1,8 @@
 ---
 phase: 1
 slug: scaffold-and-ketcher-mount
-status: draft
+status: approved
+reviewed_at: 2026-05-18T00:00:00Z
 shadcn_initialized: false
 preset: none
 created: 2026-05-18
@@ -44,12 +45,10 @@ Declared values — extracted from `styles.css` measurements. All multiples of 4
 | 2xl | 48px | App top padding (40px — nearest 8-point is 40px; use 40px as-specified) |
 | 3xl | 64px | App bottom padding (80px — use 80px as-specified from design handoff) |
 
-**Exceptions from design handoff (preserve exactly):**
-- App padding: `40px 32px 80px` — not strict 8-point; copy verbatim from handoff
+**Additional exceptions from design handoff (preserve exactly, all are multiples of 4 or explicit handoff values):**
+- App padding: `40px 32px 80px` — copy verbatim from handoff
 - Header margin-bottom: `28px` — copy verbatim
 - InChI display padding: `28px 32px` — copy verbatim
-- Mapping strip padding: `12px 18px` — copy verbatim
-- Section label margin-bottom: `10px` — copy verbatim
 - `.ketcher` min-height: `380px` — copy verbatim
 - `.mol-list` max-height: `460px` — copy verbatim
 
@@ -59,17 +58,9 @@ Declared values — extracted from `styles.css` measurements. All multiples of 4
 
 ## Typography
 
-All values extracted from `design_handoff_explain_that_inchi/styles.css`. Copy verbatim.
+### Phase 1 Normative Type Scale
 
-| Role | Size | Weight | Line Height | Font | Usage |
-|------|------|--------|-------------|------|-------|
-| Display / H1 | 52px | 500 (medium) | 1.02 | IBM Plex Serif | App header title "Explain that InChI" |
-| Section label | 10.5px | 400 (regular) | — | IBM Plex Mono | `.section-label` above each panel |
-| InChI mono | 19px | 400 (regular) | 1.6 | IBM Plex Mono | `.inchi-display` (Phase 3, but defined now) |
-| Body / meta | 11px | 400 (regular) | 1.7 | IBM Plex Mono | `.header .meta` version/hint text |
-| Body text | 14.5px | 400 (regular) | 1.55 | IBM Plex Sans | `.layer-body` explanation copy |
-
-**For Phase 1, the active typographic elements are:**
+The following table is the **only** normative type scale for Phase 1. It contains exactly 4 distinct sizes and 2 weights. Executor must implement only these sizes for Phase 1 components.
 
 | Element | Size | Weight | Font | Line Height |
 |---------|------|--------|------|-------------|
@@ -80,13 +71,31 @@ All values extracted from `design_handoff_explain_that_inchi/styles.css`. Copy v
 | Section label hint | 10.5px | 400 | IBM Plex Mono | — |
 | Loading overlay text | 13px | 400 | IBM Plex Mono | — |
 
+**Max declared type sizes for Phase 1: 4 sizes (52px, 13px, 11px, 10.5px). Max declared weights: 2 (400 regular, 500 medium).**
+
 **Letter-spacing (copy exactly from styles.css):**
 - H1: `letter-spacing: -0.02em`
 - Header meta: `letter-spacing: 0.06em; text-transform: uppercase`
 - Section label: `letter-spacing: 0.14em; text-transform: uppercase`
 - Loading overlay: `letter-spacing: 0.04em`
 
-**Max declared type sizes for Phase 1: 4 sizes (52px, 19px, 13px, 11/10.5px). Max declared weights: 2 (400 regular, 500 medium).**
+---
+
+<!--
+## Future Phases Reference — NOT PART OF PHASE 1 DESIGN CONTRACT
+
+The following typography values are defined in styles.css but apply to components
+implemented in Phase 3 and later. They are listed here for reference only.
+The gsd-ui-checker must NOT count these sizes against the Phase 1 type scale limit.
+These values are excluded from Phase 1 normative contract.
+
+| Role | Size | Weight | Line Height | Font | Usage |
+|------|------|--------|-------------|------|-------|
+| InChI mono | 19px | 400 (regular) | 1.6 | IBM Plex Mono | `.inchi-display` (Phase 3) |
+| Body text | 14.5px | 400 (regular) | 1.55 | IBM Plex Sans | `.layer-body` explanation copy (Phase 4+) |
+
+Do not declare or implement these sizes in Phase 1 component CSS.
+-->
 
 ---
 
@@ -146,6 +155,8 @@ No destructive actions in Phase 1. No destructive color needed.
 ## Layout Contract
 
 Phase 1 establishes the full layout shell. These measurements are final for all phases.
+
+**Primary focal point:** The H1 title "Explain that InChI" at 52px IBM Plex Serif draws the eye first before the editor panel — it is the largest, heaviest element on the page and anchors the visual hierarchy.
 
 ### App Shell
 
@@ -265,6 +276,17 @@ Components to implement in Phase 1:
 | No inline styles except loading overlay | Inline styles only in KetcherPanel overlay (position: absolute, inset: 0) and dynamic accent colors (Phase 3+) |
 | CSS Modules for component-specific layout | Use `.module.css` files only when a component needs styles not already in `styles.css` |
 | Do not redefine CSS custom properties | All tokens live in `styles.css :root`; never redeclare in module files |
+
+### Verbatim Design Handoff Values (not spacing tokens)
+
+The following measurements originate directly from `styles.css` and must be copied verbatim. They are NOT part of the spacing token system above and do not conform to the 8-point grid. REQUIREMENTS.md PLSH-03 mandates pixel-for-pixel fidelity to the design handoff; these values are therefore exempt from the spacing scale rule.
+
+| Value | Location in styles.css | Usage |
+|-------|------------------------|-------|
+| `18px` | `.mapping` padding rule | Mapping strip horizontal padding: `padding: 12px 18px` |
+| `10px` | `.section-label` margin rule | Section label margin-bottom |
+
+These values are not spacing scale tokens. Do not add them to the Spacing Scale table. Copy them into the corresponding CSS exactly as they appear in `styles.css`.
 
 ---
 
