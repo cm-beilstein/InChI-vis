@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-18T12:58:56.277Z",
+  "phase": "1",
+  "phase_name": "Scaffold and Ketcher Mount",
+  "phase_dir": ".planning/phases/01-scaffold-and-ketcher-mount",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "Discuss phase 1 context (CONTEXT.md)", "status": "done", "commit": "913ca5b"},
+    {"id": 2, "name": "Research phase 1 (RESEARCH.md + VALIDATION.md)", "status": "done", "commit": "31ea196"},
+    {"id": 3, "name": "UI design contract (UI-SPEC.md approved)", "status": "done", "commit": "2915b14"}
+  ],
+  "remaining_tasks": [
+    {"id": 4, "name": "Create PLAN.md via /gsd-plan-phase 1", "status": "not_started"},
+    {"id": 5, "name": "Execute Phase 1 via /gsd-execute-phase 1", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "Use @vitejs/plugin-react (esbuild), NOT SWC variant", "rationale": "SWC crashes on Ketcher packages (issue #5565)", "phase": "1"},
+    {"decision": "All Ketcher packages pinned to exactly 3.12.0", "rationale": "RC releases target macromolecule features irrelevant to this tool", "phase": "1"},
+    {"decision": "StandaloneStructServiceProvider created at module level, never inside a component", "rationale": "Prevents WASM re-initialization on remount", "phase": "1"},
+    {"decision": "Ketcher <Editor> never conditionally rendered", "rationale": "WASM re-initializes on remount (D-09 locked)", "phase": "1"},
+    {"decision": "CSS Modules + CSS custom properties for styling", "rationale": "Preserves oklch token system from design handoff; Tailwind rejected", "phase": "1"},
+    {"decision": "vite-plugin-static-copy + assetsInlineLimit: 0", "rationale": "WASM/worker assets must be served at known URL, not base64-inlined", "phase": "1"}
+  ],
+  "uncommitted_files": [".planning/STATE.md"],
+  "next_action": "Run /gsd-plan-phase 1 — all prerequisites done: CONTEXT.md, RESEARCH.md, VALIDATION.md, UI-SPEC.md are in place. The planner will skip research and go straight to planning.",
+  "context_notes": "This session completed all pre-planning artifacts for Phase 1. The UI-SPEC required 2 revision rounds: typography table needed future-phase sizes moved to HTML comment, and two off-grid spacing values (18px, 10px from design handoff) needed to be moved out of the token table into a separate 'Verbatim Design Handoff Values' section under CSS Architecture."
+}
