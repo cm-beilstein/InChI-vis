@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Scaffold and Ketcher Mount** — Vite + React + TS project running with Ketcher mounted, WASM confirmed working, and design tokens intact
+- [x] **Phase 1: Scaffold and Ketcher Mount** — Vite + React + TS project running with Ketcher mounted, WASM confirmed working, and design tokens intact (complete 2026-05-19)
 - [ ] **Phase 2: Data Pipeline** — Live InChI + AuxInfo parsing producing correct `layers[]` and `auxMap` in state on every draw event
 - [ ] **Phase 3: InChI Display and Explanation UI** — Color-coded layer strip, explanation cards, and legend rendered from state; full design fidelity
 - [ ] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas
@@ -32,7 +32,7 @@
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold: Vite config, deps, design tokens, coi-serviceworker, HTML entry (complete 2026-05-19)
-- [ ] 01-02-PLAN.md — React shell: App, Header, KetcherPanel with real Editor and loading overlay
+- [x] 01-02-PLAN.md — React shell: App, Header, KetcherPanel with real Editor and loading overlay (complete 2026-05-19)
 
 **UI hint**: yes
 
@@ -140,7 +140,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Ketcher Mount | 1/2 | Executing | - |
+| 1. Scaffold and Ketcher Mount | 2/2 | Complete | 2026-05-19 |
 | 2. Data Pipeline | 0/? | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
@@ -149,4 +149,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-19 — Phase 1 Plan 01 complete (scaffold); Plan 02 ready to execute*
+*Updated: 2026-05-19 — Phase 1 complete (both plans done); ready for Phase 2*

@@ -7,7 +7,7 @@
 
 ### Editor
 
-- [ ] **EDIT-01**: User can draw and edit molecules using the embedded Ketcher standalone editor (no backend required)
+- [x] **EDIT-01**: User can draw and edit molecules using the embedded Ketcher standalone editor (no backend required) — complete Phase 1
 - [ ] **EDIT-02**: User can click a preset molecule row in the sidebar to load it into the canvas
 - [ ] **EDIT-03**: Canvas overlay shows the current molecule name, molecular formula, and heavy-atom count
 
@@ -33,7 +33,7 @@
 ### Polish
 
 - [ ] **PLSH-01**: Empty canvas or invalid/disconnected structure shows a placeholder message in the InChI display instead of an error
-- [ ] **PLSH-02**: WASM initialisation loading state is shown in the editor panel until Ketcher is ready
+- [x] **PLSH-02**: WASM initialisation loading state is shown in the editor panel until Ketcher is ready — complete Phase 1
 - [ ] **PLSH-03**: Typography (IBM Plex Sans/Serif/Mono), color tokens, spacing, and hover transitions match the design handoff pixel-for-pixel
 
 ## v2 Requirements

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-19T11:54:42Z"
+last_updated: "2026-05-19T12:04:06Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -19,35 +19,36 @@ progress:
 
 ## Current Phase
 
-Phase 1 — Scaffold and Ketcher Mount (Executing — 1/2 plans complete)
+Phase 1 — Scaffold and Ketcher Mount (COMPLETE — 2/2 plans done)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 1 — Plan 02 (Ketcher mount and App shell components)
+**Current focus:** Phase 1 complete. Ready for Phase 2 — InChI parsing and live update.
 
 ## Current Position
 
-- **Phase:** 1 — Scaffold and Ketcher Mount
-- **Plan:** 02 — Ketcher Mount and App Shell (ready to execute)
-- **Status:** Executing (1/2 plans complete)
-- **Progress:** 0/6 phases complete (Phase 1 in progress)
+- **Phase:** 1 — Scaffold and Ketcher Mount (COMPLETE)
+- **Plan:** All plans complete — 2/2
+- **Status:** Phase 1 done; awaiting phase transition
+- **Progress:** 1/6 phases complete
 
 ```
-[░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
+[████░░░░░░░░░░░░░░░░░░░░░] 17%
 ```
 
 ## Performance Metrics
 
-- Plans completed: 1 (01-01-PLAN.md — 5 min, 2026-05-19)
+- Plans completed: 2 (01-01-PLAN.md — 5 min, 01-02-PLAN.md — 6 min, 2026-05-19)
 - Plans total: 2 (Phase 1)
-- Phases completed: 0 / 6
+- Phases completed: 1 / 6
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
 | 01-scaffold-and-ketcher-mount | 01 | 5min | 2 | 12 | 2026-05-19 |
+| 01-scaffold-and-ketcher-mount | 02 | 6min | 2 | 7 | 2026-05-19 |
 
 ## Accumulated Context
 
@@ -62,6 +63,9 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 - React state ownership is flat on `App`; Ketcher ref stored in `useRef`, never in state
 - `@vitejs/plugin-react` must be v6.x (not 4.x) for Vite 8 compatibility — v4.x peer dep does not support Vite 8; v6 still uses esbuild (not SWC)
 - `vite-plugin-static-copy` must be v4.x (not 2.x) for Vite 8 compatibility — API unchanged
+- `vite-plugin-static-copy` v4 requires `rename: {stripBase: true}` for flat copy — v4 default preserves full directory structure (unlike v2)
+- Use `@import ... layer(layerName)` syntax for CSS layer assignment — `@import` inside `@layer {}` blocks is invalid per CSS spec; Vite follows the spec
+- Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Vitest 3 bundles Vite 6 internally, causing Plugin type conflicts when using vitest/config defineConfig in the same file as Vite 8 plugins
 
 ### Research Flags (require empirical validation during implementation)
 
@@ -89,7 +93,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-05-19T11:54:42Z
-**Stopped at:** Completed 01-01-PLAN.md (scaffold and config files)
-**Resume file:** .planning/phases/01-scaffold-and-ketcher-mount/01-02-PLAN.md
-**Next action:** Execute Plan 02 — Ketcher mount and App shell components (`npm run dev` will work after App.tsx is created)
+**Last session:** 2026-05-19T12:04:06Z
+**Stopped at:** Completed 01-02-PLAN.md (React components, Editor mount, loading overlay)
+**Resume file:** None — Phase 1 complete. Next: /gsd-transition to start Phase 2.
+**Next action:** Phase 2 — InChI parsing and live update loop (getInchi + editor.subscribe)
