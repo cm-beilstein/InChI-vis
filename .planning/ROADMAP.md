@@ -31,7 +31,7 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold: Vite config, deps, design tokens, coi-serviceworker, HTML entry
+- [x] 01-01-PLAN.md — Project scaffold: Vite config, deps, design tokens, coi-serviceworker, HTML entry (complete 2026-05-19)
 - [ ] 01-02-PLAN.md — React shell: App, Header, KetcherPanel with real Editor and loading overlay
 
 **UI hint**: yes
@@ -140,7 +140,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Ketcher Mount | 0/2 | Ready to execute | - |
+| 1. Scaffold and Ketcher Mount | 1/2 | Executing | - |
 | 2. Data Pipeline | 0/? | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
@@ -149,4 +149,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-19 — Phase 1 plans created (2 plans)*
+*Updated: 2026-05-19 — Phase 1 Plan 01 complete (scaffold); Plan 02 ready to execute*
