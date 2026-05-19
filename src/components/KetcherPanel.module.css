@@ -33,5 +33,5 @@
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.04em;
-  z-index: 10;
+  z-index: 1001; /* must exceed Ketcher's highest internal z-index of 1000 */
 }
