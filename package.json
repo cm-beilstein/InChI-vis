@@ -1,0 +1,30 @@
+{
+  "name": "explain-that-inchi",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "ketcher-core": "3.12.0",
+    "ketcher-react": "3.12.0",
+    "ketcher-standalone": "3.12.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "5.0.13"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^6.0.0",
+    "typescript": "~5.7.2",
+    "vite": "^8.0.0",
+    "vite-plugin-static-copy": "^4.0.0",
+    "vitest": "^3.0.0"
+  }
+}
