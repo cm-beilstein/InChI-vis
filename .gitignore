@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Vite
+*.local
+.vite/
+
+# TypeScript build info
+node_modules/.tmp/
+
+# Editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.local
+.env.*.local
