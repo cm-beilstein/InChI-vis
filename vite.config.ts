@@ -11,14 +11,12 @@ export default defineConfig({
         {
           src: 'node_modules/ketcher-standalone/dist/binaryWasm/*.{wasm,js}',
           dest: '',
+          rename: { stripBase: true },
         },
       ],
     }),
   ],
   build: {
     assetsInlineLimit: 0,
-  },
-  test: {
-    environment: 'jsdom',
   },
 });
