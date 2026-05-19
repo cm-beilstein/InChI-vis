@@ -28,7 +28,12 @@
 4. CSS custom properties from `styles.css` (e.g. `--color-formula`) resolve correctly and are not overridden by Ketcher's stylesheet
 5. `vite build && vite preview` completes without WASM or worker 404 errors
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold: Vite config, deps, design tokens, coi-serviceworker, HTML entry
+- [ ] 01-02-PLAN.md — React shell: App, Header, KetcherPanel with real Editor and loading overlay
+
 **UI hint**: yes
 
 ### Phase 2: Data Pipeline
@@ -135,7 +140,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Ketcher Mount | 0/? | Not started | - |
+| 1. Scaffold and Ketcher Mount | 0/2 | Not started | - |
 | 2. Data Pipeline | 0/? | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
@@ -144,3 +149,4 @@
 
 ---
 *Roadmap created: 2026-05-18*
+*Updated: 2026-05-19 — Phase 1 plans created (2 plans)*
