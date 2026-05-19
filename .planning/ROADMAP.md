@@ -140,7 +140,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Ketcher Mount | 0/2 | Not started | - |
+| 1. Scaffold and Ketcher Mount | 0/2 | Ready to execute | - |
 | 2. Data Pipeline | 0/? | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |

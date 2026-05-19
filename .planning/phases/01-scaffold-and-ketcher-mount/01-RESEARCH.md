@@ -590,22 +590,19 @@ This phase has no user-facing data processing, authentication, or network commun
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **coi-serviceworker path with Vite base**
+1. **coi-serviceworker path with Vite base** — **RESOLVED**
    - What we know: `coi-serviceworker.js` must be in `public/`; Vite copies `public/` contents to `dist/`; Vite's `base` config applies to `%BASE_URL%` in `index.html`
-   - What's unclear: Whether `%BASE_URL%coi-serviceworker.js` correctly resolves in Vite 8 with `base: '/explain-that-inchi/'`
-   - Recommendation: Use `%BASE_URL%coi-serviceworker.js` in index.html; verify in `vite preview` before considering complete
+   - Resolution: Use `<script src="%BASE_URL%coi-serviceworker.js"></script>` as the first script in `index.html`. Vite 8 replaces `%BASE_URL%` with the configured base (`/explain-that-inchi/`) during build, producing `/explain-that-inchi/coi-serviceworker.js` in production and `/coi-serviceworker.js` in dev. Verify with `vite preview` after first build. (Plan 01-01 Task 2 implements this.)
 
-2. **Google Fonts under COEP**
+2. **Google Fonts under COEP** — **RESOLVED**
    - What we know: COEP blocks cross-origin resources that lack CORP headers; Google Fonts CDN responses may or may not include `Cross-Origin-Resource-Policy`
-   - What's unclear: Whether IBM Plex fonts load correctly from Google Fonts after coi-serviceworker activates COEP
-   - Recommendation: Add `crossorigin` attribute to Google Fonts `<link>` preconnect tags; if fonts still fail, switch to self-hosted fonts in `public/fonts/` with `@font-face` in `styles.css`
+   - Resolution: Add `crossorigin` attribute to Google Fonts `<link rel="preconnect">` tags pointing to `fonts.gstatic.com`. This opts them into CORS mode and satisfies COEP. If fonts still fail after COEP activates, fall back to self-hosted fonts in `public/fonts/` with `@font-face` declarations in `styles.css`. (Plan 01-01 Task 2 implements the `crossorigin` attribute.)
 
-3. **vite-plugin-static-copy destination path for dev server**
+3. **vite-plugin-static-copy destination path for dev server** — **RESOLVED**
    - What we know: The plugin copies assets during `vite build`; during `vite dev`, behavior depends on plugin version
-   - What's unclear: Whether `vite-plugin-static-copy@2.x` also serves copied files in dev mode or only at build time
-   - Recommendation: Test with `npm run dev` after configuring the plugin; if WASM 404s in dev, add the `binaryWasm/` files to `public/` as well (Vite serves `public/` in dev mode)
+   - Resolution: Configure `vite-plugin-static-copy` to copy `node_modules/ketcher-standalone/dist/binaryWasm/*.{wasm,js}` to `dest: ''` (dist root). For dev mode, `vite-plugin-static-copy@2.x` also serves the files via the dev server middleware. Verify with `npm run dev` after scaffold — if WASM 404s appear in dev, copy the `binaryWasm/` files directly to `public/` as a fallback (Vite serves `public/` in all modes). (Plan 01-01 Task 1 configures this.)
 
 ---
 
