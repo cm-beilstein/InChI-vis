@@ -7,7 +7,7 @@ last_updated: "2026-05-20T00:00:00Z"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 2
+  total_plans: 5
   completed_plans: 2
 ---
 
@@ -19,20 +19,20 @@ progress:
 
 ## Current Phase
 
-Phase 1 — Scaffold and Ketcher Mount (COMPLETE — 2/2 plans done)
+Phase 2 — Data Pipeline (READY TO EXECUTE — 3/3 plans planned)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 1 complete. Ready for Phase 2 — InChI parsing and live update.
+**Current focus:** Phase 2 planned. Ready to execute — InChI parsing and live update pipeline.
 
 ## Current Position
 
-- **Phase:** 1 — Scaffold and Ketcher Mount (COMPLETE)
-- **Plan:** All plans complete — 2/2
-- **Status:** Phase 1 done; awaiting phase transition
+- **Phase:** 2 — Data Pipeline (PLANNED)
+- **Plan:** 3 plans ready — 02-01, 02-02, 02-03
+- **Status:** Phase 2 planned; ready to execute
 - **Progress:** 1/6 phases complete
 
 ```
