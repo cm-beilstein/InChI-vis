@@ -694,10 +694,3 @@ body {
   .explain { grid-template-columns: 1fr; }
   .header h1 { font-size: 36px; }
 }
-
-/* Ketcher CSS isolation — prevents Ketcher's :root declarations from
-   overriding project design tokens. Unlayered styles (our tokens) win
-   the cascade against layered styles (Ketcher CSS). */
-@layer ketcher-reset {
-  /* KetcherPanel.module.css imports ketcher-react/dist/index.css inside this layer */
-}

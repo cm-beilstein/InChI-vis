@@ -15,6 +15,15 @@ export default function App() {
 
   const handleInit = (ketcher: Ketcher) => {
     ketcherRef.current = ketcher;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).ketcher = ketcher;
+    // Reset render settings to canonical defaults, overriding any stale localStorage
+    // values. The micro-mode editor exposes setOptions() on its legacy Raphaël editor
+    // object; bondLength (px) === microModeScale, default is 40px per Å.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ketcher.editor as any).setOptions(
+      JSON.stringify({ bondLength: 40, bondLengthUnit: 'px', zoom: 1 }),
+    );
     setIsReady(true);
   };
 
@@ -26,11 +35,6 @@ export default function App() {
         onInit={handleInit}
         structServiceProvider={structServiceProvider}
       />
-      {/* Phase 1 stubs — class names match styles.css exactly. Later phases replace with real components. */}
-      <div className="inchi-section" />
-      <div className="mapping" />
-      <div className="explain" />
-      <div className="footnote" />
     </div>
   );
 }

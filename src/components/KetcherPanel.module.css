@@ -1,15 +1,3 @@
-/*
- * Ketcher CSS isolation via cascade layers (D-07).
- *
- * Vite processes @import before @layer, so we cannot reliably wrap an @import
- * inside @layer{} within a CSS Module. Instead, we use the established @layer
- * ketcher-reset declaration from styles.css and a companion layer-wrapper file.
- *
- * The ketcher-reset layer is declared (empty) in styles.css — unlayered rules
- * from styles.css always win over anything in ketcher-reset, so D-07 is met.
- */
-@import 'ketcher-react/dist/index.css' layer(ketcher-reset);
-
 .ketcher {
   /* Override the 3-column grid from global styles.css — the real Ketcher Editor
      fills the full container and renders its own toolbar/mol-list internally */
@@ -18,7 +6,7 @@
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
-  min-height: 380px;
+  height: 650px;
   position: relative;
 }
 
