@@ -49,7 +49,13 @@ Plans:
 4. Drawing then rapidly erasing atoms does not produce stale or mismatched `layers`/`auxMap` pairs; state always reflects the current structure
 5. An empty or disconnected canvas produces no thrown exception; `layers` is an empty array and `auxMap` is empty
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Vitest config fix + parsing library (parseInchi.ts, parseAuxMapping.ts) + unit test stubs
+- [ ] 02-02-PLAN.md — Zustand 5 store with all v1 fields and typed actions
+- [ ] 02-03-PLAN.md — App.tsx subscription wiring (debounce + generation guard) + real AuxInfo fixture
+
 **UI hint**: no
 
 ### Phase 3: InChI Display and Explanation UI
@@ -141,7 +147,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold and Ketcher Mount | 2/2 | Complete | 2026-05-19 |
-| 2. Data Pipeline | 0/? | Not started | - |
+| 2. Data Pipeline | 0/3 | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
 | 5. Mapping Strip and Preset Molecules | 0/? | Not started | - |
@@ -149,4 +155,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-19 — Phase 1 complete (both plans done); ready for Phase 2*
+*Updated: 2026-05-20 — Phase 2 planned (3 plans); ready to execute*
