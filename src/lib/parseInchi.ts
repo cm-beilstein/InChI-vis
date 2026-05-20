@@ -1,0 +1,225 @@
+// Pure InChI parsing library — no browser globals, Node-compatible for Vitest.
+// Ported from design_handoff_explain_that_inchi/molecules.js lines 334–422.
+// No algorithmic changes from the original JS; types added only.
+
+// ---------------------------------------------------------------------------
+// Shared Types
+// ---------------------------------------------------------------------------
+
+export type LayerType =
+  | 'version'
+  | 'formula'
+  | 'c'
+  | 'h'
+  | 'q'
+  | 'p'
+  | 'b'
+  | 't'
+  | 'm'
+  | 's'
+  | 'i';
+
+export interface Layer {
+  type: LayerType;
+  prefix: string;
+  text: string;
+  atoms: number[];   // canonical 1-based indices (per D-07)
+  bonds: number[][]; // [a, b] canonical atom-pair tuples — only 'c' layer (per D-08)
+}
+
+export type AuxMap = Record<number, number>; // canonical 1-based → Ketcher 0-based (per D-10)
+
+export interface SubHover {
+  kind: 'element' | 'atom' | 'stereo' | 'hAtoms' | 'mobileH';
+  el?: string;
+  canonical?: number;
+  atom?: number;
+  sign?: string;
+  atoms?: number[];
+  count?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Layer helper parsers (ported from molecules.js lines 352–421)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parses the InChI connection layer text into canonical atom-pair bond tuples.
+ * Handles linear chains, ring closures, and branch notation.
+ * Port of molecules.js lines 352–378 — stack-based branch parser.
+ */
+export function parseConnectionBonds(text: string): [number, number][] {
+  const bonds: [number, number][] = [];
+  const stack: (number | null)[] = [];
+  let i = 0;
+  let last: number | null = null;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '(') {
+      stack.push(last);
+      i++;
+    } else if (c === ')') {
+      last = stack.pop() ?? null;
+      i++;
+    } else if (c === '-') {
+      i++;
+    } else if (c === ',') {
+      // Comma inside a branch: next atom bonds to the branch root, not the
+      // previous atom. e.g. "19(18,23)" => 19-18 AND 19-23, not 18-23.
+      if (stack.length) last = stack[stack.length - 1] as number | null;
+      i++;
+    } else if (/\d/.test(c)) {
+      let j = i;
+      while (j < text.length && /\d/.test(text[j])) j++;
+      const n = parseInt(text.slice(i, j), 10);
+      if (last != null) bonds.push([last, n]);
+      last = n;
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return bonds;
+}
+
+/**
+ * Parses the InChI hydrogen layer text into a canonical atom → H-count map.
+ * Handles ranges (1-6H), comma lists, and multipliers (H2, H3).
+ * Strips mobile-H groups in parentheses before parsing.
+ * Port of molecules.js lines 381–404.
+ */
+export function parseHydrogenAtoms(text: string): Record<number, number> {
+  const out: Record<number, number> = {};
+  // Strip parenthesised mobile-H groups: (H,3,4)
+  const cleaned = text.replace(/\([^)]*\)/g, '');
+  // Match runs of digits/commas/dashes followed by "Hn?", up to the next
+  // comma or end of string.
+  const re = /([\d,\-]+)H(\d*)(?=,|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(cleaned))) {
+    const count = m[2] ? parseInt(m[2], 10) : 1;
+    for (const range of m[1].split(',')) {
+      if (!range) continue;
+      if (range.includes('-')) {
+        const [a, b] = range.split('-').map(n => parseInt(n, 10));
+        for (let k = a; k <= b; k++) out[k] = count;
+      } else {
+        out[parseInt(range, 10)] = count;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Parses mobile hydrogen groups from the InChI hydrogen layer.
+ * Returns flat array of atom numbers from (H,a,b,...) groups.
+ * Port of molecules.js lines 407–415.
+ */
+export function parseMobileHydrogens(text: string): number[] {
+  const groups: number[] = [];
+  const re = /\(H\d*,([^)]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    groups.push(...m[1].split(',').map(n => parseInt(n, 10)));
+  }
+  return groups;
+}
+
+/**
+ * Extracts canonical atom numbers from the InChI stereo layer (t or b layer).
+ * Port of molecules.js lines 418–421.
+ */
+export function parseStereoAtoms(text: string): number[] {
+  const nums: number[] = [];
+  for (const m of text.matchAll(/(\d+)[\-+]/g)) nums.push(parseInt(m[1], 10));
+  return nums;
+}
+
+// ---------------------------------------------------------------------------
+// Enrichment (new — not in design handoff JS; required per D-06/D-07/D-08/D-09)
+// ---------------------------------------------------------------------------
+
+/**
+ * Counts total heavy atoms in a formula string like 'C6H6' or 'C2H6O'.
+ * Hydrogen atoms are excluded because canonical numbering covers heavy atoms only.
+ */
+function countFormulaAtoms(formulaText: string): number {
+  let total = 0;
+  for (const m of formulaText.matchAll(/(?<![A-Za-z])([A-Z][a-z]?)(\d*)(?![a-z])/g)) {
+    if (m[1] !== 'H') total += m[2] ? parseInt(m[2], 10) : 1;
+  }
+  return total;
+}
+
+/**
+ * Enriches parsed layers by filling in `atoms[]` and `bonds[]` per layer type.
+ * Runs after the raw layer split in parseInchi().
+ *
+ * Enrichment table (per D-06/D-07/D-08/D-09 and RESEARCH.md Pattern 5):
+ *   version  → atoms: [],       bonds: []
+ *   formula  → atoms: [1..N],   bonds: []
+ *   c        → atoms: deduplicated from parseConnectionBonds, bonds: those bond tuples
+ *   h        → atoms: keys(parseHydrogenAtoms) + parseMobileHydrogens, bonds: []
+ *   t, b     → atoms: parseStereoAtoms, bonds: []
+ *   others   → atoms: [], bonds: []
+ */
+function enrichLayers(layers: Layer[]): Layer[] {
+  const formulaLayer = layers.find(l => l.type === 'formula');
+  const N = formulaLayer ? countFormulaAtoms(formulaLayer.text) : 0;
+
+  return layers.map(layer => {
+    switch (layer.type) {
+      case 'formula':
+        return { ...layer, atoms: Array.from({ length: N }, (_, idx) => idx + 1) };
+      case 'c': {
+        const bonds = parseConnectionBonds(layer.text);
+        const atomSet = new Set<number>();
+        bonds.forEach(([a, b]) => {
+          atomSet.add(a);
+          atomSet.add(b);
+        });
+        return { ...layer, atoms: [...atomSet].sort((a, b) => a - b), bonds };
+      }
+      case 'h': {
+        const fixed = Object.keys(parseHydrogenAtoms(layer.text)).map(Number);
+        const mobile = parseMobileHydrogens(layer.text);
+        const all = [...new Set([...fixed, ...mobile])].sort((a, b) => a - b);
+        return { ...layer, atoms: all };
+      }
+      case 't':
+      case 'b':
+        return { ...layer, atoms: parseStereoAtoms(layer.text) };
+      default:
+        return layer; // version, m, s, q, p, i — atoms: [], bonds: []
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main parser
+// ---------------------------------------------------------------------------
+
+/**
+ * Splits an InChI string into typed, enriched Layer objects.
+ * Port of molecules.js lines 335–348, extended with enrichLayers().
+ *
+ * parseInchi('InChI=1S//') returns layers.length === 1 (version only, no formula),
+ * enabling the empty-canvas guard in App.tsx (D-13).
+ */
+export function parseInchi(s: string): Layer[] {
+  const body = s.slice('InChI='.length);
+  const parts = body.split('/');
+  const layers: Layer[] = [];
+  layers.push({ type: 'version', prefix: '', text: parts[0], atoms: [], bonds: [] });
+  if (parts[1]) {
+    layers.push({ type: 'formula', prefix: '', text: parts[1], atoms: [], bonds: [] });
+  }
+  for (let i = 2; i < parts.length; i++) {
+    const p = parts[i];
+    if (!p) continue;
+    const prefix = p[0] as LayerType;
+    layers.push({ type: prefix, prefix, text: p.slice(1), atoms: [], bonds: [] });
+  }
+  return enrichLayers(layers);
+}
