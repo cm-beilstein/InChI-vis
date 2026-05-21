@@ -74,11 +74,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0: test stubs for layerInfo.ts, parseAtomElements, and store atomElements field
-- [ ] 03-02-PLAN.md — Data layer: parseAtomElements + store atomElements field + App.tsx wiring
-- [ ] 03-03-PLAN.md — layerInfo.ts: TypeScript port of layers-info.js with all helpers
-- [ ] 03-04-PLAN.md — InchiSection.tsx + LayerText.tsx + InchiSection.module.css
-- [ ] 03-05-PLAN.md — Explanation.tsx + Legend.tsx + CSS Modules + App.tsx integration + visual UAT
+- [x] 03-01-PLAN.md — Wave 0: test stubs for layerInfo.ts, parseAtomElements, and store atomElements field
+- [x] 03-02-PLAN.md — Data layer: parseAtomElements + store atomElements field + App.tsx wiring
+- [x] 03-03-PLAN.md — layerInfo.ts: TypeScript port of layers-info.js with all helpers
+- [x] 03-04-PLAN.md — InchiSection.tsx + LayerText.tsx + InchiSection.module.css
+- [x] 03-05-PLAN.md — Explanation.tsx + Legend.tsx + CSS Modules + App.tsx integration + visual UAT
 
 **UI hint**: yes
 
