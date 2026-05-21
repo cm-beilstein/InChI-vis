@@ -1,0 +1,113 @@
+/* Legend row — verbatim from styles.css .legend-row */
+.legendRow {
+  display: grid;
+  grid-template-columns: 14px 28px 100px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 22px;
+  font-size: 12.5px;
+  position: relative;
+  border-radius: 4px;
+  transition: background 120ms;
+}
+
+/* Absent layer type — muted appearance — verbatim from styles.css .legend-row.muted */
+.muted {
+  /* key and name color handled inline; sw opacity handled below */
+}
+
+.muted .sw {
+  opacity: 0.35;
+}
+
+/* Swatch circle inside legend row — verbatim from styles.css .legend-row .sw */
+.sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Key column (e.g. "c…") — verbatim from styles.css .legend-row .key */
+.key {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Name column — verbatim from styles.css .legend-row .name */
+.name {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Desc column — verbatim from styles.css .legend-row .desc */
+.desc {
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Tooltip — CSS-only :hover trigger; default hidden.
+   Verbatim from styles.css .legend-tip */
+.legendTip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  width: 300px;
+  padding: 14px 16px;
+  background: var(--ink);
+  color: oklch(0.95 0.005 250);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 20;
+  box-shadow: 0 12px 32px oklch(0.2 0.015 255 / 0.22);
+  text-wrap: pretty;
+}
+
+/* CSS-only tooltip on hover — no React state */
+.legendRow:hover .legendTip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Tooltip arrow (right-pointing) — verbatim from styles.css .legend-tip::after */
+.legendTip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: var(--ink);
+}
+
+/* Tooltip label (uppercase, faint) — verbatim from styles.css .legend-tip .tip-label */
+.tipLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(0.7 0.03 250);
+  margin-bottom: 6px;
+}
+
+/* Tooltip example — verbatim from styles.css .legend-tip .tip-eg */
+.tipEg {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid oklch(0.4 0.02 255);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: oklch(0.78 0.02 250);
+}
