@@ -51,13 +51,13 @@ export default function App() {
           const result = parseInchiWithAux(raw);
           // D-12/D-13: empty canvas guard — no formula layer means empty or disconnected
           if (result.layers.length < 2) {
-            useInchiStore.getState().setInchiData('', [], {});
+            useInchiStore.getState().setInchiData('', [], {}, {});
             return;
           }
-          useInchiStore.getState().setInchiData(result.inchi, result.layers, result.auxMap);
+          useInchiStore.getState().setInchiData(result.inchi, result.layers, result.auxMap, result.atomElements);
         } catch {
           // getInchi() can throw on empty or disconnected canvas — reset to empty (D-12)
-          useInchiStore.getState().setInchiData('', [], {});
+          useInchiStore.getState().setInchiData('', [], {}, {});
         }
       }, 150);
     };
