@@ -507,17 +507,19 @@ All InChI display, explanation panel, and legend CSS already exists in `src/styl
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`rA:` multi-letter element encoding for Cl, Br, I**
    - What we know: `rA:6CCCCCC` for benzene — all single-char elements
    - What's unclear: Whether `Cl` is encoded as `Cl` (two chars) or a different encoding in the Ketcher 3.12.0 AuxInfo implementation
    - Recommendation: Write a unit test for `parseAtomElements` with a chlorobenzene fixture. Verify by running `window.ketcher.getInchi(true)` in the browser on a chlorobenzene molecule and logging the `rA:` field. If the format differs, update the parser accordingly. This is a Wave 0 or Wave 1 task.
+   - **RESOLVED:** Plan 01 (Wave 0) includes a chlorobenzene fixture test. Plan 02 implements `parseAtomElements` with a greedy two-char check (uppercase letter followed by optional lowercase letter) — aligned with the AuxInfo spec. Empirical verification happens automatically when Wave 0 tests run.
 
 2. **Existing global CSS rules in `styles.css` vs CSS Module rules**
    - What we know: `src/styles.css` already contains `.inchi-section`, `.inchi-display`, `.inchi-layer`, `.explain`, `.card`, `.legend-row`, etc. (lines 352–663)
    - What's unclear: Whether Phase 3 should convert these to CSS Module rules (removing from `styles.css`) or add Module files alongside the existing globals
    - Recommendation: Convert to CSS Module rules in the new component files. Remove the corresponding global rules from `styles.css` to avoid specificity conflicts. This is the clean approach consistent with D-04. The global rules currently have no effect (no components render them), so removing them has no impact.
+   - **RESOLVED:** D-04 from CONTEXT.md is authoritative — CSS Modules per component. Plans 04 and 05 create collocated `.module.css` files. The global rules in `styles.css` lines 352–663 will be removed during execution to eliminate specificity conflicts (no components currently render them, so removal has zero runtime impact).
 
 ---
 

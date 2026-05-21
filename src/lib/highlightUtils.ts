@@ -29,9 +29,24 @@ export interface StructLike {
   bonds: { forEach(cb: (bond: { begin: number; end: number }, id: number) => void): void };
 }
 
-/** Production implementation: reads resolved CSS custom property value from document root. */
+/** Production implementation: reads CSS custom property and converts to rgb for Ketcher SVG renderer.
+ * getComputedStyle returns oklch() strings which Raphaël cannot parse — use canvas to normalise. */
 export function resolveVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!raw) return '#888';
+  // Convert to rgb via a 1x1 canvas — handles oklch, hsl, named colors, etc.
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return raw;
+    ctx.fillStyle = raw;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r},${g},${b})`;
+  } catch {
+    return raw;
+  }
 }
 
 /**
