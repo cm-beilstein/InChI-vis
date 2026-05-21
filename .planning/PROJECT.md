@@ -12,19 +12,20 @@ Every chunk of an InChI string is hoverable, explained, and linked back to the a
 
 ### Validated
 
-- [x] Embed real `ketcher-react` editor with `StandaloneStructServiceProvider` (no backend required) — Validated in Phase 1
-- [x] Live InChI generation from Ketcher's current structure via its built-in WASM InChI library — Validated in Phase 2
-- [x] Parse aux-info atom mapping (canonical# → Ketcher atom index) from `getInchi(true)` — Validated in Phase 2
-- [x] InChI string displayed as clickable, colour-coded layer chunks per the design token system — Validated in Phase 3
-- [x] Explanation panel: left card (current-layer prose + reading code), right card (full layer legend with tooltips) — Validated in Phase 3
-- [x] Pixel-perfect typography (IBM Plex Sans/Serif/Mono), colour tokens, and layout from the design handoff — Validated in Phase 3
+(None yet — ship to validate)
 
 ### Active
 
+- [ ] Embed real `ketcher-react` editor with `StandaloneStructServiceProvider` (no backend required)
+- [ ] Live InChI generation from Ketcher's current structure via its built-in WASM InChI library
+- [ ] Parse aux-info atom mapping (canonical# → Ketcher atom index) from `getInchi(true)`
+- [ ] InChI string displayed as clickable, colour-coded layer chunks per the design token system
 - [ ] Layer-level hover: highlights matching atoms/bonds in Ketcher canvas, dims other layers, updates explanation card
 - [ ] Sub-token hover (formula element, c-layer atom, t/b-layer parity token, h-layer group) with layer-wide suppression
 - [ ] Mapping strip: Ketcher → canonical numbering, identity pairs dimmed, divergent pairs highlighted green
+- [ ] Explanation panel: left card (current-layer prose + reading code), right card (full layer legend with tooltips)
 - [ ] Example molecule list (5 presets) that loads via `ketcher.setMolecule()`
+- [ ] Pixel-perfect typography (IBM Plex Sans/Serif/Mono), colour tokens, and layout from the design handoff
 - [ ] Graceful empty/invalid-structure handling in the InChI display
 - [ ] Static build deployable to GitHub Pages or Netlify (no server required)
 
@@ -81,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 after Phase 3 completion*
+*Last updated: 2026-05-18 after initialization*

@@ -20,9 +20,9 @@
 
 ### Explanation
 
-- [x] **EXPL-01**: Left explanation card shows the currently hovered layer's prose description and a molecule-specific reading-code block
-- [x] **EXPL-02**: Right legend card lists all 11 InChI layer types with color swatches; hovering a row reveals a tooltip with fuller description and example syntax
-- [x] **EXPL-03**: Idle state (no layer hovered) shows the default explanation card content
+- [ ] **EXPL-01**: Left explanation card shows the currently hovered layer's prose description and a molecule-specific reading-code block
+- [ ] **EXPL-02**: Right legend card lists all 11 InChI layer types with color swatches; hovering a row reveals a tooltip with fuller description and example syntax
+- [ ] **EXPL-03**: Idle state (no layer hovered) shows the default explanation card content
 
 ### Mapping
 
@@ -34,7 +34,7 @@
 
 - [ ] **PLSH-01**: Empty canvas or invalid/disconnected structure shows a placeholder message in the InChI display instead of an error
 - [x] **PLSH-02**: WASM initialisation loading state is shown in the editor panel until Ketcher is ready — complete Phase 1
-- [x] **PLSH-03**: Typography (IBM Plex Sans/Serif/Mono), color tokens, spacing, and hover transitions match the design handoff pixel-for-pixel
+- [ ] **PLSH-03**: Typography (IBM Plex Sans/Serif/Mono), color tokens, spacing, and hover transitions match the design handoff pixel-for-pixel
 
 ## v2 Requirements
 
@@ -72,10 +72,10 @@
 | PLSH-02 | Phase 1 | Pending |
 | INCHI-01 | Phase 2 | Pending |
 | INCHI-02 | Phase 3 | Pending |
-| EXPL-01 | Phase 3 | Complete |
-| EXPL-02 | Phase 3 | Complete |
-| EXPL-03 | Phase 3 | Complete |
-| PLSH-03 | Phase 3 | Complete |
+| EXPL-01 | Phase 3 | Pending |
+| EXPL-02 | Phase 3 | Pending |
+| EXPL-03 | Phase 3 | Pending |
+| PLSH-03 | Phase 3 | Pending |
 | INCHI-03 | Phase 4 | Pending |
 | INCHI-04 | Phase 4 | Pending |
 | MAP-01 | Phase 5 | Pending |

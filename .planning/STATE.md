@@ -2,43 +2,41 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-05-21T12:23:49.661Z"
+status: executing
+last_updated: "2026-05-20T00:00:00Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 2
 ---
 
 # Project State
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Ready to plan
+**Status:** Executing
 
 ## Current Phase
 
-Phase 3 — InChI Display and Explanation UI (COMPLETE — 5/5 plans done)
+Phase 2 — Data Pipeline (READY TO EXECUTE — 3/3 plans planned)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 3 complete. Full InChI explanation UI shipped — color-coded strip, explanation card, legend with CSS-only tooltips. Ready for Phase 4.
+**Current focus:** Phase 2 planned. Ready to execute — InChI parsing and live update pipeline.
 
 ## Current Position
 
-- **Phase:** 4
-- **Plan:** Not started
-- **Status:** Phase 3 complete; ready for Phase 4
-- **Progress:** [██████████] 100%
+- **Phase:** 2 — Data Pipeline (PLANNED)
+- **Plan:** 3 plans ready — 02-01, 02-02, 02-03
+- **Status:** Phase 2 planned; ready to execute
+- **Progress:** 1/6 phases complete
 
 ```
-[██████████] 100% (3/6 phases complete)
+[████░░░░░░░░░░░░░░░░░░░░░] 17%
 ```
 
 ## Performance Metrics
@@ -51,7 +49,6 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 |-------|------|----------|-------|-------|------|
 | 01-scaffold-and-ketcher-mount | 01 | 5min | 2 | 12 | 2026-05-19 |
 | 01-scaffold-and-ketcher-mount | 02 | 6min | 2 | 7 | 2026-05-19 |
-| Phase 03-inchi-display-and-explanation-ui P05 | continuation | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -69,9 +66,6 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 - `vite-plugin-static-copy` v4 requires `rename: {stripBase: true}` for flat copy — v4 default preserves full directory structure (unlike v2)
 - Use `@import ... layer(layerName)` syntax for CSS layer assignment — `@import` inside `@layer {}` blocks is invalid per CSS spec; Vite follows the spec
 - Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Vitest 3 bundles Vite 6 internally, causing Plugin type conflicts when using vitest/config defineConfig in the same file as Vite 8 plugins
-- `dangerouslySetInnerHTML` used for `readingFor()` output in Explanation card — controlled HTML only (WASM-parsed InChI text, not user-controlled free text); T-03-05-01 threat accepted per plan threat model
-- `--accent` CSS custom property always set on card wrapper (idle: `var(--ink-faint)`, active: layer accent) so `card::before` left border strip never loses its value (Pitfall 3)
-- CSS-only tooltip for Legend rows via `.legendRow:hover .legendTip` — no React useState needed; `overflow:visible` on legend card prevents tooltip clip (Pitfall 4)
 
 ### Research Flags (require empirical validation during implementation)
 
@@ -99,7 +93,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-05-21T12:23:49.658Z
-**Stopped at:** Phase 4 context gathered
-**Resume file:** .planning/phases/04-hover-to-highlight-integration/04-CONTEXT.md
-**Next action:** Phase 4 — next phase after InChI display and explanation UI (Phase 3 complete)
+**Last session:** 2026-05-20T00:00:00Z
+**Stopped at:** Phase 1 UAT complete — all 3 browser tests passed. CSS double-hash root cause fixed (Ketcher CSS now imported as global in main.tsx; @layer approach removed). window.ketcher exposed in handleInit for dev console access.
+**Resume file:** None — Phase 1 fully complete including UAT sign-off.
+**Next action:** Phase 2 — InChI parsing and live update loop (getInchi + editor.subscribe)

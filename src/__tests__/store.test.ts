@@ -13,7 +13,6 @@ describe('useInchiStore', () => {
       auxMap: {},
       hoverIdx: null,
       subHover: null,
-      atomElements: {},
     });
   });
 
@@ -33,7 +32,7 @@ describe('useInchiStore', () => {
     ];
     const fakeMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
 
-    useInchiStore.getState().setInchiData('InChI=1S/C6H6/...', fakeLayers, fakeMap, {});
+    useInchiStore.getState().setInchiData('InChI=1S/C6H6/...', fakeLayers, fakeMap);
 
     const state = useInchiStore.getState();
     expect(state.inchi).toBe('InChI=1S/C6H6/...');
@@ -65,35 +64,13 @@ describe('useInchiStore', () => {
     expect(useInchiStore.getState().subHover).toBeNull();
   });
 
-  it('has atomElements field initialized to empty object', () => {
-    const state = useInchiStore.getState();
-    expect(state).toHaveProperty('atomElements');
-    expect(state.atomElements).toEqual({});
-  });
-
-  it('setInchiData with 4 args updates atomElements', () => {
-    const fakeLayers: Layer[] = [
-      { type: 'version', prefix: '', text: '1S', atoms: [], bonds: [] },
-      { type: 'formula', prefix: '', text: 'C6H6', atoms: [1,2,3,4,5,6], bonds: [] },
-    ];
-    const fakeMap: AuxMap = { 1: 0, 2: 1 };
-    const fakeElements: Record<number, string> = { 1: 'C', 2: 'C' };
-
-    useInchiStore.getState().setInchiData('InChI=1S/C6H6/...', fakeLayers, fakeMap, fakeElements);
-
-    const state = useInchiStore.getState();
-    expect(state.atomElements[1]).toBe('C');
-    expect(state.atomElements[2]).toBe('C');
-  });
-
-  it('getState returns all six v1 fields', () => {
+  it('getState returns all five v1 fields', () => {
     const state = useInchiStore.getState();
     expect('inchi' in state).toBe(true);
     expect('layers' in state).toBe(true);
     expect('auxMap' in state).toBe(true);
     expect('hoverIdx' in state).toBe(true);
     expect('subHover' in state).toBe(true);
-    expect('atomElements' in state).toBe(true);
   });
 
   it('getState returns all three action functions', () => {
