@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: hover-to-highlight-integration
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-21
+reviewed_at: 2026-05-21
 ---
 
 # Phase 4 — UI Design Contract
@@ -279,11 +280,11 @@ No registry vetting required. Project uses CSS Modules only.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG — no explicit focal-point section (non-blocking; state machine implies visual anchor)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG — label size as range "10.5–11px" rather than single value (non-blocking)
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-21
