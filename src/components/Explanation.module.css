@@ -1,0 +1,127 @@
+/* Two-column grid wrapper — verbatim from styles.css .explain */
+.explain {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Responsive: single column at narrow width — verbatim from styles.css @media */
+@media (max-width: 900px) {
+  .explain {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Base card — verbatim from styles.css .explain .card */
+.card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 22px 24px;
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Left border accent strip (3px) — verbatim from styles.css .explain .card::before */
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent, var(--line));
+  transition: background 200ms;
+}
+
+/* Active card state — ::before uses var(--accent) which is set inline */
+.active::before {
+  background: var(--accent);
+}
+
+/* Legend card: overflow visible so tooltip is not clipped (Pitfall 4).
+   No ::before strip; flex column layout for the rows.
+   Verbatim from styles.css .explain .legend-card */
+.legendCard {
+  overflow: visible;
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.legendCard::before {
+  display: none;
+}
+
+/* Layer tag row (type label + swatch) — verbatim from styles.css .explain .layer-tag */
+.layerTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent, var(--ink-soft));
+  margin-bottom: 8px;
+}
+
+/* Color swatch circle — verbatim from styles.css .explain .layer-tag .swatch */
+.swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--accent, var(--ink-faint));
+  flex-shrink: 0;
+}
+
+/* Layer title — verbatim from styles.css .explain .layer-title */
+.layerTitle {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 500;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* Prose body — verbatim from styles.css .explain .layer-body */
+.layerBody {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+  text-wrap: pretty;
+}
+
+/* Reading-code block — verbatim from styles.css .explain .layer-eg */
+.layerEg {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.layerEg b {
+  color: var(--accent, var(--ink));
+  font-weight: 600;
+}
+
+/* "Reads as" label — verbatim from styles.css .explain .layer-eg .lbl */
+.lbl {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}

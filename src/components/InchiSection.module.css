@@ -1,0 +1,117 @@
+/* InChI strip CSS Module
+   Port of design_handoff_explain_that_inchi/styles.css — InChI section rules.
+   All class names camelCased per CSS Modules convention.
+   Verbatim design-handoff values preserved exactly (spacing, transitions, typography).
+*/
+
+/* Section wrapper */
+.inchiSection {
+  margin-top: 36px;
+}
+
+/* Section label row */
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.hint {
+  margin-left: auto;
+  color: var(--ink-faint);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* InChI string display box */
+.inchiDisplay {
+  background: var(--bg-canvas);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 28px 32px;
+  font-family: var(--font-mono);
+  font-size: 19px;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  word-break: break-all;
+  cursor: default;
+}
+
+/* InChI= prefix */
+.inchiPrefix {
+  color: var(--ink-faint);
+}
+
+/* Layer separator / */
+.inchiSlash {
+  color: var(--ink-faint);
+  margin: 0 1px;
+}
+
+/* Layer chip */
+.inchiLayer {
+  display: inline;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.active {
+  /* background applied via inline style using data-layer's bg token */
+}
+
+.dim {
+  opacity: 0.35;
+  transition: opacity 160ms ease;
+}
+
+/* Prefix label inside a layer (e.g. "c", "h") */
+.prefix {
+  color: var(--ink-faint);
+  margin-right: 1px;
+}
+
+/* Sub-token spans (hoverable atoms/elements) */
+.inchiSubtoken {
+  border-radius: 2px;
+  transition: background 120ms, box-shadow 120ms;
+  cursor: crosshair;
+}
+
+/* Sub-token ring on hover — only when inside an active layer */
+.inchiLayer.active .inchiSubtoken:hover {
+  background: var(--bg-canvas);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+/* Formula element colors — attribute selector targets data-layer="formula" */
+[data-layer="formula"] .elC { color: var(--c-el-C); }
+[data-layer="formula"] .elH { color: var(--c-el-H); }
+[data-layer="formula"] .elN { color: var(--c-el-N); }
+[data-layer="formula"] .elO { color: var(--c-el-O); }
+[data-layer="formula"] .elS { color: var(--c-el-S); }
+[data-layer="formula"] .elP { color: var(--c-el-P); }
+[data-layer="formula"] .elF { color: var(--c-el-F); }
+[data-layer="formula"] .elCl { color: var(--c-el-Cl); }
+[data-layer="formula"] .elBr { color: var(--c-el-Br); }
+[data-layer="formula"] .elI { color: var(--c-el-I); }
+
+/* Stereo parity colors */
+[data-layer="t"] .parityPlus,
+[data-layer="b"] .parityPlus { color: var(--c-stereo-plus); }
+[data-layer="t"] .parityMinus,
+[data-layer="b"] .parityMinus { color: var(--c-stereo-minus); }
+
+/* Hydrogen count shading */
+[data-layer="h"] .hydro1 { color: var(--c-hydro-1); }
+[data-layer="h"] .hydro2 { color: var(--c-hydro-2); }
+[data-layer="h"] .hydro3 { color: var(--c-hydro-3); }
+[data-layer="h"] .hydro4 { color: var(--c-hydro-4); }
+[data-layer="h"] .hydroMobile { color: var(--c-hydro-mobile); font-style: italic; }
