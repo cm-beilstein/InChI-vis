@@ -1,10 +1,11 @@
 ---
 phase: 3
 slug: inchi-display-and-explanation-ui
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-21
+reviewed_at: 2026-05-21
 ---
 
 # Phase 3 — UI Design Contract
