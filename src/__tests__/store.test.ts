@@ -11,6 +11,7 @@ describe('useInchiStore', () => {
       inchi: '',
       layers: [],
       auxMap: {},
+      atomElements: {},
       hoverIdx: null,
       subHover: null,
     });
@@ -32,7 +33,7 @@ describe('useInchiStore', () => {
     ];
     const fakeMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
 
-    useInchiStore.getState().setInchiData('InChI=1S/C6H6/...', fakeLayers, fakeMap);
+    useInchiStore.getState().setInchiData('InChI=1S/C6H6/...', fakeLayers, fakeMap, {});
 
     const state = useInchiStore.getState();
     expect(state.inchi).toBe('InChI=1S/C6H6/...');

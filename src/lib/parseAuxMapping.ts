@@ -6,6 +6,36 @@ import { parseInchi } from './parseInchi';
 import type { Layer, AuxMap } from './parseInchi';
 
 /**
+ * Derives a canonical → element symbol map from enriched layers.
+ * Uses the formula layer's atom list and resolves element symbols from the formula text.
+ * Returns Record<canonicalIndex, elementSymbol>.
+ */
+export function buildAtomElements(layers: Layer[]): Record<number, string> {
+  const formulaLayer = layers.find(l => l.type === 'formula');
+  if (!formulaLayer) return {};
+  const out: Record<number, string> = {};
+  // Parse element runs from the formula text: e.g. "C6H6" → [C,C,C,C,C,C]
+  // Assign canonical indices in formula order (Hill order: C first, H skipped, then rest alphabetically)
+  // We need to expand the formula into an atom list matching canonical order.
+  // The canonical numbering is the same order as the atom list in the formula layer.
+  const atoms = formulaLayer.atoms; // [1, 2, 3, ... N]
+  // Expand formula into element array
+  const elements: string[] = [];
+  const re = /([A-Z][a-z]?)(\d*)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(formulaLayer.text))) {
+    if (!m[1] || m[1] === 'H') continue; // Skip H — canonical indices cover heavy atoms only
+    const count = m[2] ? parseInt(m[2], 10) : 1;
+    for (let i = 0; i < count; i++) elements.push(m[1]);
+  }
+  // Assign: canonical atom[i] (1-based) → elements[i]
+  atoms.forEach((canon, i) => {
+    if (elements[i]) out[canon] = elements[i];
+  });
+  return out;
+}
+
+/**
  * Builds a canonical → Ketcher-index map from an AuxInfo body string.
  *
  * Input: the portion AFTER "AuxInfo=" — e.g. "1/0/N:1,2,6,3,5,4/E:..."
@@ -48,18 +78,22 @@ export function parseInchiWithAux(raw: string): {
   inchi: string;
   layers: Layer[];
   auxMap: AuxMap;
+  atomElements: Record<number, string>;
 } {
   const sep = '\nAuxInfo=';
   const idx = raw.indexOf(sep);
   if (idx === -1) {
     // No AuxInfo section — plain InChI (shouldn't happen with getInchi(true) on non-empty canvas)
-    return { inchi: raw, layers: parseInchi(raw), auxMap: {} };
+    const layers = parseInchi(raw);
+    return { inchi: raw, layers, auxMap: {}, atomElements: buildAtomElements(layers) };
   }
   const inchiStr = raw.slice(0, idx);
   const auxBody = raw.slice(idx + sep.length);
+  const layers = parseInchi(inchiStr);
   return {
     inchi: inchiStr,
-    layers: parseInchi(inchiStr),
+    layers,
     auxMap: parseAuxMapping(auxBody),
+    atomElements: buildAtomElements(layers),
   };
 }

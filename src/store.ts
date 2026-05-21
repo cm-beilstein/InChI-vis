@@ -10,10 +10,11 @@ interface InchiState {
   inchi: string;
   layers: Layer[];
   auxMap: AuxMap;
+  atomElements: Record<number, string>;
   hoverIdx: number | null;
   subHover: SubHover | null;
   // Actions
-  setInchiData: (inchi: string, layers: Layer[], auxMap: AuxMap) => void;
+  setInchiData: (inchi: string, layers: Layer[], auxMap: AuxMap, atomElements: Record<number, string>) => void;
   setHover: (idx: number | null) => void;
   setSubHover: (sub: SubHover | null) => void;
 }
@@ -29,9 +30,10 @@ export const useInchiStore = create<InchiState>()(
       inchi: '',
       layers: [],
       auxMap: {},
+      atomElements: {},
       hoverIdx: null,
       subHover: null,
-      setInchiData: (inchi, layers, auxMap) => set({ inchi, layers, auxMap }),
+      setInchiData: (inchi, layers, auxMap, atomElements) => set({ inchi, layers, auxMap, atomElements }),
       setHover: (idx) => set({ hoverIdx: idx }),
       setSubHover: (sub) => set({ subHover: sub }),
     }),

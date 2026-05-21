@@ -2,7 +2,7 @@
 // Implementation fills in Plan 02.
 import { describe, it, expect, vi } from 'vitest';
 import { buildHighlightSpecs, buildSubHoverSpecs } from '../highlightUtils';
-import type { HighlightSpec, StructLike } from '../highlightUtils';
+import type { StructLike } from '../highlightUtils';
 import type { Layer, AuxMap } from '../parseInchi';
 
 // Identity mock — CSS var names passed through as-is for readable assertions

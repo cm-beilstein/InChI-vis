@@ -43,28 +43,30 @@ export function useKetcherHighlights(
 
   useEffect(() => {
     if (!isReady || !ketcherRef.current) return;
-    const editor = ketcherRef.current.editor;
-    const struct = (editor as any).render.ctab.molecule as StructLike;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const editorAny = ketcherRef.current.editor as any;
+    const struct = editorAny.render.ctab.molecule as StructLike;
+    const highlightEditor = editorAny as { highlights: { clear(): void; create(...args: HighlightSpec[]): void } };
 
     // Always clear first — prevents stale highlight accumulation (D-04).
     // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
     if (hoverIdx === null) {
-      editor.highlights.clear();
+      highlightEditor.highlights.clear();
       return;
     }
     const layer = layers[hoverIdx];
     if (!layer) {
-      editor.highlights.clear();
+      highlightEditor.highlights.clear();
       return;
     }
     // Non-spatial layers: clear canvas, update explanation card only (D-01)
     if (['version', 'q', 'p', 'i'].includes(layer.type)) {
-      editor.highlights.clear();
+      highlightEditor.highlights.clear();
       return;
     }
 
     const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, layers, struct, resolveVar);
-    applyKetcherHighlights(editor, specs);
+    applyKetcherHighlights(highlightEditor, specs);
   }, [hoverIdx, subHover, layers, auxMap, atomElements, isReady]);
   // Note: ketcherRef is a ref — intentionally not in deps (stable reference)
 }
