@@ -209,7 +209,7 @@ Per canvas.jsx and D-01 through D-05, the full mapping from layer type to highli
 | `c` | Halo bond endpoints + highlight bonds | `layer.atoms[]` (from bond endpoint set) | `--c-conn` | `layer.bonds[]` via `findBondId` |
 | `h` | Halo atoms per H-count shading | `parseHydrogenAtoms(layer.text)` keys | `hydroColor(count)` → `--c-hydro-{1..4}` or `--c-hydro-mobile` for mobile atoms | — |
 | `t` | Halo stereo-center atoms by parity | `parseStereoParities(layer.text)` keys | `parityColor(sign)` → `--c-stereo-{plus|minus}` | — |
-| `b` | Halo double-bond stereo atoms by parity | `parseStereoAtoms(layer.text)` | `parityColor(sign)` → `--c-stereo-{plus|minus}` | — |
+| `b` | **No canvas highlight** | — | — | — |
 | `m` | Halo all stereo-center atoms | Read from co-present `t` layer's `parseStereoAtoms()` | `--c-stereo` | — |
 | `s` | Halo all stereo-center atoms | Same as `m` — co-present `t` layer | `--c-stereo` | — |
 | `i` | **No canvas highlight** | — | — | — |
@@ -217,6 +217,8 @@ Per canvas.jsx and D-01 through D-05, the full mapping from layer type to highli
 **Note on `i` layer:** canvas.jsx header comment explicitly groups `q/p/i` as "no canvas highlight (no spatial meaning here)". The enriched `layer.atoms[]` for `i` is always `[]`. Treat like `q`/`p`. [VERIFIED: canvas.jsx line 12]
 
 **Note on `m`/`s` layers:** `layer.atoms[]` is `[]` because the m/s layers carry no atom list. To highlight stereocenters for m/s, find the `t` layer in `layers[]` and call `parseStereoAtoms(tLayer.text)`. If no `t` layer is present, skip highlighting. [VERIFIED: canvas.jsx lines 70–75 — stereoSet for m/s reads from `mol.atoms.filter(a => a.stereo)`; equivalent in our data model is reading from t-layer atoms]
+
+**Note on `b` layer:** Despite the header comment on line 11 of canvas.jsx grouping `t/m/s/b` together, the actual implementation in canvas.jsx computes `stereoSet` only for `"tms"` (line 70: `!"tms".includes(layerType)`) and `parityMap` only for `layerType === "t"` (line 77). The `b` layer produces no atom halos. Treat as no-highlight (return `[]`), same as `q`/`p`/`i`. [VERIFIED: canvas.jsx lines 70, 77 — b absent from both stereoSet and parityMap branches]
 
 ---
 
@@ -487,18 +489,10 @@ function buildHighlightSpecs(
     }
 
     case 'b': {
-      // Same parity coloring as t-layer but for double-bond stereo atoms
-      const parities = parseStereoParities(layer.text);
-      const plusAtoms: number[] = [], minusAtoms: number[] = [];
-      for (const [canonStr, sign] of Object.entries(parities)) {
-        const kid = auxMap[Number(canonStr)];
-        if (kid === undefined) continue;
-        (sign === '+' ? plusAtoms : minusAtoms).push(kid);
-      }
-      const specs: HighlightSpec[] = [];
-      if (plusAtoms.length > 0) specs.push({ atoms: plusAtoms, bonds: [], rgroupAttachmentPoints: [], color: resolveVar('--c-stereo-plus') });
-      if (minusAtoms.length > 0) specs.push({ atoms: minusAtoms, bonds: [], rgroupAttachmentPoints: [], color: resolveVar('--c-stereo-minus') });
-      return specs;
+      // No canvas highlight — canvas.jsx does not include b in stereoSet or parityMap.
+      // The header comment groups t/m/s/b together, but the actual implementation
+      // only covers t/m/s. Follow canvas.jsx behavior: return [].
+      return [];
     }
 
     case 'm':
@@ -601,12 +595,13 @@ Not applicable — this is a greenfield phase adding new logic. No rename/refact
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`i` (isotope) layer — canvas.jsx vs. UI-SPEC inconsistency**
    - What we know: canvas.jsx groups `q/p/i` as "no canvas highlight (no spatial meaning here)". The UI-SPEC table lists `i` as "Halo isotope-labeled atoms" with `var(--c-isotope)`. However, `enrichLayers` in parseInchi.ts returns `atoms: []` for `i` layers because they have no atom list parsing implemented.
    - What's unclear: Whether Phase 4 should implement isotope atom parsing and highlighting, or treat `i` as no-highlight per canvas.jsx.
    - Recommendation: Follow canvas.jsx (the explicit behavioral spec, per D-02) — treat `i` as no canvas highlight. If isotope highlighting is desired, that's a separate enrichment task in `parseInchi.ts` that would need a companion plan.
+   - RESOLVED: Follow canvas.jsx — treat `i` as no canvas highlight (return []). Same handling as `q` and `p`.
 
 ---
 
