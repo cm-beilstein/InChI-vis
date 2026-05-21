@@ -35,25 +35,63 @@ export function parseAuxMapping(auxBody: string): AuxMap {
 }
 
 /**
+ * Parses the rA: field from an AuxInfo body string to build a 1-based
+ * canonical-index → element-symbol map.
+ *
+ * Format: "rA:6CCCCCC" — digit(s) = atom count, then element symbols concatenated.
+ * Single-letter elements: one char (C, N, O, S, P, F, H, I).
+ * Two-letter elements: uppercase followed immediately by lowercase (Cl, Br).
+ *
+ * Returns 1-based map: { 1: 'C', 2: 'Cl', ... }
+ *
+ * Per D-01: required for readingFor() to produce labels like "C₁–C₂".
+ */
+export function parseAtomElements(auxBody: string): Record<number, string> {
+  const parts = auxBody.split('/');
+  const raPart = parts.find(p => p.startsWith('rA:'));
+  if (!raPart) return {};
+  const body = raPart.slice(3); // "6CCCCCC" or "7CClCCCCC"
+  const countMatch = body.match(/^(\d+)/);
+  if (!countMatch) return {};
+  const count = parseInt(countMatch[1], 10);
+  const symbols = body.slice(countMatch[1].length); // just the element chars
+  const map: Record<number, string> = {};
+  let i = 0, canon = 1;
+  while (i < symbols.length && canon <= count) {
+    // Greedy: if next char is lowercase, take two chars (e.g. 'C'+'l' → 'Cl')
+    if (i + 1 < symbols.length && /[a-z]/.test(symbols[i + 1])) {
+      map[canon] = symbols.slice(i, i + 2);
+      i += 2;
+    } else {
+      map[canon] = symbols[i];
+      i += 1;
+    }
+    canon++;
+  }
+  return map;
+}
+
+/**
  * Splits the raw string returned by ketcher.getInchi(true) into its InChI
- * string, enriched layers array, and AuxMap.
+ * string, enriched layers array, AuxMap, and atomElements.
  *
  * getInchi(true) format (per D-11 / RESEARCH.md Pattern 3):
  *   "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H\nAuxInfo=1/0/N:1,2,6,3,5,4/..."
  *
  * If no AuxInfo section is present (shouldn't happen with getInchi(true) on a
- * non-empty canvas), returns the plain InChI with an empty auxMap.
+ * non-empty canvas), returns the plain InChI with empty auxMap and atomElements.
  */
 export function parseInchiWithAux(raw: string): {
   inchi: string;
   layers: Layer[];
   auxMap: AuxMap;
+  atomElements: Record<number, string>;
 } {
   const sep = '\nAuxInfo=';
   const idx = raw.indexOf(sep);
   if (idx === -1) {
     // No AuxInfo section — plain InChI (shouldn't happen with getInchi(true) on non-empty canvas)
-    return { inchi: raw, layers: parseInchi(raw), auxMap: {} };
+    return { inchi: raw, layers: parseInchi(raw), auxMap: {}, atomElements: {} };
   }
   const inchiStr = raw.slice(0, idx);
   const auxBody = raw.slice(idx + sep.length);
@@ -61,5 +99,6 @@ export function parseInchiWithAux(raw: string): {
     inchi: inchiStr,
     layers: parseInchi(inchiStr),
     auxMap: parseAuxMapping(auxBody),
+    atomElements: parseAtomElements(auxBody),
   };
 }
