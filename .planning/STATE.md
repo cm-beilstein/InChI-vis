@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: planning
 stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-05-21T07:28:40.188Z"
+last_updated: "2026-05-21T07:44:57.899Z"
 progress:
   total_phases: 6
   completed_phases: 3
@@ -17,7 +17,7 @@ progress:
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Executing
+**Status:** Ready to plan
 
 ## Current Phase
 
@@ -32,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 
 ## Current Position
 
-- **Phase:** 3 — InChI Display and Explanation UI (COMPLETE)
-- **Plan:** All 5 plans complete (03-01 through 03-05)
+- **Phase:** 4
+- **Plan:** Not started
 - **Status:** Phase 3 complete; ready for Phase 4
 - **Progress:** [██████████] 100%
 
