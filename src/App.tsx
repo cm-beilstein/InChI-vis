@@ -3,6 +3,8 @@ import { StandaloneStructServiceProvider } from 'ketcher-standalone';
 import type { Ketcher } from 'ketcher-core';
 import { Header } from './components/Header';
 import { KetcherPanel } from './components/KetcherPanel';
+import { InchiSection } from './components/InchiSection';
+import { Explanation } from './components/Explanation';
 import { parseInchiWithAux } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
 
@@ -81,6 +83,8 @@ export default function App() {
         onInit={handleInit}
         structServiceProvider={structServiceProvider}
       />
+      <InchiSection />
+      <Explanation />
     </div>
   );
 }
