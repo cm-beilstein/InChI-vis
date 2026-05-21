@@ -1,33 +1,62 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-18T12:58:56.277Z",
-  "phase": "1",
-  "phase_name": "Scaffold and Ketcher Mount",
-  "phase_dir": ".planning/phases/01-scaffold-and-ketcher-mount",
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "timestamp": "2026-05-21T13:53:08.058Z",
+  "phase": "04",
+  "phase_name": "hover-to-highlight-integration",
+  "phase_dir": ".planning/phases/04-hover-to-highlight-integration",
+  "plan": 3,
+  "task": 2,
+  "total_tasks": 2,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Discuss phase 1 context (CONTEXT.md)", "status": "done", "commit": "913ca5b"},
-    {"id": 2, "name": "Research phase 1 (RESEARCH.md + VALIDATION.md)", "status": "done", "commit": "31ea196"},
-    {"id": 3, "name": "UI design contract (UI-SPEC.md approved)", "status": "done", "commit": "2915b14"}
+    {
+      "id": 1,
+      "name": "Wire useKetcherHighlights into App.tsx",
+      "status": "done",
+      "commit": "d37f6b8"
+    }
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "Create PLAN.md via /gsd-plan-phase 1", "status": "not_started"},
-    {"id": 5, "name": "Execute Phase 1 via /gsd-execute-phase 1", "status": "not_started"}
+    {
+      "id": 2,
+      "name": "Visual UAT — hover-to-highlight end-to-end",
+      "status": "not_started",
+      "note": "blocking human-verify checkpoint — requires developer to run npm run dev and manually test 7 hover scenarios in browser"
+    }
   ],
-  "blockers": [],
-  "human_actions_pending": [],
+  "blockers": [
+    {
+      "description": "Task 2 is a blocking human-verify checkpoint. Cannot be automated. Developer must run `npm run dev`, open http://localhost:5173, draw a molecule, and confirm hover-to-highlight works visually.",
+      "type": "human_action",
+      "workaround": "none — gate is intentional"
+    }
+  ],
+  "human_actions_pending": [
+    {
+      "action": "Visual UAT: run npm run dev, draw a molecule (benzene recommended), hover each InChI layer chunk and verify atom/bond halos appear correctly. See Task 2 in 04-03-PLAN.md for full 7-test checklist.",
+      "context": "Phase 4 goal is hover-to-highlight integration. All automated tests pass. Visual confirmation is the final gate before phase is complete.",
+      "blocking": true
+    },
+    {
+      "action": "Commit the uncommitted `src/lib/highlightUtils.ts` change (resolveVar oklch→rgb fix via canvas). This is a real bug fix required for Ketcher Raphaël renderer compatibility.",
+      "context": "getComputedStyle returns oklch() strings which Raphaël SVG renderer cannot parse. The fix uses a 1x1 canvas to normalise any color format to rgb(). Not yet committed.",
+      "blocking": true
+    }
+  ],
   "decisions": [
-    {"decision": "Use @vitejs/plugin-react (esbuild), NOT SWC variant", "rationale": "SWC crashes on Ketcher packages (issue #5565)", "phase": "1"},
-    {"decision": "All Ketcher packages pinned to exactly 3.12.0", "rationale": "RC releases target macromolecule features irrelevant to this tool", "phase": "1"},
-    {"decision": "StandaloneStructServiceProvider created at module level, never inside a component", "rationale": "Prevents WASM re-initialization on remount", "phase": "1"},
-    {"decision": "Ketcher <Editor> never conditionally rendered", "rationale": "WASM re-initializes on remount (D-09 locked)", "phase": "1"},
-    {"decision": "CSS Modules + CSS custom properties for styling", "rationale": "Preserves oklch token system from design handoff; Tailwind rejected", "phase": "1"},
-    {"decision": "vite-plugin-static-copy + assetsInlineLimit: 0", "rationale": "WASM/worker assets must be served at known URL, not base64-inlined", "phase": "1"}
+    {
+      "decision": "resolveVar now converts oklch to rgb via 1x1 canvas normalisation",
+      "rationale": "Ketcher uses Raphaël SVG renderer which cannot parse oklch() color strings. CSS custom properties return oklch from getComputedStyle. Canvas fillStyle+getImageData is the reliable cross-browser way to normalise any color format.",
+      "phase": "04"
+    }
   ],
-  "uncommitted_files": [".planning/STATE.md"],
-  "next_action": "Run /gsd-plan-phase 1 — all prerequisites done: CONTEXT.md, RESEARCH.md, VALIDATION.md, UI-SPEC.md are in place. The planner will skip research and go straight to planning.",
-  "context_notes": "This session completed all pre-planning artifacts for Phase 1. The UI-SPEC required 2 revision rounds: typography table needed future-phase sizes moved to HTML comment, and two off-grid spacing values (18px, 10px from design handoff) needed to be moved out of the token table into a separate 'Verbatim Design Handoff Values' section under CSS Architecture."
+  "uncommitted_files": [
+    "src/lib/highlightUtils.ts",
+    ".planning/config.json",
+    ".planning/phases/02-data-pipeline/02-HUMAN-UAT.md",
+    ".planning/phases/03-inchi-display-and-explanation-ui/03-RESEARCH.md",
+    "package-lock.json"
+  ],
+  "next_action": "1. Commit the highlightUtils.ts fix: `git add src/lib/highlightUtils.ts && git commit -m 'fix(04-03): convert oklch CSS vars to rgb for Ketcher Raphaël renderer'`. 2. Run `npm run dev`. 3. Open http://localhost:5173, draw benzene, run visual UAT (7 tests in Task 2 of 04-03-PLAN.md). 4. Type 'approved' to clear the Task 2 gate.",
+  "context_notes": "Phase 4 is one UAT session away from completion. The resolveVar fix was discovered during integration — Ketcher Raphaël renderer silently rejects oklch colors, so highlights would render with wrong/no color without the canvas normalisation workaround. Everything else is clean."
 }
