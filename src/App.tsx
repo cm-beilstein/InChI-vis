@@ -7,6 +7,7 @@ import { InchiSection } from './components/InchiSection';
 import { Explanation } from './components/Explanation';
 import { parseInchiWithAux } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
+import { useKetcherHighlights } from './hooks/useKetcherHighlights';
 
 // Module-level — created once for the page lifetime. NEVER move inside a component.
 // (D-13: provider inside component re-creates WASM worker on every render)
@@ -16,6 +17,9 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   // useRef, not useState — storing in state triggers unnecessary re-renders (D-15)
   const ketcherRef = useRef<Ketcher | null>(null);
+
+  // Bridge hover state → Ketcher canvas highlights (Phase 4)
+  useKetcherHighlights(ketcherRef, isReady);
 
   const handleInit = (ketcher: Ketcher) => {
     ketcherRef.current = ketcher;
