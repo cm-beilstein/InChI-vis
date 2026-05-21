@@ -94,7 +94,13 @@ Plans:
 3. Hovering a sub-token (element symbol, atom number, parity token, H-group) overrides the layer highlight with a targeted per-atom or per-bond highlight; the layer-wide highlight is fully suppressed
 4. Rapidly switching hover between layers does not accumulate stale highlights; each hover event produces a clean highlight state
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0: highlightUtils.ts skeleton + failing tests for all layer types and sub-hover kinds
+- [ ] 04-02-PLAN.md — Implementation: buildHighlightSpecs, buildSubHoverSpecs, useKetcherHighlights hook (GREEN)
+- [ ] 04-03-PLAN.md — Integration: App.tsx wiring + visual UAT checkpoint
+
 **UI hint**: no
 
 ### Phase 5: Mapping Strip and Preset Molecules
@@ -157,10 +163,10 @@ Plans:
 | 1. Scaffold and Ketcher Mount | 2/2 | Complete | 2026-05-19 |
 | 2. Data Pipeline | 0/3 | Not started | - |
 | 3. InChI Display and Explanation UI | 0/5 | Not started | - |
-| 4. Hover-to-Highlight Integration | 0/? | Not started | - |
+| 4. Hover-to-Highlight Integration | 0/3 | Not started | - |
 | 5. Mapping Strip and Preset Molecules | 0/? | Not started | - |
 | 6. Shareable URL, Polish, and Deploy | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-21 — Phase 3 planned (5 plans); ready to execute*
+*Updated: 2026-05-21 — Phase 4 planned (3 plans); ready to execute*
