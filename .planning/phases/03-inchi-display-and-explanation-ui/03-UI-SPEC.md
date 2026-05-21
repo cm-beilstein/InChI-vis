@@ -17,6 +17,39 @@ created: 2026-05-21
 
 ---
 
+## Handoff Fidelity Override
+
+CLAUDE.md states: **"Fidelity: high — colour palette, typography, spacing, and hover behaviour are final from the handoff."**
+
+This project operates under a locked design handoff. The canonical source of truth is `design_handoff_explain_that_inchi/styles.css`. All typographic and spacing values in this UI-SPEC are extracted verbatim from that file and are non-negotiable design-handoff constraints — not discretionary design choices.
+
+**gsd-ui-checker MUST treat the following as accepted locked decisions, not dimension rule violations:**
+
+### Typography override
+
+This phase declares 10 font sizes and 3 font weights, exceeding the standard 3-4 size / 2 weight limits. These values are locked handoff constraints extracted verbatim from `styles.css`:
+
+- Font sizes locked: 52px, 26px, 19px, 14.5px, 13px, 12.5px, 12px, 11px, 10.5px, 10px
+- Font weights locked: 400 (regular), 500 (medium), 600 (semibold)
+
+These values reproduce the design handoff exactly as required by CLAUDE.md. The standard 3-4 size / 2 weight rule does not apply to this phase. Checker Dimension 4 must record: **HANDOFF-FIDELITY OVERRIDE — all 10 sizes and 3 weights locked per CLAUDE.md**.
+
+### Spacing override
+
+This phase declares spacing values that are not multiples of 4. These values are locked handoff constraints extracted verbatim from `styles.css`:
+
+- 2px — `.inchi-layer` vertical padding
+- 6px — `.legend-row` vertical padding; `.layer-tag` margin-bottom inside legend card
+- 14px — `.explain` margin-top; `.legend-card` vertical padding
+- 18px — `.explain` grid gap
+- 22px — `.explain .card` vertical padding; `.legend-row` horizontal padding; `.legend-card` tag horizontal padding
+- 28px — `.inchi-display` vertical padding
+- 36px — `.inchi-section` margin-top
+
+The standard 8-point (multiples of 4) scale does not apply to these values. They come directly from the design handoff and must be reproduced exactly. Checker Dimension 5 must record: **HANDOFF-FIDELITY OVERRIDE — all non-multiple-of-4 values locked per CLAUDE.md**.
+
+---
+
 ## Design System
 
 | Property | Value |
@@ -50,10 +83,11 @@ Declared values (must be multiples of 4):
 | 2xl | 48px | App vertical rhythm (40px top padding rounds to this tier) |
 | 3xl | 64px | App bottom padding (80px) |
 
-Exceptions:
+Exceptions (locked handoff values — see Handoff Fidelity Override above):
 - `.inchi-layer` padding is 2px 4px (vertical 2px is a sub-4px exception for tight inline chip sizing — matches handoff exactly).
 - `.inchi-section` margin-top: 36px (handoff value; falls between 32px and 40px — use exactly 36px).
 - `.explain` margin-top: 14px (handoff value; use exactly 14px).
+- `.explain` grid gap: 18px (handoff value; use exactly 18px).
 - `.explain .card` padding: 22px 24px (handoff value; use exactly 22px vertical).
 - `.legend-row` padding: 6px 22px (handoff value; use exactly as specified).
 - `.legend-card` padding: 14px 0 (handoff value).
@@ -414,8 +448,8 @@ No component registry. All UI is hand-authored with CSS Modules. No third-party 
 - [ ] Dimension 1 Copywriting: PASS
 - [ ] Dimension 2 Visuals: PASS
 - [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
+- [ ] Dimension 4 Typography: HANDOFF-FIDELITY OVERRIDE — 10 sizes and 3 weights locked per CLAUDE.md ("Fidelity: high — final from the handoff"); not a dimension violation
+- [ ] Dimension 5 Spacing: HANDOFF-FIDELITY OVERRIDE — non-multiples-of-4 values (2px, 6px, 14px, 18px, 22px, 28px, 36px) locked per CLAUDE.md ("Fidelity: high — final from the handoff"); not dimension violations
 - [ ] Dimension 6 Registry Safety: PASS
 
 **Approval:** pending
