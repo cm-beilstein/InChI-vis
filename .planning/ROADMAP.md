@@ -7,7 +7,7 @@
 ## Phases
 
 - [x] **Phase 1: Scaffold and Ketcher Mount** — Vite + React + TS project running with Ketcher mounted, WASM confirmed working, and design tokens intact (complete 2026-05-19)
-- [ ] **Phase 2: Data Pipeline** — Live InChI + AuxInfo parsing producing correct `layers[]` and `auxMap` in state on every draw event
+- [x] **Phase 2: Data Pipeline** — Live InChI + AuxInfo parsing producing correct `layers[]` and `auxMap` in state on every draw event (complete 2026-05-21)
 - [ ] **Phase 3: InChI Display and Explanation UI** — Color-coded layer strip, explanation cards, and legend rendered from state; full design fidelity
 - [ ] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas
 - [ ] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline
@@ -71,7 +71,15 @@ Plans:
 4. The idle state (nothing hovered) shows the default explanation card content with no residual hover state from a previous interaction
 5. Typography renders in IBM Plex Sans/Serif/Mono; color tokens, spacing, and hover transition timings (160ms, 4px) match the design handoff
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Wave 0: test stubs for layerInfo.ts, parseAtomElements, and store atomElements field
+- [ ] 03-02-PLAN.md — Data layer: parseAtomElements + store atomElements field + App.tsx wiring
+- [ ] 03-03-PLAN.md — layerInfo.ts: TypeScript port of layers-info.js with all helpers
+- [ ] 03-04-PLAN.md — InchiSection.tsx + LayerText.tsx + InchiSection.module.css
+- [ ] 03-05-PLAN.md — Explanation.tsx + Legend.tsx + CSS Modules + App.tsx integration + visual UAT
+
 **UI hint**: yes
 
 ### Phase 4: Hover-to-Highlight Integration
@@ -148,11 +156,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Scaffold and Ketcher Mount | 2/2 | Complete | 2026-05-19 |
 | 2. Data Pipeline | 0/3 | Not started | - |
-| 3. InChI Display and Explanation UI | 0/? | Not started | - |
+| 3. InChI Display and Explanation UI | 0/5 | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
 | 5. Mapping Strip and Preset Molecules | 0/? | Not started | - |
 | 6. Shareable URL, Polish, and Deploy | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-20 — Phase 2 planned (3 plans); ready to execute*
+*Updated: 2026-05-21 — Phase 3 planned (5 plans); ready to execute*
