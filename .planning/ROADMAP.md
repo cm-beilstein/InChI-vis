@@ -101,7 +101,13 @@ Plans:
 3. The canvas overlay shows the current molecule name, molecular formula, and heavy-atom count for both drawn and preset molecules
 4. Footnote strip below the mapping strip displays the InChI definition text and the Hover/Click keyboard hint legend
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Test stubs (Wave 0) + molecules.ts data + MappingStrip component + Footnote component
+- [ ] 05-02-PLAN.md — KetcherPanel layout restructure (2-column grid) + mol-list sidebar + canvas overlay
+- [ ] 05-03-PLAN.md — App.tsx wiring (selectedMolId, handleMolSelect, isSettingMoleculeRef, new render tree) + human verify
+
 **UI hint**: yes
 
 ### Phase 6: Shareable URL, Polish, and Deploy
@@ -150,9 +156,9 @@ Plans:
 | 2. Data Pipeline | 0/3 | Not started | - |
 | 3. InChI Display and Explanation UI | 0/? | Not started | - |
 | 4. Hover-to-Highlight Integration | 0/? | Not started | - |
-| 5. Mapping Strip and Preset Molecules | 0/? | Not started | - |
+| 5. Mapping Strip and Preset Molecules | 0/3 | Planned | - |
 | 6. Shareable URL, Polish, and Deploy | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-20 — Phase 2 planned (3 plans); ready to execute*
+*Updated: 2026-05-22 — Phase 5 planned (3 plans); ready to execute*

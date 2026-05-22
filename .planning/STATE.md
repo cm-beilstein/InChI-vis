@@ -3,12 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-22T00:00:00Z"
+stopped_at: Phase 5 planned — 3 plans in 3 waves; ready to execute
+last_updated: "2026-05-22T08:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 16
+  completed_plans: 13
+  percent: 81
 ---
 
 # Project State
@@ -19,24 +21,24 @@ progress:
 
 ## Current Phase
 
-Phase 5 — Mapping Strip (not yet planned)
+Phase 5 — Mapping Strip and Preset Molecules (planned, ready to execute)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phases 1–4 complete. Phase 5 (Mapping Strip) is next.
+**Current focus:** Phase 5 planned (3 plans). Execute with `/gsd-execute-phase 5`.
 
 ## Current Position
 
-- **Phase:** 5 — Mapping Strip (not yet planned)
-- **Plan:** none yet
-- **Status:** Phase 4 UAT complete (2026-05-22); ready to plan Phase 5
-- **Progress:** 4/6 phases complete
+- **Phase:** 5 — Mapping Strip and Preset Molecules
+- **Plan:** none started yet
+- **Status:** Plans created 2026-05-22; ready to execute
+- **Progress:** 4/6 phases complete; 13/16 plans complete
 
 ```
-[████████████████░░░░░░░░░] 67%
+[████████████████████░░░░░] 81%
 ```
 
 ## Performance Metrics
@@ -65,6 +67,9 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 - `vite-plugin-static-copy` v4 requires `rename: {stripBase: true}` for flat copy — v4 default preserves full directory structure (unlike v2)
 - Use `@import ... layer(layerName)` syntax for CSS layer assignment — `@import` inside `@layer {}` blocks is invalid per CSS spec; Vite follows the spec
 - Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Vitest 3 bundles Vite 6 internally, causing Plugin type conflicts when using vitest/config defineConfig in the same file as Vite 8 plugins
+- Phase 5: `selectedMolId` lives in App.tsx as `useState` (not Zustand) — local UI state only (D-05)
+- Phase 5: `isSettingMoleculeRef` guards handleChange from resetting selectedMolId during setMolecule() calls — separate from isHighlightingRef (D-05, Pitfall 4)
+- Phase 5: All Phase 5 CSS already in src/styles.css — do NOT redefine .mapping, .mol-list, .canvas-meta etc. in CSS Modules
 
 ### Research Flags (require empirical validation during implementation)
 
@@ -78,6 +83,7 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 3. WASM/worker 404 in production — `vite-plugin-static-copy` + `assetsInlineLimit: 0` (done: configured)
 4. `getInchi(true)` returns concatenated string — split on `AuxInfo=`, not destructuring
 5. Stale closures in `editor.subscribe` — read state through `useRef` in handler
+6. Phase 5: KetcherPanel layout regression — Editor must be wrapped in div.canvasWrap (position:relative) before switching .ketcher to display:grid
 
 ### TODOs
 
@@ -91,7 +97,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-05-22T00:00:00Z
-**Stopped at:** Phase 4 UAT complete — all 7 browser tests passed. Three bugs fixed during UAT: Pool ID remapping, highlight feedback loop, N element color visibility.
-**Resume file:** None — Phase 4 fully complete including UAT sign-off.
-**Next action:** Phase 5 — Mapping Strip (`/gsd-plan-phase 5`)
+**Last session:** 2026-05-22T08:00:00.000Z
+**Stopped at:** Phase 5 planned — 3 plans created
+**Resume file:** .planning/phases/05-mapping-strip-and-preset-molecules/05-01-PLAN.md
+**Next action:** Execute Phase 5 (`/gsd-execute-phase 5`)
