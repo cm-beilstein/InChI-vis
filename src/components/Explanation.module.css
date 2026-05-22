@@ -1,6 +1,6 @@
 /* Two-column grid wrapper — verbatim from styles.css .explain */
 .explain {
-  margin-top: 14px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;

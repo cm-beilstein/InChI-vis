@@ -105,7 +105,7 @@ export const LAYER_INFO: Record<LayerType, LayerInfoEntry> = {
 export const DEFAULT_INFO = {
   title: 'Hover any layer',
   blurb:
-    'Move your cursor over a coloured chunk of the InChI string above to see what it encodes and watch the structure light up.',
+    'Move your cursor over a coloured layer of the InChI string above to see what it encodes and watch the structure light up.',
   accent: 'var(--ink-faint)',
 };
 

@@ -31,8 +31,7 @@ export function KetcherPanel({
   return (
     <section>
       <div className="section-label">
-        <span>Ketcher · sketch panel</span>
-        <span className="hint">Draw a molecule to see its InChI</span>
+        <span>Draw a molecule to see its InChI</span>
       </div>
       <div className={styles.ketcher}>
         {/* Canvas column: Editor + loading overlay + canvas-meta overlay */}

@@ -6,7 +6,7 @@
 
 /* Section wrapper */
 .inchiSection {
-  margin-top: 36px;
+  margin-top: 12px;
 }
 
 /* Section label row */
@@ -34,7 +34,7 @@
   background: var(--bg-canvas);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 28px 32px;
+  padding: 8px 14px;
   font-family: var(--font-mono);
   font-size: 19px;
   line-height: 1.6;

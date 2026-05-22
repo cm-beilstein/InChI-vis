@@ -447,3 +447,65 @@ describe('buildSubHoverSpecs', () => {
     });
   });
 });
+
+// ─── INCHI-05: H sub-token highlight ─────────────────────────────────────────
+// Wave 0 RED tests — call buildSubHoverSpecs / buildHighlightSpecs with the
+// POST-06-01 signatures (hAtomPoolIds param inserted after atomElements).
+// These tests fail against the current implementation because the parameter
+// does not exist yet. 06-01 adds the parameter (with default []) to turn them GREEN.
+
+// Explicit H pool IDs — arbitrary values not in auxMap (which maps canonicals 1..6 → 0..5)
+const hAtomPoolIds = [10, 11, 12];
+const emptyHAtomPoolIds: number[] = [];
+
+describe('INCHI-05: H sub-token highlight', () => {
+  describe('buildSubHoverSpecs — element H branch', () => {
+    it('returns hAtomPoolIds as atoms when el is H and hAtomPoolIds is non-empty', () => {
+      const struct = makeMockStruct();
+      // POST-06-01 signature: buildSubHoverSpecs(subHover, auxMap, atomElements, hAtomPoolIds, layer, struct, resolveVarFn)
+      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
+      const specs = buildSubHoverSpecs({ kind: 'element', el: 'H' }, auxMap, atomElements, hAtomPoolIds, formulaLayer, struct, resolveVarFn);
+      expect(specs).toHaveLength(1);
+      expect(specs[0].atoms).toEqual([10, 11, 12]);
+      expect(specs[0].bonds).toEqual([]);
+      expect(specs[0].color).toBe('--c-el-H');
+    });
+
+    it('returns empty array (silent no-op) when el is H and hAtomPoolIds is empty', () => {
+      const struct = makeMockStruct();
+      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
+      const specs = buildSubHoverSpecs({ kind: 'element', el: 'H' }, auxMap, atomElements, emptyHAtomPoolIds, formulaLayer, struct, resolveVarFn);
+      expect(specs).toEqual([]);
+    });
+
+    it('non-H element sub-hover still works with hAtomPoolIds param (regression)', () => {
+      const struct = makeMockStruct();
+      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
+      const specs = buildSubHoverSpecs({ kind: 'element', el: 'C' }, auxMap, atomElements, emptyHAtomPoolIds, formulaLayer, struct, resolveVarFn);
+      expect(specs[0].atoms).toContain(0); // canonical 1 → ketcher 0
+      expect(specs[0].color).toBe('--c-el-C');
+    });
+  });
+
+  describe('buildHighlightSpecs formula layer — H pool IDs appended', () => {
+    it('formula layer with non-empty hAtomPoolIds includes H pool IDs in specs', () => {
+      const struct = makeMockStruct();
+      // POST-06-01 signature: buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVarFn)
+      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, hAtomPoolIds, allLayers, struct, resolveVarFn);
+      const allAtoms = specs.flatMap(s => s.atoms);
+      expect(allAtoms).toContain(10);
+      expect(allAtoms).toContain(11);
+      expect(allAtoms).toContain(12);
+    });
+
+    it('formula layer with empty hAtomPoolIds does not include phantom atoms in specs', () => {
+      const struct = makeMockStruct();
+      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, emptyHAtomPoolIds, allLayers, struct, resolveVarFn);
+      const allAtoms = specs.flatMap(s => s.atoms);
+      expect(allAtoms).not.toContain(10);
+      expect(allAtoms).not.toContain(11);
+    });
+  });
+});

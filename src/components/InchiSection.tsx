@@ -15,18 +15,11 @@ export function InchiSection() {
   const layers = useInchiStore(state => state.layers);
   const hoverIdx = useInchiStore(state => state.hoverIdx);
 
-  // D-08: hint is the formula layer text when layers is non-empty; nothing when empty
-  const formulaHint = layers.find(l => l.type === 'formula')?.text ?? '';
-
   if (layers.length === 0) return null;
 
   return (
     <section className={styles.inchiSection}>
-      <div className={styles.sectionLabel}>
-        <span>InChI · colour-coded layers</span>
-        {formulaHint && <span className={styles.hint}>{formulaHint}</span>}
-      </div>
-      <div
+<div
         className={styles.inchiDisplay}
         onMouseLeave={() => {
           useInchiStore.getState().setHover(null);

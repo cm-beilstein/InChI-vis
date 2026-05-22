@@ -4,20 +4,20 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 6 context gathered
-last_updated: "2026-05-22T12:06:19.367Z"
+last_updated: "2026-05-22T12:48:26.106Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 16
+  total_plans: 20
   completed_plans: 16
-  percent: 100
+  percent: 80
 ---
 
 # Project State
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Executing
+**Status:** Executing Phase 6
 
 ## Current Phase
 
@@ -28,9 +28,12 @@ Phase 2 — Data Pipeline (READY TO EXECUTE — 3/3 plans planned)
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 2 planned. Ready to execute — InChI parsing and live update pipeline.
+**Current focus:** Phase 6 — hydrogen-highlight-polish-and-deploy
 
 ## Current Position
+
+Phase: 6 (hydrogen-highlight-polish-and-deploy) — EXECUTING
+Plan: 1 of 4
 
 - **Phase:** 2 — Data Pipeline (PLANNED)
 - **Plan:** 3 plans ready — 02-01, 02-02, 02-03
