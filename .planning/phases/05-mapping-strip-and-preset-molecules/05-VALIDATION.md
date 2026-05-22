@@ -40,6 +40,7 @@ created: 2026-05-22
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 5-01-01 | 01 | 1 | MAP-01 | — | N/A | unit | `npm run test -- --run` | ❌ W0 | ⬜ pending |
 | 5-01-02 | 01 | 1 | MAP-02 | — | N/A | unit | `npm run test -- --run` | ❌ W0 | ⬜ pending |
+| 5-01-stub | 01 | 1 | EDIT-02 | — | N/A | unit stub | `npm run test -- --run` | ❌ W0 | ⬜ pending |
 | 5-02-01 | 02 | 1 | EDIT-02 | — | N/A | unit | `npm run test -- --run` | ❌ W0 | ⬜ pending |
 | 5-02-02 | 02 | 1 | EDIT-03 | — | N/A | unit | `npm run test -- --run` | ❌ W0 | ⬜ pending |
 
@@ -51,6 +52,7 @@ created: 2026-05-22
 
 - [ ] `src/__tests__/MappingStrip.test.tsx` — stubs for MAP-01, MAP-02
 - [ ] `src/__tests__/PresetMolecules.test.tsx` — stubs for EDIT-02, EDIT-03
+- [ ] `src/__tests__/handleMolSelect.test.ts` — stubs for EDIT-02 fetch behavior
 
 *Existing test infrastructure in vitest.config.ts covers all phase requirements.*
 
