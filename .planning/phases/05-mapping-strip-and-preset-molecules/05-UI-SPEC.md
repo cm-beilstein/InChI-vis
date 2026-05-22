@@ -58,7 +58,7 @@ Source: `src/styles.css` lines 459–508 (`.mapping` block), lines 306–350 (`.
 ## Spacing Waivers
 
 Three values from the canonical design handoff (`src/styles.css`) are not multiples of 4.
-Rounding them would visually diverge from the upstream design contract. Owner approved at discuss-phase (2026-05-22).
+Rounding them would visually diverge from the upstream design contract. See CONTEXT.md D-11.
 
 | Value | Element | Nearest 4× | Reason waived |
 |-------|---------|------------|---------------|
@@ -87,7 +87,7 @@ Source: `src/styles.css` lines 306–350, 459–508, 665–696.
 
 ### Typography Waivers
 
-**3-weight waiver:** The `src/styles.css` design token file (canonical design handoff) uses exactly three weights across the mapping strip and mol-list: 400 (base), 500 (interactive/label emphasis), and 600 (canonical index emphasis in `.pair .c`). Collapsing 500→400 would break the interactive weight differentiation; collapsing 600→500 would break the established typographic hierarchy in the pair display. All three weights are pre-existing locked values from the upstream design contract. Project owner approved at discuss-phase (2026-05-22). The 2-weight rule is waived for this phase.
+**3-weight waiver (see CONTEXT.md D-10):** The `src/styles.css` design token file (canonical design handoff) uses exactly three weights across the mapping strip and mol-list: 400 (base), 500 (interactive/label emphasis), and 600 (canonical index emphasis in `.pair .c`). Collapsing 500→400 would break the interactive weight differentiation; collapsing 600→500 would break the established typographic hierarchy in the pair display. All three weights are pre-existing locked values from the upstream design contract. The 2-weight rule is waived for this phase per D-10.
 
 ---
 

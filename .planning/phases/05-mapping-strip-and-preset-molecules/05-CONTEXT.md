@@ -50,6 +50,12 @@ No new store fields needed. No new parsing logic needed. No URL state (Phase 6).
 ### Layout / Component Placement
 - **D-09:** Component hierarchy in App.tsx: `<KetcherPanel>` (with mol-list sidebar + canvas overlay) → `<InchiSection>` → `<MappingStrip>` → `<Footnote>` → `<Explanation>`. MappingStrip and Footnote are new sibling components rendered between InchiSection and Explanation.
 
+### Typography Weights (Design-Handoff Waiver)
+- **D-10:** The mapping strip and mol-list use three font weights (400 regular, 500 medium, 600 semibold), all locked from `src/styles.css` / the canonical design handoff. Weight 400 = base text; weight 500 = interactive/label emphasis (`.pair .k`, `.mol-name`); weight 600 = canonical index emphasis (`.pair .c`). Collapsing any two weights would break the established typographic hierarchy in the pair chip display. The 2-weight UI checker rule is waived for this phase — all three weights are pre-existing committed values in the design token file, not new decisions.
+
+### Spacing Non-Multiples (Design-Handoff Waiver)
+- **D-11:** Three spacing values from `src/styles.css` are not multiples of 4: `18px` (`.mapping` padding-inline), `10px` (`.mol-item` padding-block), `14px` (`.canvas-meta` left). All three are pixel-exact values from the committed design handoff. Rounding any to the nearest 4× multiple would visually diverge from the upstream design contract. The 4× spacing rule is waived for these three values — they are locked, not new decisions.
+
 </decisions>
 
 <canonical_refs>
