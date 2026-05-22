@@ -1,13 +1,19 @@
 .ketcher {
-  /* Override the 3-column grid from global styles.css — the real Ketcher Editor
-     fills the full container and renders its own toolbar/mol-list internally */
-  display: block;
+  /* 2-column grid: Editor canvas (fluid) + mol-list sidebar (fixed 240px) */
+  display: grid;
+  grid-template-columns: 1fr 240px;
   background: var(--bg-canvas);
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
   height: 650px;
+}
+
+.canvasWrap {
+  /* Establishes stacking context for loadingOverlay and canvas-meta overlay */
   position: relative;
+  overflow: hidden;
+  height: 100%;
 }
 
 .loadingOverlay {
