@@ -3,53 +3,52 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 planned — 3 plans created
-last_updated: "2026-05-22T08:09:13.993Z"
+last_updated: "2026-05-20T00:00:00Z"
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 16
-  completed_plans: 13
-  percent: 81
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 2
 ---
 
 # Project State
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Ready to execute
+**Status:** Executing
 
 ## Current Phase
 
-Phase 5 — Mapping Strip and Preset Molecules (planned, ready to execute)
+Phase 2 — Data Pipeline (READY TO EXECUTE — 3/3 plans planned)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 5 planned (3 plans). Execute with `/gsd-execute-phase 5`.
+**Current focus:** Phase 2 planned. Ready to execute — InChI parsing and live update pipeline.
 
 ## Current Position
 
-- **Phase:** 5 — Mapping Strip and Preset Molecules
-- **Plan:** none started yet
-- **Status:** Plans created 2026-05-22; ready to execute
-- **Progress:** 4/6 phases complete; 13/16 plans complete
+- **Phase:** 2 — Data Pipeline (PLANNED)
+- **Plan:** 3 plans ready — 02-01, 02-02, 02-03
+- **Status:** Phase 2 planned; ready to execute
+- **Progress:** 1/6 phases complete
 
 ```
-[████████████████████░░░░░] 81%
+[████░░░░░░░░░░░░░░░░░░░░░] 17%
 ```
 
 ## Performance Metrics
 
-- Phases completed: 4 / 6
+- Plans completed: 2 (01-01-PLAN.md — 5 min, 01-02-PLAN.md — 6 min, 2026-05-19)
+- Plans total: 2 (Phase 1)
+- Phases completed: 1 / 6
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
 | 01-scaffold-and-ketcher-mount | 01 | 5min | 2 | 12 | 2026-05-19 |
 | 01-scaffold-and-ketcher-mount | 02 | 6min | 2 | 7 | 2026-05-19 |
-| 04-hover-to-highlight-integration | 03 | UAT session | 2 | 3 | 2026-05-22 |
 
 ## Accumulated Context
 
@@ -67,14 +66,12 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 - `vite-plugin-static-copy` v4 requires `rename: {stripBase: true}` for flat copy — v4 default preserves full directory structure (unlike v2)
 - Use `@import ... layer(layerName)` syntax for CSS layer assignment — `@import` inside `@layer {}` blocks is invalid per CSS spec; Vite follows the spec
 - Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Vitest 3 bundles Vite 6 internally, causing Plugin type conflicts when using vitest/config defineConfig in the same file as Vite 8 plugins
-- Phase 5: `selectedMolId` lives in App.tsx as `useState` (not Zustand) — local UI state only (D-05)
-- Phase 5: `isSettingMoleculeRef` guards handleChange from resetting selectedMolId during setMolecule() calls — separate from isHighlightingRef (D-05, Pitfall 4)
-- Phase 5: All Phase 5 CSS already in src/styles.css — do NOT redefine .mapping, .mol-list, .canvas-meta etc. in CSS Modules
 
 ### Research Flags (require empirical validation during implementation)
 
-- **Phase 2:** `getInchi(true)` exact return format — CONFIRMED: `\nAuxInfo=` separator, N: field is 1-based draw-order rank (not Pool ID)
-- **Phase 2:** COOP/COEP requirement — `coi-serviceworker.js` 404 in dev is harmless; WASM works without it on local dev and Netlify
+- **Phase 2:** `getInchi(true)` exact return format — split on `AuxInfo=` prefix; verify against real 3.12.0 output and write unit test
+- **Phase 2:** COOP/COEP requirement — check `crossOriginIsolated` after first mount; add `coi-serviceworker` if needed (coi-serviceworker.js is already in place from Plan 01)
+- **Phase 4:** `highlights.create` multi-call accumulation — confirm sequential calls accumulate correctly in 3.12.0
 
 ### Critical Pitfalls to Watch
 
@@ -83,7 +80,6 @@ See: .planning/PROJECT.md (updated 2026-05-18)
 3. WASM/worker 404 in production — `vite-plugin-static-copy` + `assetsInlineLimit: 0` (done: configured)
 4. `getInchi(true)` returns concatenated string — split on `AuxInfo=`, not destructuring
 5. Stale closures in `editor.subscribe` — read state through `useRef` in handler
-6. Phase 5: KetcherPanel layout regression — Editor must be wrapped in div.canvasWrap (position:relative) before switching .ketcher to display:grid
 
 ### TODOs
 
@@ -97,7 +93,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-05-22T08:00:00.000Z
-**Stopped at:** Phase 5 planned — 3 plans created
-**Resume file:** .planning/phases/05-mapping-strip-and-preset-molecules/05-01-PLAN.md
-**Next action:** Execute Phase 5 (`/gsd-execute-phase 5`)
+**Last session:** 2026-05-20T00:00:00Z
+**Stopped at:** Phase 1 UAT complete — all 3 browser tests passed. CSS double-hash root cause fixed (Ketcher CSS now imported as global in main.tsx; @layer approach removed). window.ketcher exposed in handleInit for dev console access.
+**Resume file:** None — Phase 1 fully complete including UAT sign-off.
+**Next action:** Phase 2 — InChI parsing and live update loop (getInchi + editor.subscribe)
