@@ -7,10 +7,10 @@
 ## Phases
 
 - [x] **Phase 1: Scaffold and Ketcher Mount** — Vite + React + TS project running with Ketcher mounted, WASM confirmed working, and design tokens intact (complete 2026-05-19)
-- [ ] **Phase 2: Data Pipeline** — Live InChI + AuxInfo parsing producing correct `layers[]` and `auxMap` in state on every draw event
-- [ ] **Phase 3: InChI Display and Explanation UI** — Color-coded layer strip, explanation cards, and legend rendered from state; full design fidelity
-- [ ] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas
-- [ ] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline
+- [x] **Phase 2: Data Pipeline** — Live InChI + AuxInfo parsing producing correct `layers[]` and `auxMap` in state on every draw event (complete 2026-05-20)
+- [x] **Phase 3: InChI Display and Explanation UI** — Color-coded layer strip, explanation cards, and legend rendered from state; full design fidelity (complete 2026-05-21)
+- [x] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas (complete 2026-05-22)
+- [x] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline (complete 2026-05-22)
 - [ ] **Phase 6: Shareable URL, Polish, and Deploy** — Production build with URL sharing, graceful error states, and confirmed static deployment
 
 ## Phase Details
@@ -52,9 +52,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Vitest config fix + parsing library (parseInchi.ts, parseAuxMapping.ts) + unit test stubs
-- [ ] 02-02-PLAN.md — Zustand 5 store with all v1 fields and typed actions
-- [ ] 02-03-PLAN.md — App.tsx subscription wiring (debounce + generation guard) + real AuxInfo fixture
+- [x] 02-01-PLAN.md — Vitest config fix + parsing library (parseInchi.ts, parseAuxMapping.ts) + unit test stubs (complete 2026-05-20)
+- [x] 02-02-PLAN.md — Zustand 5 store with all v1 fields and typed actions (complete 2026-05-20)
+- [x] 02-03-PLAN.md — App.tsx subscription wiring (debounce + generation guard) + real AuxInfo fixture (complete 2026-05-20)
 
 **UI hint**: no
 
@@ -71,7 +71,15 @@ Plans:
 4. The idle state (nothing hovered) shows the default explanation card content with no residual hover state from a previous interaction
 5. Typography renders in IBM Plex Sans/Serif/Mono; color tokens, spacing, and hover transition timings (160ms, 4px) match the design handoff
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [x] 03-01-PLAN.md — InChI section layout and layer strip (complete 2026-05-21)
+- [x] 03-02-PLAN.md — FormulaText, HLayerText, ParityText, ConnectionText sub-token components (complete 2026-05-21)
+- [x] 03-03-PLAN.md — Explanation card and layerInfo prose (complete 2026-05-21)
+- [x] 03-04-PLAN.md — Legend card with color swatches and CSS-only tooltips (complete 2026-05-21)
+- [x] 03-05-PLAN.md — Idle state, hover transitions, and integration wiring (complete 2026-05-21)
+
 **UI hint**: yes
 
 ### Phase 4: Hover-to-Highlight Integration
@@ -86,7 +94,13 @@ Plans:
 3. Hovering a sub-token (element symbol, atom number, parity token, H-group) overrides the layer highlight with a targeted per-atom or per-bond highlight; the layer-wide highlight is fully suppressed
 4. Rapidly switching hover between layers does not accumulate stale highlights; each hover event produces a clean highlight state
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 04-01-PLAN.md — Wave 0 test scaffolding for highlight spec builders (complete 2026-05-21)
+- [x] 04-02-PLAN.md — buildHighlightSpecs, buildSubHoverSpecs, useKetcherHighlights hook (complete 2026-05-21)
+- [x] 04-03-PLAN.md — Wire useKetcherHighlights into App.tsx + UAT (complete 2026-05-22)
+
 **UI hint**: no
 
 ### Phase 5: Mapping Strip and Preset Molecules
@@ -101,22 +115,35 @@ Plans:
 3. The canvas overlay shows the current molecule name, molecular formula, and heavy-atom count for both drawn and preset molecules
 4. Footnote strip below the mapping strip displays the InChI definition text and the Hover/Click keyboard hint legend
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 05-01-PLAN.md — molecules.ts data, deriveMappingPairs, MappingStrip + Footnote components (complete 2026-05-22)
+- [x] 05-02-PLAN.md — KetcherPanel 2-column grid layout, canvas overlay, mol-list sidebar (complete 2026-05-22)
+- [x] 05-03-PLAN.md — App.tsx wiring: selectedMolId state, handleMolSelect, render MappingStrip + Footnote (complete 2026-05-22)
+
 **UI hint**: yes
 
-### Phase 6: Shareable URL, Polish, and Deploy
+### Phase 6: Hydrogen Highlight, Polish, and Deploy
 
-**Goal**: The application is production-ready with URL-encoded molecule state, graceful handling of all edge cases, and a confirmed working static deployment
+**Goal**: Hovering the H sub-token in the molecular formula highlights explicit hydrogens in the Ketcher canvas; the app handles edge cases gracefully and deploys cleanly as a static build
 **Depends on**: Phase 5
-**Requirements**: MAP-03, PLSH-01
+**Requirements**: INCHI-05, PLSH-01
 
 **Success Criteria** (what must be TRUE):
-1. The current molecule structure is encoded in the URL (hash or query param); loading the URL in a new tab restores the same molecule and InChI display
+1. When explicit hydrogens are shown in the canvas and the user hovers the H sub-token in the molecular formula layer, the hydrogen atoms are highlighted in the Ketcher canvas
 2. An empty canvas or invalid/disconnected structure shows a placeholder message in the InChI display instead of an error or blank space
 3. `vite build` produces a clean static bundle; deploying to Netlify or GitHub Pages serves the app with WASM assets loading correctly (no 404s, `crossOriginIsolated` check passes)
 4. The WASM loading state (1-3s cold start) shows a visible spinner or skeleton in the editor panel; the rest of the UI is not blocked
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 06-00-PLAN.md — Wave 0 test stubs: InchiSection empty-state tests (PLSH-01) + highlightUtils H-branch tests (INCHI-05)
+- [ ] 06-01-PLAN.md — INCHI-05: hAtomPoolIds store field, App.tsx H pool collection, highlightUtils H-branch, useKetcherHighlights threading
+- [ ] 06-02-PLAN.md — PLSH-01: InchiSection empty-state render + CSS; Footnote removed from App.tsx (D-03)
+- [ ] 06-03-PLAN.md — Deploy: GitHub Actions workflow (.github/workflows/deploy.yml) + README.md
+
 **UI hint**: no
 
 ## Requirement Coverage
@@ -137,7 +164,7 @@ Plans:
 | MAP-02 | Phase 5 | Footnote strip: InChI definition + keyboard hint legend |
 | EDIT-02 | Phase 5 | Preset molecule list loads molecule into canvas on click |
 | EDIT-03 | Phase 5 | Canvas overlay: molecule name, formula, heavy-atom count |
-| MAP-03 | Phase 6 | Molecule state encoded in URL for bookmarking and sharing |
+| INCHI-05 | Phase 6 | Hovering H sub-token highlights explicit hydrogen atoms in Ketcher canvas |
 | PLSH-01 | Phase 6 | Empty/invalid structure shows placeholder, not error |
 
 **Coverage:** 16/16 requirements mapped ✓
@@ -147,12 +174,12 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold and Ketcher Mount | 2/2 | Complete | 2026-05-19 |
-| 2. Data Pipeline | 0/3 | Not started | - |
-| 3. InChI Display and Explanation UI | 0/? | Not started | - |
-| 4. Hover-to-Highlight Integration | 0/? | Not started | - |
-| 5. Mapping Strip and Preset Molecules | 0/? | Not started | - |
-| 6. Shareable URL, Polish, and Deploy | 0/? | Not started | - |
+| 2. Data Pipeline | 3/3 | Complete | 2026-05-20 |
+| 3. InChI Display and Explanation UI | 5/5 | Complete | 2026-05-21 |
+| 4. Hover-to-Highlight Integration | 3/3 | Complete | 2026-05-22 |
+| 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
+| 6. Hydrogen Highlight, Polish, and Deploy | 0/4 | Planned | - |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-20 — Phase 2 planned (3 plans); ready to execute*
+*Updated: 2026-05-22 — Phases 1–5 complete; Phase 6 planned (4 plans)*
