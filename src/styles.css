@@ -500,7 +500,7 @@ body {
 .mapping .pair .arrow { color: var(--ink-faint); font-size: 10px; }
 .mapping .pair .c { color: var(--c-conn); font-weight: 600; }
 .mapping .pair .el {
-  color: var(--ink-faint);
+  color: oklch(0.78 0.008 255);
   font-size: 10px;
   margin-left: 4px;
   letter-spacing: 0.02em;
