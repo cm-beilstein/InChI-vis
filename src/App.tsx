@@ -5,7 +5,6 @@ import { Header } from './components/Header';
 import { KetcherPanel } from './components/KetcherPanel';
 import { InchiSection } from './components/InchiSection';
 import { Explanation } from './components/Explanation';
-import { MappingStrip } from './components/MappingStrip';
 import { Footnote } from './components/Footnote';
 import { parseInchiWithAux } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
@@ -143,7 +142,6 @@ export default function App() {
         isLoading={isLoading}
       />
       <InchiSection />
-      <MappingStrip />
       <Footnote />
       <Explanation />
     </div>
