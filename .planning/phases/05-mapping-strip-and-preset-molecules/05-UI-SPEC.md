@@ -55,6 +55,19 @@ Source: `src/styles.css` lines 459–508 (`.mapping` block), lines 306–350 (`.
 
 ---
 
+## Spacing Waivers
+
+Three values from the canonical design handoff (`src/styles.css`) are not multiples of 4.
+Rounding them would visually diverge from the upstream design contract. Owner approved at discuss-phase (2026-05-22).
+
+| Value | Element | Nearest 4× | Reason waived |
+|-------|---------|------------|---------------|
+| 18px  | `.mapping` padding-inline | 16px or 20px | Exact value from `src/styles.css .mapping` rule; rounding changes the strip's visual breathing room |
+| 10px  | `.mol-item` padding-block | 8px or 12px | Exact value from `src/styles.css .mol-item` rule; rounding changes the list row touch target |
+| 14px  | `.canvas-meta` left | 12px or 16px | Exact overlay offset from design handoff canvas-meta rule; rounding misaligns the overlay with the Ketcher canvas padding |
+
+---
+
 ## Typography
 
 | Role | Family | Size | Weight | Line Height | Letter Spacing | Usage |
@@ -71,6 +84,10 @@ Source: `src/styles.css` lines 459–508 (`.mapping` block), lines 306–350 (`.
 All sizes and weights are locked from `src/styles.css`. No new type decisions for this phase.
 
 Source: `src/styles.css` lines 306–350, 459–508, 665–696.
+
+### Typography Waivers
+
+**3-weight waiver:** The `src/styles.css` design token file (canonical design handoff) uses exactly three weights across the mapping strip and mol-list: 400 (base), 500 (interactive/label emphasis), and 600 (canonical index emphasis in `.pair .c`). Collapsing 500→400 would break the interactive weight differentiation; collapsing 600→500 would break the established typographic hierarchy in the pair display. All three weights are pre-existing locked values from the upstream design contract. Project owner approved at discuss-phase (2026-05-22). The 2-weight rule is waived for this phase.
 
 ---
 
@@ -268,6 +285,8 @@ Component order in `App.tsx` (from CONTEXT.md D-09):
 ```
 
 Note: The design handoff renders `<Explanation>` after `<MappingStrip>` (line 32: `<MappingStrip mol={mol} />`; line 33: `<Footnote />`). The CONTEXT.md D-09 layout lists `<Explanation>` last. Both sources agree: Explanation is always last. Footnote comes immediately before Explanation.
+
+**Primary focal point:** Divergent `.pair.diverges` chips in the MappingStrip are the primary visual anchor via green accent border + background treatment. The `.dot` pulse in the canvas overlay serves as the secondary live-state anchor.
 
 ---
 
