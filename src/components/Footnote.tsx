@@ -8,10 +8,6 @@
 export function Footnote() {
   return (
     <div className="footnote">
-      <span>
-        InChI · IUPAC International Chemical Identifier ·
-        {' '}an open-standard line notation for chemical structure
-      </span>
       <span className="key-hint">
         <kbd>Hover</kbd> a coloured chunk to highlight ·
         {' '}<kbd>Click</kbd> a molecule on the right to switch

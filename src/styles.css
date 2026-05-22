@@ -105,7 +105,13 @@ body {
   font-size: 52px;
   line-height: 1.02;
   letter-spacing: -0.02em;
-  margin: 0;
+  margin: 0 0 6px;
+}
+.header-tagline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
 }
 .header h1 em {
   font-style: italic;
@@ -675,7 +681,6 @@ body {
   gap: 24px;
   flex-wrap: wrap;
   padding-top: 18px;
-  border-top: 1px solid var(--line);
 }
 .footnote .key-hint { display: inline-flex; align-items: center; gap: 6px; }
 .footnote kbd {
