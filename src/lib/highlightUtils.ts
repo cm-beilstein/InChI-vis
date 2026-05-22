@@ -57,6 +57,20 @@ function stripVar(cssVar: string): string {
   return cssVar.replace('var(', '').replace(')', '');
 }
 
+/**
+ * Lightens an rgb(r,g,b) string by mixing towards white at the given amount (0–1).
+ * Used for element-color highlights so the halo doesn't blend with Ketcher's own atom labels
+ * (e.g. N is blue in both the label and its element color token).
+ */
+function lightenRgb(rgb: string, amount: number): string {
+  const m = rgb.match(/rgb\((\d+),(\d+),(\d+)\)/);
+  if (!m) return rgb;
+  const r = Math.round(Number(m[1]) + (255 - Number(m[1])) * amount);
+  const g = Math.round(Number(m[2]) + (255 - Number(m[2])) * amount);
+  const b = Math.round(Number(m[3]) + (255 - Number(m[3])) * amount);
+  return `rgb(${r},${g},${b})`;
+}
+
 export function buildHighlightSpecs(
   layer: Layer,
   subHover: SubHover | null,
@@ -85,7 +99,7 @@ export function buildHighlightSpecs(
         if (!el) continue;
         const kId = auxMap[canon];
         if (kId === undefined) continue;
-        const color = resolveVarFn(stripVar(elementColor(el)));
+        const color = lightenRgb(resolveVarFn(stripVar(elementColor(el))), 0.45);
         if (!colorToAtoms.has(color)) colorToAtoms.set(color, []);
         colorToAtoms.get(color)!.push(kId);
       }
@@ -218,7 +232,7 @@ export function buildSubHoverSpecs(
         .map(canon => auxMap[canon])
         .filter((id): id is number => id !== undefined);
       if (kAtoms.length === 0) return [];
-      const color = resolveVarFn(stripVar(elementColor(el)));
+      const color = lightenRgb(resolveVarFn(stripVar(elementColor(el))), 0.45);
       return [{ atoms: kAtoms, bonds: [], rgroupAttachmentPoints: [], color }];
     }
 

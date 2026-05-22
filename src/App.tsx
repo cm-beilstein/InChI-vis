@@ -18,8 +18,13 @@ export default function App() {
   // useRef, not useState — storing in state triggers unnecessary re-renders (D-15)
   const ketcherRef = useRef<Ketcher | null>(null);
 
+  // Prevents highlight-triggered editor.update() from re-firing handleChange.
+  // highlights.create/clear call editor.update() synchronously, which dispatches
+  // the editor change event — without this guard that re-triggers getInchi() in a loop.
+  const isHighlightingRef = useRef(false);
+
   // Bridge hover state → Ketcher canvas highlights (Phase 4)
-  useKetcherHighlights(ketcherRef, isReady);
+  useKetcherHighlights(ketcherRef, isReady, isHighlightingRef);
 
   const handleInit = (ketcher: Ketcher) => {
     ketcherRef.current = ketcher;
@@ -46,6 +51,7 @@ export default function App() {
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     const handleChange = () => {
+      if (isHighlightingRef.current) return;
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
         // Increment before the async call; capture for stale-result comparison after
@@ -60,7 +66,19 @@ export default function App() {
             useInchiStore.getState().setInchiData('', [], {}, {});
             return;
           }
-          useInchiStore.getState().setInchiData(result.inchi, result.layers, result.auxMap, result.atomElements);
+          // parseInchiWithAux returns canonical → 0-based mol-file rank (from AuxInfo N: field).
+          // Ketcher atom Pool IDs are NOT sequential from 0 — they are cumulative across draws.
+          // We must read actual Pool IDs and remap rank → poolId so highlights.create() works.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const poolIds: number[] = [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (ketcher.editor as any).render.ctab.molecule.atoms.forEach((_: unknown, id: number) => poolIds.push(id));
+          const actualAuxMap: Record<number, number> = {};
+          for (const [canonStr, rank] of Object.entries(result.auxMap)) {
+            const poolId = poolIds[rank as number];
+            if (poolId !== undefined) actualAuxMap[Number(canonStr)] = poolId;
+          }
+          useInchiStore.getState().setInchiData(result.inchi, result.layers, actualAuxMap, result.atomElements);
         } catch {
           // getInchi() can throw on empty or disconnected canvas — reset to empty (D-12)
           useInchiStore.getState().setInchiData('', [], {}, {});
