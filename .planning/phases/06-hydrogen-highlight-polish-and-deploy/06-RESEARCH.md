@@ -461,7 +461,7 @@ The `highlightUtils.test.ts` file exists with 29 passing tests. New H-related te
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `render.ctab.molecule.atoms` reflect the state AFTER `setMolecule()` completes?**
    - What we know: `handleChange` is triggered by the editor 'change' event, which fires after `setMolecule()` updates the canvas. The `isSettingMoleculeRef` guard is in place.
