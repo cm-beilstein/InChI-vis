@@ -18,6 +18,9 @@ export function MappingStrip() {
   const pairs = deriveMappingPairs(auxMap, atomElements);
   const anyDiverges = pairs.some(p => p.k !== p.c);
 
+  // Identity mapping (all k === c) is already conveyed by the connection layer — hide strip
+  if (!anyDiverges) return null;
+
   return (
     <div className="mapping" aria-label="Ketcher to InChI atom mapping">
       <span className="mapping-label">
@@ -38,11 +41,6 @@ export function MappingStrip() {
             <span className="el">{p.el}</span>
           </span>
         ))}
-        {!anyDiverges && (
-          <span style={{ color: 'var(--ink-faint)', fontStyle: 'italic', marginLeft: 4 }}>
-            (identity — drawing order already matches the canonical numbering)
-          </span>
-        )}
       </span>
     </div>
   );
