@@ -34,6 +34,7 @@ export function applyKetcherHighlights(
 export function useKetcherHighlights(
   ketcherRef: React.RefObject<Ketcher | null>,
   isReady: boolean,
+  isHighlightingRef: React.MutableRefObject<boolean>,
 ): void {
   const hoverIdx    = useInchiStore(s => s.hoverIdx);
   const subHover    = useInchiStore(s => s.subHover);
@@ -48,25 +49,30 @@ export function useKetcherHighlights(
     const struct = editorAny.render.ctab.molecule as StructLike;
     const highlightEditor = editorAny as { highlights: { clear(): void; create(...args: HighlightSpec[]): void } };
 
-    // Always clear first — prevents stale highlight accumulation (D-04).
-    // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
-    if (hoverIdx === null) {
-      highlightEditor.highlights.clear();
-      return;
-    }
-    const layer = layers[hoverIdx];
-    if (!layer) {
-      highlightEditor.highlights.clear();
-      return;
-    }
-    // Non-spatial layers: clear canvas, update explanation card only (D-01)
-    if (['version', 'q', 'p', 'i'].includes(layer.type)) {
-      highlightEditor.highlights.clear();
-      return;
-    }
+    isHighlightingRef.current = true;
+    try {
+      // Always clear first — prevents stale highlight accumulation (D-04).
+      // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
+      if (hoverIdx === null) {
+        highlightEditor.highlights.clear();
+        return;
+      }
+      const layer = layers[hoverIdx];
+      if (!layer) {
+        highlightEditor.highlights.clear();
+        return;
+      }
+      // Non-spatial layers: clear canvas, update explanation card only (D-01)
+      if (['version', 'q', 'p', 'i'].includes(layer.type)) {
+        highlightEditor.highlights.clear();
+        return;
+      }
 
-    const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, layers, struct, resolveVar);
-    applyKetcherHighlights(highlightEditor, specs);
+      const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, layers, struct, resolveVar);
+      applyKetcherHighlights(highlightEditor, specs);
+    } finally {
+      isHighlightingRef.current = false;
+    }
   }, [hoverIdx, subHover, layers, auxMap, atomElements, isReady]);
   // Note: ketcherRef is a ref — intentionally not in deps (stable reference)
 }
