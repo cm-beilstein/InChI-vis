@@ -5,9 +5,13 @@ import { Header } from './components/Header';
 import { KetcherPanel } from './components/KetcherPanel';
 import { InchiSection } from './components/InchiSection';
 import { Explanation } from './components/Explanation';
+import { MappingStrip } from './components/MappingStrip';
+import { Footnote } from './components/Footnote';
 import { parseInchiWithAux } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
 import { useKetcherHighlights } from './hooks/useKetcherHighlights';
+import { MOLECULES } from './data/molecules';
+import { handleMolSelectLogic } from './lib/handleMolSelectLogic';
 
 // Module-level — created once for the page lifetime. NEVER move inside a component.
 // (D-13: provider inside component re-creates WASM worker on every render)
@@ -15,8 +19,17 @@ const structServiceProvider = new StandaloneStructServiceProvider();
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [selectedMolId, setSelectedMolId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   // useRef, not useState — storing in state triggers unnecessary re-renders (D-15)
   const ketcherRef = useRef<Ketcher | null>(null);
+  // Prevents selectedMolId from resetting to null when the 'change' event fires
+  // after setMolecule() — separate from isHighlightingRef (RESEARCH.md Pitfall 4)
+  const isSettingMoleculeRef = useRef(false);
+
+  // Subscribe to layers and atomElements for KetcherPanel canvas overlay (D-06)
+  const layers = useInchiStore(s => s.layers);
+  const atomElements = useInchiStore(s => s.atomElements);
 
   // Bridge hover state → Ketcher canvas highlights (Phase 4)
   useKetcherHighlights(ketcherRef, isReady);
@@ -35,6 +48,17 @@ export default function App() {
     setIsReady(true);
   };
 
+  const handleMolSelect = async (id: string) => {
+    await handleMolSelectLogic({
+      id,
+      molecules: MOLECULES,
+      ketcherRef,
+      setSelectedMolId,
+      setIsLoading,
+      isSettingMoleculeRef,
+    });
+  };
+
   // Generation counter: synchronous useRef (not useState) so it updates before the
   // async WASM call resolves. Prevents a slow prior result from overwriting newer state (D-05).
   const generationRef = useRef(0);
@@ -48,6 +72,10 @@ export default function App() {
     const handleChange = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
+        // Reset selectedMolId when user draws freely (not during setMolecule())
+        // isSettingMoleculeRef guards against clearing the active preset name
+        // while PubChem SDF is being loaded (RESEARCH.md Pitfall 1, Pitfall 4)
+        if (!isSettingMoleculeRef.current) setSelectedMolId(null);
         // Increment before the async call; capture for stale-result comparison after
         const thisGen = ++generationRef.current;
         try {
@@ -79,6 +107,13 @@ export default function App() {
     };
   }, [isReady]); // ketcherRef is a ref — not a React dependency
 
+  // Derive KetcherPanel props from store and local state (D-06)
+  const formula = layers.length > 0 ? layers[0].text : null;
+  const heavyAtomCount = Object.keys(atomElements).length;
+  const molName = selectedMolId
+    ? (MOLECULES.find(m => m.id === selectedMolId)?.name ?? null)
+    : null;
+
   return (
     <div className="app">
       <Header />
@@ -86,8 +121,16 @@ export default function App() {
         isReady={isReady}
         onInit={handleInit}
         structServiceProvider={structServiceProvider}
+        selectedMolId={selectedMolId}
+        onMolSelect={handleMolSelect}
+        molName={molName}
+        formula={formula}
+        heavyAtomCount={heavyAtomCount}
+        isLoading={isLoading}
       />
       <InchiSection />
+      <MappingStrip />
+      <Footnote />
       <Explanation />
     </div>
   );
