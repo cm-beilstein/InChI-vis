@@ -445,17 +445,11 @@ export function Footnote() {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **selectedMolId reset on user draw**
-   - What we know: `handleChange` fires on every editor change. We need to reset `selectedMolId` to null when the user draws freely.
-   - What's unclear: Whether wrapping the `await setMolecule()` with an `isSettingMoleculeRef` ref is sufficient, or whether the 'change' event fires multiple times asynchronously in a way that makes the ref timing unreliable.
-   - Recommendation: Implement `isSettingMoleculeRef` and test empirically during Wave 1. Fallback: add a `resetPresetOnChange` flag that handleChange checks.
+1. **selectedMolId reset on user draw** — RESOLVED: Use `isSettingMoleculeRef` pattern (set ref to `true` before `await setMolecule()`, clear in `finally`). `handleChange` checks `if (isSettingMoleculeRef.current) return` and skips the reset. Pattern is identical to `isHighlightingRef` already proven in Phase 4. If the 'change' event fires asynchronously after `finally`, the ref will already be `false` — correct behavior. Empirical validation during Wave 1 execution will confirm timing.
 
-2. **Canvas overlay z-index within new grid layout**
-   - What we know: The overlay uses `position: absolute` with `z-index: 2` (from `src/styles.css` line 208). The loading overlay uses `z-index: 1001`.
-   - What's unclear: Whether the new `.canvasWrap` div in the CSS Module correctly establishes a stacking context.
-   - Recommendation: Ensure `.canvasWrap` has `position: relative` in the CSS Module.
+2. **Canvas overlay z-index within new grid layout** — RESOLVED: Add `position: relative` to `.canvasWrap` in `KetcherPanel.module.css`. This establishes the stacking context required for `position: absolute` children (canvas overlay at `z-index: 2`, loading overlay at `z-index: 1001`). The `.canvasWrap` div wraps the Ketcher `<Editor>` so the new grid column boundary does not break the overlay stacking.
 
 ---
 
