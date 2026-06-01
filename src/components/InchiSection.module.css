@@ -35,6 +35,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 8px 14px;
+  padding-right: 40px;
   font-family: var(--font-mono);
   font-size: 19px;
   line-height: 1.6;
@@ -42,6 +43,7 @@
   word-break: break-all;
   cursor: default;
   min-height: calc(1.6em + 16px);
+  position: relative;
 }
 
 /* InChI= prefix */
@@ -138,4 +140,43 @@
   display: block;
   text-align: center;
   padding: 4px 0;
+}
+
+/* Copy-to-clipboard button (PLSH-04) */
+.copyBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-faint);
+  padding: 4px;
+  border-radius: 3px;
+  transition: color 160ms;
+  line-height: 0;
+}
+
+.copyBtn:hover {
+  color: var(--c-formula);
+}
+
+.copyBtn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* "Copied!" confirmation feedback */
+.copiedFeedback {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-formula);
+  white-space: nowrap;
+  pointer-events: none;
 }
