@@ -88,7 +88,7 @@ export function useKetcherHighlights(
       return;
     }
     // Non-spatial layers: clear canvas, update explanation card only (D-01)
-    if (['version', 'q', 'p', 'i'].includes(layer.type)) {
+    if (['version', 'q', 'i'].includes(layer.type)) {
       highlightEditor.highlights.clear();
       return;
     }

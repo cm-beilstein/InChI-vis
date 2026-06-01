@@ -73,7 +73,7 @@ export function buildHighlightSpecs(
   }
 
   // NON-SPATIAL layers — no canvas highlight (D-01)
-  if (['version', 'q', 'p', 'i', 'b'].includes(layer.type)) {
+  if (['version', 'q', 'i', 'b'].includes(layer.type)) {
     return [];
   }
 
@@ -188,6 +188,21 @@ export function buildHighlightSpecs(
         });
       }
       return specs;
+    }
+
+    case 'p': {
+      // Protonation site highlighting: collect heteroatom canonical indices (not C, not H)
+      // and highlight them with --c-proton color. Pure-carbon molecules return [] silently.
+      const heteroIds: number[] = [];
+      for (const [canonStr, el] of Object.entries(atomElements)) {
+        if (el === 'C' || el === 'H') continue;
+        const canon = Number(canonStr);
+        const kId = auxMap[canon];
+        if (kId === undefined) continue;
+        heteroIds.push(kId);
+      }
+      if (heteroIds.length === 0) return [];
+      return [{ atoms: heteroIds, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-proton') }];
     }
 
     case 'm':

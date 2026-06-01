@@ -5,7 +5,7 @@
 // D-07: setSubHover wired on all sub-token spans (via LayerText).
 // D-08: hint text from formula layer.
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useInchiStore } from '../store';
 import { swatchVar } from '../lib/layerInfo';
 import { LayerText } from './LayerText';
@@ -16,10 +16,22 @@ export function InchiSection() {
   const layers = useInchiStore(state => state.layers);
   const hoverIdx = useInchiStore(state => state.hoverIdx);
 
+  const [copied, setCopied] = useState(false);
+
   // Verbatim segments from the raw Ketcher string — never reconstruct from layer.text.
   const rawParts = inchi ? inchi.slice('InChI='.length).split('/') : [];
 
   const isEmpty = layers.length === 0;
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(inchi);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Silent failure — clipboard API may be unavailable in some contexts
+    }
+  }
 
   return (
     <section className={styles.inchiSection}>
@@ -66,6 +78,17 @@ export function InchiSection() {
                 </React.Fragment>
               );
             })}
+            <button
+              className={styles.copyBtn}
+              onClick={handleCopy}
+              aria-label="Copy InChI to clipboard"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="5" y="4" width="8" height="10" rx="1.5" />
+                <path d="M4 10.5H3a1.5 1.5 0 0 1-1.5-1.5V3A1.5 1.5 0 0 1 3 1.5h6A1.5 1.5 0 0 1 10.5 3v1" />
+              </svg>
+            </button>
+            {copied && <span className={styles.copiedFeedback}>Copied!</span>}
           </>
         )}
       </div>
