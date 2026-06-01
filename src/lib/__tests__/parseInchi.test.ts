@@ -100,6 +100,57 @@ describe('parseMobileHydrogens', () => {
   });
 });
 
+describe('INCHI-06: multi-fragment enrichLayers', () => {
+  const TOLUENE_BENZENE_INCHI = 'InChI=1S/C7H8.C6H6/c1-7-5-3-2-4-6-7;1-2-4-6-5-3-1/h2-6H,1H3;1-6H';
+
+  it('Test D: formulaLayer.atoms has 13 entries for toluene+benzene', () => {
+    const layers = parseInchi(TOLUENE_BENZENE_INCHI);
+    const formulaLayer = layers.find(l => l.type === 'formula')!;
+    expect(formulaLayer).toBeDefined();
+    expect(formulaLayer.atoms).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+  });
+
+  it('Test D: cLayer.bonds does NOT contain spurious cross-fragment bond [7, 1]', () => {
+    const layers = parseInchi(TOLUENE_BENZENE_INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    expect(cLayer).toBeDefined();
+    // [7, 1] would be the spurious bond created if the ';' is not handled:
+    // the parser would see the '7' at end of fragment 1 and '1' at start of fragment 2 as connected
+    expect(cLayer.bonds).not.toContainEqual([7, 1]);
+  });
+
+  it('Test D: cLayer.atoms does not contain atom indices > 13', () => {
+    const layers = parseInchi(TOLUENE_BENZENE_INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    expect(cLayer).toBeDefined();
+    const allAbove13 = cLayer.atoms.filter(a => a > 13);
+    expect(allAbove13).toHaveLength(0);
+  });
+
+  it('Test D: cLayer.bonds contains fragment-2 ring closure with offset applied', () => {
+    // Fragment 2 text: '1-2-4-6-5-3-1' with offset=7
+    // After offset: atoms 8,9,11,13,12,10,8 → bonds include [10, 8] (fragment-2 ring closure 3→1 + offset)
+    const layers = parseInchi(TOLUENE_BENZENE_INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    expect(cLayer).toBeDefined();
+    // The ring closure in fragment 2 (1-2-4-6-5-3-1) → last bond is [3+7, 1+7] = [10, 8]
+    expect(cLayer.bonds).toContainEqual([10, 8]);
+  });
+
+  it('Test E: hLayer.atoms includes fragment-2 atom 1 with offset 7 applied (= canonical 8)', () => {
+    // h-layer text: '2-6H,1H3;1-6H'
+    // Fragment 1: atoms 2,3,4,5,6 (range 2-6H) and atom 1 (1H3)
+    // Fragment 2: atoms 1-6 with offset=7 → atoms 8,9,10,11,12,13
+    const layers = parseInchi(TOLUENE_BENZENE_INCHI);
+    const hLayer = layers.find(l => l.type === 'h')!;
+    expect(hLayer).toBeDefined();
+    // Fragment 1 atom 1 (bearing H3) should be present
+    expect(hLayer.atoms).toContain(1);
+    // Fragment 2 atom 1 (canonical 8 after offset) should be present
+    expect(hLayer.atoms).toContain(8);
+  });
+});
+
 describe('parseStereoAtoms', () => {
   it('extracts atom numbers from stereo notation', () => {
     expect(parseStereoAtoms('2-,5+')).toEqual([2, 5]);
