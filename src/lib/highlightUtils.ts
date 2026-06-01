@@ -175,17 +175,28 @@ export function buildHighlightSpecs(
     }
 
     case 't': {
-      // Group atoms by parity sign
-      const parities = parseStereoParities(layer.text);
+      // Multi-fragment: derive per-fragment atom counts from formula layer
+      const formulaLayerT = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsT = formulaLayerT
+        ? formulaLayerT.text.split('.').map(f => countFormulaAtoms(f))
+        : [];
+
+      const fragmentTextsT = layer.text.split(';');
       const plusAtoms: number[] = [];
       const minusAtoms: number[] = [];
-      for (const [canonStr, sign] of Object.entries(parities)) {
-        const canon = Number(canonStr);
-        const kId = auxMap[canon];
-        if (kId === undefined) continue;
-        if (sign === '+') plusAtoms.push(kId);
-        else minusAtoms.push(kId);
-      }
+      let cumulativeOffsetT = 0;
+      fragmentTextsT.forEach((fragText, fi) => {
+        const parities = parseStereoParities(fragText);
+        for (const [canonStr, sign] of Object.entries(parities)) {
+          const canon = Number(canonStr) + cumulativeOffsetT;
+          const kId = auxMap[canon];
+          if (kId === undefined) continue;
+          if (sign === '+') plusAtoms.push(kId);
+          else minusAtoms.push(kId);
+        }
+        cumulativeOffsetT += fragmentAtomCountsT[fi] ?? 0;
+      });
+
       const specs: HighlightSpec[] = [];
       if (plusAtoms.length > 0) {
         specs.push({
@@ -226,10 +237,23 @@ export function buildHighlightSpecs(
       // Delegate to co-present t-layer atoms
       const tLayer = layers.find(l => l.type === 't');
       if (!tLayer) return [];
-      const stereoCanons = parseStereoAtoms(tLayer.text);
-      const kAtoms = stereoCanons
-        .map(c => auxMap[c])
-        .filter((id): id is number => id !== undefined);
+      // Multi-fragment: derive per-fragment atom counts from formula layer
+      const formulaLayerMS = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsMS = formulaLayerMS
+        ? formulaLayerMS.text.split('.').map(f => countFormulaAtoms(f))
+        : [];
+
+      const fragmentTextsMS = tLayer.text.split(';');
+      const kAtoms: number[] = [];
+      let cumulativeOffsetMS = 0;
+      fragmentTextsMS.forEach((fragText, fi) => {
+        parseStereoAtoms(fragText).forEach(c => {
+          const kId = auxMap[c + cumulativeOffsetMS];
+          if (kId !== undefined) kAtoms.push(kId);
+        });
+        cumulativeOffsetMS += fragmentAtomCountsMS[fi] ?? 0;
+      });
+
       if (kAtoms.length === 0) return [];
       const color = resolveVarFn('--c-stereo');
       return [{ atoms: kAtoms, bonds: [], rgroupAttachmentPoints: [], color }];

@@ -361,6 +361,134 @@ describe('INCHI-07: p-layer highlight', () => {
   });
 });
 
+describe('CR-01: h-layer multi-fragment offset correction', () => {
+  // Two-fragment molecule: fragment 1 = methane (CH4, 1 atom), fragment 2 = benzene (C6H6, 6 atoms)
+  // h-layer text: "1H4;1-6H" (fragment separator ';')
+  // auxMap: fragment-1 canonical 1 → Ketcher 0; fragment-2 canonicals 1–6 → Ketcher 1–6 (global 7–12 offset by 1)
+  const twoFragFormulaLayer: Layer = makeLayer({
+    type: 'formula',
+    text: 'CH4.C6H6', // fragment 1: 1 atom, fragment 2: 6 atoms
+    atoms: [1, 2, 3, 4, 5, 6, 7],
+  });
+  // auxMap: global canonical index → Ketcher pool ID
+  const twoFragAuxMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6 };
+  const twoFragElements: Record<number, string> = { 1: 'C', 2: 'C', 3: 'C', 4: 'C', 5: 'C', 6: 'C', 7: 'C' };
+
+  it('h-layer: fragment-2 atoms are highlighted with correct global offset', () => {
+    // Fragment 1 has 1 atom (canonical 1), fragment 2 has 6 atoms (canonicals 2–7 globally).
+    // h-layer "1H4;1-6H": fragment-1 atom 1 → global 1; fragment-2 atoms 1–6 → global 2–7
+    const hLayerTwoFrag: Layer = makeLayer({
+      type: 'h',
+      prefix: 'h',
+      text: '1H4;1-6H',
+      atoms: [1, 2, 3, 4, 5, 6, 7],
+    });
+    const layers: Layer[] = [versionLayer, twoFragFormulaLayer, hLayerTwoFrag];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(hLayerTwoFrag, null, twoFragAuxMap, twoFragElements, [], layers, struct, resolveVarFn);
+    // Fragment-1 atom 1 → Ketcher 0, should be in --c-hydro-4 spec
+    const hydro4Spec = specs.find(s => s.color === '--c-hydro-4');
+    expect(hydro4Spec).toBeDefined();
+    expect(hydro4Spec!.atoms).toContain(0); // canonical 1 → Ketcher 0
+
+    // Fragment-2 atoms 1–6 offset by 1 → global canonicals 2–7 → Ketcher 1–6
+    const hydro1Spec = specs.find(s => s.color === '--c-hydro-1');
+    expect(hydro1Spec).toBeDefined();
+    // All 6 fragment-2 atoms should appear
+    expect(hydro1Spec!.atoms).toContain(1); // global canonical 2 → Ketcher 1
+    expect(hydro1Spec!.atoms).toContain(6); // global canonical 7 → Ketcher 6
+  });
+
+  it('h-layer single-fragment: behaves identically to pre-fix code (no regression)', () => {
+    // Single-fragment benzene h-layer — no ';' in text
+    const hLayerSingleFrag: Layer = makeLayer({
+      type: 'h',
+      prefix: 'h',
+      text: '1-6H',
+      atoms: [1, 2, 3, 4, 5, 6],
+    });
+    const layers: Layer[] = [versionLayer, formulaLayer, hLayerSingleFrag];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(hLayerSingleFrag, null, auxMap, atomElements, [], layers, struct, resolveVarFn);
+    expect(specs.length).toBeGreaterThan(0);
+    const hydro1Spec = specs.find(s => s.color === '--c-hydro-1');
+    expect(hydro1Spec).toBeDefined();
+    expect(hydro1Spec!.atoms).toContain(0); // canonical 1 → Ketcher 0
+    expect(hydro1Spec!.atoms).toContain(5); // canonical 6 → Ketcher 5
+  });
+});
+
+describe('CR-02: t-layer multi-fragment offset correction', () => {
+  // Two-fragment molecule: fragment 1 = 2 atoms, fragment 2 = 2 atoms
+  // t-layer text: "1+;1-" — fragment 1 atom 1 is '+', fragment 2 atom 1 is '-'
+  // Without offset correction both fragments return canonical index 1, second overwrites first.
+  const twoFragFormulaT: Layer = makeLayer({
+    type: 'formula',
+    text: 'C2.C2',  // 2 atoms in each fragment
+    atoms: [1, 2, 3, 4],
+  });
+  const twoFragAuxMapT: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3 };
+  const twoFragElementsT: Record<number, string> = { 1: 'C', 2: 'C', 3: 'C', 4: 'C' };
+
+  it('t-layer: fragment-2 stereocentre uses global canonical index (no collision)', () => {
+    const tLayerTwoFrag: Layer = makeLayer({
+      type: 't',
+      prefix: 't',
+      text: '1+;1-', // fragment 1 atom 1 = '+', fragment 2 atom 1 = '-'
+      atoms: [1, 3],
+    });
+    const layers: Layer[] = [versionLayer, twoFragFormulaT, tLayerTwoFrag];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(tLayerTwoFrag, null, twoFragAuxMapT, twoFragElementsT, [], layers, struct, resolveVarFn);
+
+    // Fragment-1 atom 1 → global 1 → Ketcher 0 → plus
+    const plusSpec = specs.find(s => s.color === '--c-stereo-plus');
+    expect(plusSpec).toBeDefined();
+    expect(plusSpec!.atoms).toContain(0);
+
+    // Fragment-2 atom 1 + offset 2 → global 3 → Ketcher 2 → minus
+    const minusSpec = specs.find(s => s.color === '--c-stereo-minus');
+    expect(minusSpec).toBeDefined();
+    expect(minusSpec!.atoms).toContain(2);
+  });
+
+  it('t-layer single-fragment: behaves identically to pre-fix code (no regression)', () => {
+    const tLayerSingle: Layer = makeLayer({
+      type: 't',
+      prefix: 't',
+      text: '1+,2-',
+      atoms: [1, 2],
+    });
+    const layers: Layer[] = [versionLayer, formulaLayer, tLayerSingle];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(tLayerSingle, null, auxMap, atomElements, [], layers, struct, resolveVarFn);
+    const plusSpec = specs.find(s => s.color === '--c-stereo-plus');
+    expect(plusSpec).toBeDefined();
+    expect(plusSpec!.atoms).toContain(0); // canonical 1 → Ketcher 0
+    const minusSpec = specs.find(s => s.color === '--c-stereo-minus');
+    expect(minusSpec).toBeDefined();
+    expect(minusSpec!.atoms).toContain(1); // canonical 2 → Ketcher 1
+  });
+
+  it('m-layer with two-fragment t-layer: uses global canonical indices for both fragments', () => {
+    const tLayerTwoFrag: Layer = makeLayer({
+      type: 't',
+      prefix: 't',
+      text: '1+;1-',
+      atoms: [1, 3],
+    });
+    const mLayerLocal: Layer = makeLayer({ type: 'm', prefix: 'm', text: '1', atoms: [] });
+    const layers: Layer[] = [versionLayer, twoFragFormulaT, tLayerTwoFrag, mLayerLocal];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(mLayerLocal, null, twoFragAuxMapT, twoFragElementsT, [], layers, struct, resolveVarFn);
+    expect(specs.length).toBeGreaterThan(0);
+    expect(specs[0].color).toBe('--c-stereo');
+    // Both fragments' stereocentres should be highlighted
+    expect(specs[0].atoms).toContain(0); // fragment-1 atom 1 → Ketcher 0
+    expect(specs[0].atoms).toContain(2); // fragment-2 atom 1 + offset 2 → Ketcher 2
+  });
+});
+
 describe('buildSubHoverSpecs', () => {
   describe('INCHI-04: sub-token highlights', () => {
     it('kind element: only atoms where atomElements[canonical] === subHover.el are highlighted', () => {
