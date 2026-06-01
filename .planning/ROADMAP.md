@@ -12,7 +12,7 @@
 - [x] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas (complete 2026-05-22)
 - [x] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline (complete 2026-05-22)
 - [x] **Phase 6: Hydrogen Highlight, Polish, and Deploy** — Hovering H sub-token highlights explicit hydrogens; empty-canvas placeholder; static build deployed (complete 2026-06-01)
-- [ ] **Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy** — Correct highlight mapping for multi-fragment molecules; p-layer protonation site highlighting; copy-to-clipboard button
+- [x] **Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy** — Correct highlight mapping for multi-fragment molecules; p-layer protonation site highlighting; copy-to-clipboard button (complete 2026-06-01)
 
 ## Phase Details
 
@@ -162,9 +162,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 07-00-PLAN.md — Wave 0 RED test stubs: multi-fragment parseAuxMapping + enrichLayers (INCHI-06), p-layer highlight (INCHI-07), copy button (PLSH-04)
-- [ ] 07-01-PLAN.md — INCHI-06: fix parseAuxMapping fragment offset + fix enrichLayers c/h/t/b per-fragment parsing
-- [ ] 07-02-PLAN.md — INCHI-07: p-layer case in buildHighlightSpecs; PLSH-04: copy button in InchiSection
+- [x] 07-00-PLAN.md — Wave 0 RED test stubs: multi-fragment parseAuxMapping + enrichLayers (INCHI-06), p-layer highlight (INCHI-07), copy button (PLSH-04) (complete 2026-06-01)
+- [x] 07-01-PLAN.md — INCHI-06: fix parseAuxMapping fragment offset + fix enrichLayers c/h/t/b per-fragment parsing (complete 2026-06-01)
+- [x] 07-02-PLAN.md — INCHI-07: p-layer case in buildHighlightSpecs; PLSH-04: copy button in InchiSection (complete 2026-06-01)
 
 **UI hint**: no
 
@@ -204,8 +204,8 @@ Plans:
 | 4. Hover-to-Highlight Integration | 3/3 | Complete | 2026-05-22 |
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
 | 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
-| 7. Multi-Fragment Highlighting, p-Layer, and Copy | 0/3 | Pending | - |
+| 7. Multi-Fragment Highlighting, p-Layer, and Copy | 3/3 | Complete | 2026-06-01 |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-06-01 — Phase 7 planned (3 plans)*
+*Updated: 2026-06-01 — Phase 7 complete; all 7 phases done, 23/23 plans*
