@@ -168,28 +168,62 @@ function enrichLayers(layers: Layer[]): Layer[] {
   const formulaLayer = layers.find(l => l.type === 'formula');
   const N = formulaLayer ? countFormulaAtoms(formulaLayer.text) : 0;
 
+  // Pre-compute per-fragment atom counts for multi-fragment molecules.
+  // Single-fragment formulas have no dot → fragmentAtomCounts is empty, offset stays 0.
+  const fragmentFormulas = formulaLayer ? formulaLayer.text.split('.') : [];
+  const fragmentAtomCounts = fragmentFormulas.map(f => countFormulaAtoms(f));
+
   return layers.map(layer => {
     switch (layer.type) {
       case 'formula':
         return { ...layer, atoms: Array.from({ length: N }, (_, idx) => idx + 1) };
       case 'c': {
-        const bonds = parseConnectionBonds(layer.text);
+        // Split on ';' to handle multi-fragment c-layer text (e.g. '1-7-5;1-2-4').
+        // Single-fragment: split gives [fullText], offset=0 — same behavior as before.
+        const fragmentTexts = layer.text.split(';');
+        const allBonds: [number, number][] = [];
         const atomSet = new Set<number>();
-        bonds.forEach(([a, b]) => {
-          atomSet.add(a);
-          atomSet.add(b);
+        let cumulativeOffset = 0;
+        fragmentTexts.forEach((fragText, fi) => {
+          const rawBonds = parseConnectionBonds(fragText);
+          rawBonds.forEach(([a, b]) => {
+            const oa = a + cumulativeOffset;
+            const ob = b + cumulativeOffset;
+            allBonds.push([oa, ob]);
+            atomSet.add(oa);
+            atomSet.add(ob);
+          });
+          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
         });
-        return { ...layer, atoms: [...atomSet].sort((a, b) => a - b), bonds };
+        return { ...layer, atoms: [...atomSet].sort((a, b) => a - b), bonds: allBonds };
       }
       case 'h': {
-        const fixed = Object.keys(parseHydrogenAtoms(layer.text)).map(Number);
-        const mobile = parseMobileHydrogens(layer.text);
-        const all = [...new Set([...fixed, ...mobile])].sort((a, b) => a - b);
-        return { ...layer, atoms: all };
+        // Split on ';' for multi-fragment h-layer (e.g. '2-6H,1H3;1-6H').
+        const fragmentTexts = layer.text.split(';');
+        const allAtoms = new Set<number>();
+        let cumulativeOffset = 0;
+        fragmentTexts.forEach((fragText, fi) => {
+          const fixed = Object.keys(parseHydrogenAtoms(fragText)).map(Number);
+          const mobile = parseMobileHydrogens(fragText);
+          fixed.forEach(a => allAtoms.add(a + cumulativeOffset));
+          mobile.forEach(a => allAtoms.add(a + cumulativeOffset));
+          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+        });
+        return { ...layer, atoms: [...allAtoms].sort((a, b) => a - b) };
       }
       case 't':
-      case 'b':
-        return { ...layer, atoms: parseStereoAtoms(layer.text) };
+      case 'b': {
+        // Split on ';' for multi-fragment stereo layers.
+        const fragmentTexts = layer.text.split(';');
+        const allAtoms: number[] = [];
+        let cumulativeOffset = 0;
+        fragmentTexts.forEach((fragText, fi) => {
+          const stereoAtoms = parseStereoAtoms(fragText);
+          stereoAtoms.forEach(a => allAtoms.push(a + cumulativeOffset));
+          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+        });
+        return { ...layer, atoms: allAtoms.sort((a, b) => a - b) };
+      }
       default:
         return layer; // version, m, s, q, p, i — atoms: [], bonds: []
     }
