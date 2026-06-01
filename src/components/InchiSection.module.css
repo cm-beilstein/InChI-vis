@@ -41,6 +41,7 @@
   letter-spacing: -0.005em;
   word-break: break-all;
   cursor: default;
+  min-height: calc(1.6em + 16px);
 }
 
 /* InChI= prefix */
@@ -130,5 +131,4 @@
   font-size: 14px;
   display: block;
   text-align: center;
-  padding: 8px 0;
 }
