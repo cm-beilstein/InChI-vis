@@ -2,7 +2,7 @@
 
 **Milestone:** v1.0
 **Created:** 2026-05-18
-**Phases:** 6 | **Requirements:** 16
+**Phases:** 7 | **Requirements:** 19
 
 ## Phases
 
@@ -11,7 +11,8 @@
 - [x] **Phase 3: InChI Display and Explanation UI** — Color-coded layer strip, explanation cards, and legend rendered from state; full design fidelity (complete 2026-05-21)
 - [x] **Phase 4: Hover-to-Highlight Integration** — Hovering a layer or sub-token highlights matching atoms/bonds in the Ketcher canvas (complete 2026-05-22)
 - [x] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline (complete 2026-05-22)
-- [ ] **Phase 6: Shareable URL, Polish, and Deploy** — Production build with URL sharing, graceful error states, and confirmed static deployment
+- [x] **Phase 6: Hydrogen Highlight, Polish, and Deploy** — Hovering H sub-token highlights explicit hydrogens; empty-canvas placeholder; static build deployed (complete 2026-06-01)
+- [ ] **Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy** — Correct highlight mapping for multi-fragment molecules; p-layer protonation site highlighting; copy-to-clipboard button
 
 ## Phase Details
 
@@ -146,6 +147,27 @@ Plans:
 
 **UI hint**: no
 
+### Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy
+
+**Goal**: Hovering C-layer or formula layer tokens for multi-fragment molecules (e.g. `InChI=1S/C7H8.C6H6/...`) highlights the correct atoms; hovering `p+N` highlights the protonation-site atoms; a copy-to-clipboard button appears at the end of the InChI strip — all guarded by unit tests
+**Depends on**: Phase 6
+**Requirements**: INCHI-06, INCHI-07, PLSH-04
+
+**Success Criteria** (what must be TRUE):
+1. For `InChI=1S/C7H8.C6H6/c1-7-5-3-2-4-6-7;1-2-4-6-5-3-1/h2-6H,1H3;1-6H`, hovering the formula layer highlights all 13 heavy atoms; hovering the `c` layer highlights the correct bonds and atoms for both fragments independently
+2. For `InChI=1S/C17H14N2/...p+1`, hovering the `p` layer highlights the protonation-site atoms (from `q` layer if present, else all N/O heteroatoms from the formula)
+3. A copy icon appears at the right end of the InChI display box; clicking it copies the verbatim InChI string to the clipboard and shows a brief "Copied!" confirmation
+4. All existing highlight tests continue to pass; new unit tests cover multi-fragment `parseAuxMapping`, multi-fragment `enrichLayers`, and `buildHighlightSpecs` for the `p` layer type
+
+**Plans**: 3 plans
+
+Plans:
+- [ ] 07-00-PLAN.md — Wave 0 RED test stubs: multi-fragment parseAuxMapping + enrichLayers (INCHI-06), p-layer highlight (INCHI-07), copy button (PLSH-04)
+- [ ] 07-01-PLAN.md — INCHI-06: fix parseAuxMapping fragment offset + fix enrichLayers c/h/t/b per-fragment parsing
+- [ ] 07-02-PLAN.md — INCHI-07: p-layer case in buildHighlightSpecs; PLSH-04: copy button in InchiSection
+
+**UI hint**: no
+
 ## Requirement Coverage
 
 | Requirement | Phase | Description |
@@ -166,8 +188,11 @@ Plans:
 | EDIT-03 | Phase 5 | Canvas overlay: molecule name, formula, heavy-atom count |
 | INCHI-05 | Phase 6 | Hovering H sub-token highlights explicit hydrogen atoms in Ketcher canvas |
 | PLSH-01 | Phase 6 | Empty/invalid structure shows placeholder, not error |
+| INCHI-06 | Phase 7 | Multi-fragment molecules highlight correct atoms/bonds per fragment on layer hover |
+| INCHI-07 | Phase 7 | Hovering p-layer highlights protonation-site atoms (q-layer or heteroatom fallback) |
+| PLSH-04 | Phase 7 | Copy-to-clipboard button copies verbatim InChI string with visual confirmation |
 
-**Coverage:** 16/16 requirements mapped ✓
+**Coverage:** 19/19 requirements mapped ✓
 
 ## Progress
 
@@ -178,8 +203,9 @@ Plans:
 | 3. InChI Display and Explanation UI | 5/5 | Complete | 2026-05-21 |
 | 4. Hover-to-Highlight Integration | 3/3 | Complete | 2026-05-22 |
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
-| 6. Hydrogen Highlight, Polish, and Deploy | 0/4 | Planned | - |
+| 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
+| 7. Multi-Fragment Highlighting, p-Layer, and Copy | 0/3 | Pending | - |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-05-22 — Phases 1–5 complete; Phase 6 planned (4 plans)*
+*Updated: 2026-06-01 — Phase 7 planned (3 plans)*
