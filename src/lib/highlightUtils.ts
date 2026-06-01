@@ -8,6 +8,7 @@ import {
   parseHydrogenAtoms,
   parseMobileHydrogens,
   parseStereoAtoms,
+  countFormulaAtoms,
 } from './parseInchi';
 import {
   elementColor,
@@ -127,25 +128,40 @@ export function buildHighlightSpecs(
     }
 
     case 'h': {
-      // Fixed hydrogen atoms grouped by count color
-      const hydroAtoms = parseHydrogenAtoms(layer.text);
-      const colorToAtoms = new Map<string, number[]>();
-      for (const [canonStr, count] of Object.entries(hydroAtoms)) {
-        const canon = Number(canonStr);
-        const colorVar = hydroColor(count);
-        if (!colorVar) continue; // count < 1 — skip
-        const kId = auxMap[canon];
-        if (kId === undefined) continue;
-        const color = resolveVarFn(stripVar(colorVar));
-        if (!colorToAtoms.has(color)) colorToAtoms.set(color, []);
-        colorToAtoms.get(color)!.push(kId);
-      }
+      // Multi-fragment: derive per-fragment atom counts from formula layer
+      const formulaLayerH = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsH = formulaLayerH
+        ? formulaLayerH.text.split('.').map(f => countFormulaAtoms(f))
+        : [];
 
-      // Mobile hydrogen atoms
-      const mobileCanons = parseMobileHydrogens(layer.text);
-      const mobileKAtoms = mobileCanons
-        .map(c => auxMap[c])
-        .filter((id): id is number => id !== undefined);
+      const fragmentTextsH = layer.text.split(';');
+      const colorToAtoms = new Map<string, number[]>();
+      let cumulativeOffsetH = 0;
+      fragmentTextsH.forEach((fragText, fi) => {
+        const hydroAtoms = parseHydrogenAtoms(fragText);
+        for (const [canonStr, count] of Object.entries(hydroAtoms)) {
+          const canon = Number(canonStr) + cumulativeOffsetH;
+          const colorVar = hydroColor(count);
+          if (!colorVar) continue; // count < 1 — skip
+          const kId = auxMap[canon];
+          if (kId === undefined) continue;
+          const color = resolveVarFn(stripVar(colorVar));
+          if (!colorToAtoms.has(color)) colorToAtoms.set(color, []);
+          colorToAtoms.get(color)!.push(kId);
+        }
+        cumulativeOffsetH += fragmentAtomCountsH[fi] ?? 0;
+      });
+
+      // Mobile hydrogen atoms — same per-fragment offset approach
+      cumulativeOffsetH = 0;
+      const mobileKAtoms: number[] = [];
+      fragmentTextsH.forEach((fragText, fi) => {
+        parseMobileHydrogens(fragText).forEach(c => {
+          const kId = auxMap[c + cumulativeOffsetH];
+          if (kId !== undefined) mobileKAtoms.push(kId);
+        });
+        cumulativeOffsetH += fragmentAtomCountsH[fi] ?? 0;
+      });
 
       const specs: HighlightSpec[] = [];
       for (const [color, atoms] of colorToAtoms) {
