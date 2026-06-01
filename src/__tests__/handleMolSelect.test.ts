@@ -26,17 +26,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { handleMolSelectLogic } from '../lib/handleMolSelectLogic';
 import { MOLECULES } from '../data/molecules';
-import type { MoleculePreset } from '../data/molecules';
-
 // Minimal Ketcher mock — only setMolecule is needed
 const mockSetMolecule = vi.fn().mockResolvedValue(undefined);
 const mockKetcherRef = { current: { setMolecule: mockSetMolecule } } as unknown as React.RefObject<any>;
 
 // State mock helpers
-let capturedSelectedMolId: string | null = null;
-let capturedIsLoading: boolean = false;
-const mockSetSelectedMolId = vi.fn((id: string | null) => { capturedSelectedMolId = id; });
-const mockSetIsLoading = vi.fn((loading: boolean) => { capturedIsLoading = loading; });
+const mockSetSelectedMolId = vi.fn((_id: string | null) => {});
+const mockSetIsLoading = vi.fn((_loading: boolean) => {});
 const mockIsSettingMoleculeRef = { current: false };
 
 const BENZENE = MOLECULES.find(m => m.id === 'benzene')!;
@@ -44,8 +40,6 @@ const MOCK_SDF = '\n  Ketcher  0200\n\n  6  6  0  0  0  0  0  0  0  0  0 V2000\n
 
 beforeEach(() => {
   vi.clearAllMocks();
-  capturedSelectedMolId = null;
-  capturedIsLoading = false;
   mockIsSettingMoleculeRef.current = false;
 });
 
