@@ -144,7 +144,7 @@ export function parseStereoAtoms(text: string): number[] {
  * Counts total heavy atoms in a formula string like 'C6H6' or 'C2H6O'.
  * Hydrogen atoms are excluded because canonical numbering covers heavy atoms only.
  */
-function countFormulaAtoms(formulaText: string): number {
+export function countFormulaAtoms(formulaText: string): number {
   let total = 0;
   for (const m of formulaText.matchAll(/([A-Z][a-z]?)(\d*)/g)) {
     if (m[1] !== 'H') total += m[2] ? parseInt(m[2], 10) : 1;
