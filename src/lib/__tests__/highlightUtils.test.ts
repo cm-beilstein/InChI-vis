@@ -337,6 +337,30 @@ describe('buildHighlightSpecs', () => {
   });
 });
 
+describe('INCHI-07: p-layer highlight', () => {
+  it('Test A: buildHighlightSpecs pLayer with N heteroatom returns non-empty specs highlighting the N atom', () => {
+    // atomElements_with_N: canonical 3 is N, rest are C
+    const atomElements_with_N: Record<number, string> = { 1: 'C', 2: 'C', 3: 'N' };
+    const smallAuxMap: AuxMap = { 1: 0, 2: 1, 3: 2 };
+    const struct = makeMockStruct();
+    const localAllLayers: Layer[] = [versionLayer, makeLayer({ type: 'formula', text: 'C2N', atoms: [1, 2, 3] }), pLayer];
+    const specs = buildHighlightSpecs(pLayer, null, smallAuxMap, atomElements_with_N, [], localAllLayers, struct, resolveVarFn);
+    expect(specs.length).toBeGreaterThan(0);
+    // canonical 3 (N) → Ketcher index 2
+    expect(specs[0].atoms).toContain(2);
+    expect(specs[0].color).toBe('--c-proton');
+  });
+
+  it('Test B: buildHighlightSpecs pLayer with all-carbon atomElements returns [] (no heteroatoms)', () => {
+    const atomElements_all_C: Record<number, string> = { 1: 'C', 2: 'C', 3: 'C' };
+    const smallAuxMap: AuxMap = { 1: 0, 2: 1, 3: 2 };
+    const struct = makeMockStruct();
+    const localAllLayers: Layer[] = [versionLayer, makeLayer({ type: 'formula', text: 'C3', atoms: [1, 2, 3] }), pLayer];
+    const specs = buildHighlightSpecs(pLayer, null, smallAuxMap, atomElements_all_C, [], localAllLayers, struct, resolveVarFn);
+    expect(specs).toEqual([]);
+  });
+});
+
 describe('buildSubHoverSpecs', () => {
   describe('INCHI-04: sub-token highlights', () => {
     it('kind element: only atoms where atomElements[canonical] === subHover.el are highlighted', () => {
