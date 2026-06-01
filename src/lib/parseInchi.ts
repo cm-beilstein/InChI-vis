@@ -146,7 +146,7 @@ export function parseStereoAtoms(text: string): number[] {
  */
 function countFormulaAtoms(formulaText: string): number {
   let total = 0;
-  for (const m of formulaText.matchAll(/(?<![A-Za-z])([A-Z][a-z]?)(\d*)(?![a-z])/g)) {
+  for (const m of formulaText.matchAll(/([A-Z][a-z]?)(\d*)/g)) {
     if (m[1] !== 'H') total += m[2] ? parseInt(m[2], 10) : 1;
   }
   return total;

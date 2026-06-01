@@ -25,6 +25,32 @@ export function applyKetcherHighlights(
 }
 
 /**
+ * After highlights.create() synchronously redraws highlighted atoms, set the atom
+ * label text fill to white for any atom that displays a visible element symbol.
+ *
+ * DOM contract (verified in ketcher-core/dist/index.modern.js):
+ *  - highlights.create() calls editor.update() synchronously, recreating SVG elements
+ *  - Each atom's primary SVG element gets data-atom-id="<poolId>" and data-atomLabel="<symbol>"
+ *  - SVG root is at editorAny.render.paper.canvas
+ *
+ * Carbon atoms have no visible label in skeletal formula and are left unchanged.
+ * The inline style.fill overrides Raphaël's fill attribute and is wiped automatically
+ * on the next redraw (highlights.clear() → redraw → fresh elements).
+ */
+export function whiteAtomLabels(svgRoot: Element, specs: HighlightSpec[]): void {
+  for (const spec of specs) {
+    for (const atomId of spec.atoms) {
+      const el = svgRoot.querySelector(`[data-atom-id="${atomId}"]`);
+      if (!el) continue;
+      const label = el.getAttribute('data-atomLabel') ?? '';
+      if (label !== 'C') {
+        (el as SVGElement).style.fill = 'white';
+      }
+    }
+  }
+}
+
+/**
  * React hook that subscribes to Zustand hover state and drives Ketcher canvas highlights.
  * Called from App.tsx once Ketcher is ready (isReady = true).
  *
@@ -68,6 +94,10 @@ export function useKetcherHighlights(
 
     const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVar);
     applyKetcherHighlights(highlightEditor, specs);
+    if (specs.length > 0) {
+      const svgRoot = editorAny.render.paper.canvas as Element;
+      whiteAtomLabels(svgRoot, specs);
+    }
   }, [hoverIdx, subHover, layers, auxMap, atomElements, hAtomPoolIds, isReady]);
   // Note: ketcherRef is a ref — intentionally not in deps (stable reference)
 }

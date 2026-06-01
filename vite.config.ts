@@ -27,7 +27,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    esbuildOptions: {
+    rolldownOptions: {
       define: processShim,
     },
   },

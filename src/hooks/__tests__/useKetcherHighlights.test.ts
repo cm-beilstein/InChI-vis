@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyKetcherHighlights } from '../useKetcherHighlights';
+import { applyKetcherHighlights, whiteAtomLabels } from '../useKetcherHighlights';
 import type { HighlightSpec } from '../../lib/highlightUtils';
 
 function makeMockEditor() {
@@ -33,5 +33,54 @@ describe('applyKetcherHighlights', () => {
     const spec2: HighlightSpec = { atoms: [1], bonds: [], rgroupAttachmentPoints: [], color: '#00ff00' };
     applyKetcherHighlights(editor, [spec1, spec2]);
     expect(editor.highlights.create).toHaveBeenCalledWith(spec1, spec2);
+  });
+});
+
+function makeAtomEl(atomId: number, label: string): SVGElement {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  el.setAttribute('data-atom-id', String(atomId));
+  el.setAttribute('data-atomLabel', label);
+  return el as unknown as SVGElement;
+}
+
+describe('whiteAtomLabels', () => {
+  it('sets fill:white on heteroatom labels (N, O, S, H)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const nEl = makeAtomEl(5, 'N');
+    const oEl = makeAtomEl(6, 'O');
+    svg.append(nEl, oEl);
+    const specs: HighlightSpec[] = [{ atoms: [5, 6], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(80,150,255)' }];
+    whiteAtomLabels(svg, specs);
+    expect((nEl as HTMLElement).style.fill).toBe('white');
+    expect((oEl as HTMLElement).style.fill).toBe('white');
+  });
+
+  it('does NOT set fill on C atoms (no visible label in skeletal formula)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const cEl = makeAtomEl(3, 'C');
+    svg.append(cEl);
+    const specs: HighlightSpec[] = [{ atoms: [3], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(80,150,255)' }];
+    whiteAtomLabels(svg, specs);
+    expect((cEl as HTMLElement).style.fill).toBe('');
+  });
+
+  it('skips atoms with no matching DOM element without throwing', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const specs: HighlightSpec[] = [{ atoms: [99], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(80,150,255)' }];
+    expect(() => whiteAtomLabels(svg, specs)).not.toThrow();
+  });
+
+  it('handles multiple specs correctly', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const nEl = makeAtomEl(1, 'N');
+    const clEl = makeAtomEl(2, 'Cl');
+    svg.append(nEl, clEl);
+    const specs: HighlightSpec[] = [
+      { atoms: [1], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(1,2,3)' },
+      { atoms: [2], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(4,5,6)' },
+    ];
+    whiteAtomLabels(svg, specs);
+    expect((nEl as HTMLElement).style.fill).toBe('white');
+    expect((clEl as HTMLElement).style.fill).toBe('white');
   });
 });
