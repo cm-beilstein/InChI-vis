@@ -1,5 +1,5 @@
 ---
-status: investigating
+status: resolved
 trigger: "formula-n-hover-not-readable: When hovering over N in the InChI formula layer, the N letter is not readable — CSS changes to lighten the text on hover appear to have no effect."
 created: 2026-06-01T00:00:00Z
 updated: 2026-06-01T00:00:00Z
@@ -122,7 +122,7 @@ started: Attempted fixes: (1) changed countFormulaAtoms regex (separate bug fix)
 
 ## Resolution
 
-root_cause: The subtoken hover CSS rule `.inchiLayer.active .inchiSubtoken:hover` requires the `.active` class to be present on the parent `.inchiLayer` span. This class is controlled by React state (`hoverIdx`) which is set asynchronously via `onMouseEnter`. Because React state updates do not re-render synchronously within the same browser event microtask as CSS `:hover` activation, the `.active` class is absent when the browser first evaluates the hover rule. All three attempted CSS fixes (--el-color, oklch relative color, --el-bg-color background chip) added correct CSS properties but are all blocked by this same structural gate — they can never fire because `.active` is never present at the moment `:hover` is evaluated for the first incoming cursor position.
-fix:
-verification:
-files_changed: []
+root_cause: The subtoken hover CSS rule `.inchiLayer.active .inchiSubtoken:hover` requires the `.active` class to be present on the parent `.inchiLayer` span. This class is controlled by React state (`hoverIdx`) which is set asynchronously via `onMouseEnter`. Because React state updates do not re-render synchronously within the same browser event microtask as CSS `:hover` activation, the `.active` class is absent when the browser first evaluates the hover rule. All three attempted CSS fixes (--el-color, oklch relative color, --el-bg-color background chip) added correct CSS properties but are all blocked by this same structural gate.
+fix: Changed selector from `.inchiLayer.active .inchiSubtoken:hover` to `.inchiLayer:hover .inchiSubtoken:hover` in InchiSection.module.css. CSS `:hover` on the parent fires synchronously when cursor enters, requiring no React re-render. Also updated the rule to use element-specific `--el-color`/`--el-bg-color` custom properties instead of plain `currentColor`/`--bg-canvas`.
+verification: Playwright test confirmed — on hover, N token computes color=oklch(0.6 0.16 250), background=oklch(0.94 0.04 250), boxShadow=inset 1.5px ring. Old `.active`-gated rule never fired.
+files_changed: [src/components/InchiSection.module.css]

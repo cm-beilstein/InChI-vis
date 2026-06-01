@@ -141,7 +141,7 @@ export function parseStereoAtoms(text: string): number[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Counts total heavy atoms in a formula string like 'C6H6' or 'C2H6O'.
+ * Counts total heavy atoms in a single-component formula like 'C6H6' or 'C2H6O'.
  * Hydrogen atoms are excluded because canonical numbering covers heavy atoms only.
  */
 export function countFormulaAtoms(formulaText: string): number {
@@ -150,6 +150,44 @@ export function countFormulaAtoms(formulaText: string): number {
     if (m[1] !== 'H') total += m[2] ? parseInt(m[2], 10) : 1;
   }
   return total;
+}
+
+/**
+ * Returns the per-fragment heavy-atom counts for a formula layer text.
+ *
+ * InChI uses two multi-fragment notations:
+ *   "C7H8.C6H6"  — dot-separated different components → [7, 6]
+ *   "2C6H6"      — multiplier for identical components → [6, 6]
+ *   "C6H6"       — single component                   → [6]
+ */
+export function formulaFragmentCounts(formulaText: string): number[] {
+  if (formulaText.includes('.')) {
+    return formulaText.split('.').map(f => countFormulaAtoms(f));
+  }
+  const multMatch = formulaText.match(/^(\d+)([A-Z])/);
+  if (multMatch) {
+    const n = parseInt(multMatch[1], 10);
+    const base = countFormulaAtoms(formulaText.slice(multMatch[1].length));
+    return Array(n).fill(base) as number[];
+  }
+  return [countFormulaAtoms(formulaText)];
+}
+
+/**
+ * Expands a layer text segment into per-fragment strings.
+ *
+ * Two InChI multi-fragment formats are handled:
+ *   "2*1-2-4-6-5-3-1"       — multiplier notation → ["1-2-4-6-5-3-1", "1-2-4-6-5-3-1"]
+ *   "1-7-5-3-2-4-6-7;1-2-4" — semicolon notation  → ["1-7-5-3-2-4-6-7", "1-2-4"]
+ *   "1-2-4-6-5-3-1"         — single fragment     → ["1-2-4-6-5-3-1"]
+ */
+export function expandLayerText(text: string): string[] {
+  const multMatch = text.match(/^(\d+)\*([\s\S]*)$/);
+  if (multMatch) {
+    const n = parseInt(multMatch[1], 10);
+    return Array(n).fill(multMatch[2]) as string[];
+  }
+  return text.split(';');
 }
 
 /**
@@ -166,21 +204,18 @@ export function countFormulaAtoms(formulaText: string): number {
  */
 function enrichLayers(layers: Layer[]): Layer[] {
   const formulaLayer = layers.find(l => l.type === 'formula');
-  const N = formulaLayer ? countFormulaAtoms(formulaLayer.text) : 0;
 
-  // Pre-compute per-fragment atom counts for multi-fragment molecules.
-  // Single-fragment formulas have no dot → fragmentAtomCounts is empty, offset stays 0.
-  const fragmentFormulas = formulaLayer ? formulaLayer.text.split('.') : [];
-  const fragmentAtomCounts = fragmentFormulas.map(f => countFormulaAtoms(f));
+  // Per-fragment heavy-atom counts — handles both "C7H8.C6H6" and "2C6H6" notation.
+  const fragCounts = formulaLayer ? formulaFragmentCounts(formulaLayer.text) : [];
+  const totalAtoms = fragCounts.reduce((s, n) => s + n, 0);
 
   return layers.map(layer => {
     switch (layer.type) {
       case 'formula':
-        return { ...layer, atoms: Array.from({ length: N }, (_, idx) => idx + 1) };
+        return { ...layer, atoms: Array.from({ length: totalAtoms }, (_, idx) => idx + 1) };
       case 'c': {
-        // Split on ';' to handle multi-fragment c-layer text (e.g. '1-7-5;1-2-4').
-        // Single-fragment: split gives [fullText], offset=0 — same behavior as before.
-        const fragmentTexts = layer.text.split(';');
+        // expandLayerText handles both "2*text" (multiplier) and "text;text" (semicolon).
+        const fragmentTexts = expandLayerText(layer.text);
         const allBonds: [number, number][] = [];
         const atomSet = new Set<number>();
         let cumulativeOffset = 0;
@@ -193,13 +228,12 @@ function enrichLayers(layers: Layer[]): Layer[] {
             atomSet.add(oa);
             atomSet.add(ob);
           });
-          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+          cumulativeOffset += fragCounts[fi] ?? 0;
         });
         return { ...layer, atoms: [...atomSet].sort((a, b) => a - b), bonds: allBonds };
       }
       case 'h': {
-        // Split on ';' for multi-fragment h-layer (e.g. '2-6H,1H3;1-6H').
-        const fragmentTexts = layer.text.split(';');
+        const fragmentTexts = expandLayerText(layer.text);
         const allAtoms = new Set<number>();
         let cumulativeOffset = 0;
         fragmentTexts.forEach((fragText, fi) => {
@@ -207,20 +241,19 @@ function enrichLayers(layers: Layer[]): Layer[] {
           const mobile = parseMobileHydrogens(fragText);
           fixed.forEach(a => allAtoms.add(a + cumulativeOffset));
           mobile.forEach(a => allAtoms.add(a + cumulativeOffset));
-          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+          cumulativeOffset += fragCounts[fi] ?? 0;
         });
         return { ...layer, atoms: [...allAtoms].sort((a, b) => a - b) };
       }
       case 't':
       case 'b': {
-        // Split on ';' for multi-fragment stereo layers.
-        const fragmentTexts = layer.text.split(';');
+        const fragmentTexts = expandLayerText(layer.text);
         const allAtoms: number[] = [];
         let cumulativeOffset = 0;
         fragmentTexts.forEach((fragText, fi) => {
           const stereoAtoms = parseStereoAtoms(fragText);
           stereoAtoms.forEach(a => allAtoms.push(a + cumulativeOffset));
-          cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+          cumulativeOffset += fragCounts[fi] ?? 0;
         });
         return { ...layer, atoms: allAtoms.sort((a, b) => a - b) };
       }

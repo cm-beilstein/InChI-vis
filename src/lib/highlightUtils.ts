@@ -8,8 +8,10 @@ import {
   parseHydrogenAtoms,
   parseMobileHydrogens,
   parseStereoAtoms,
-  countFormulaAtoms,
+  formulaFragmentCounts,
+  expandLayerText,
 } from './parseInchi';
+
 import {
   elementColor,
   hydroColor,
@@ -128,13 +130,11 @@ export function buildHighlightSpecs(
     }
 
     case 'h': {
-      // Multi-fragment: derive per-fragment atom counts from formula layer
       const formulaLayerH = layers.find(l => l.type === 'formula');
-      const fragmentAtomCountsH = formulaLayerH
-        ? formulaLayerH.text.split('.').map(f => countFormulaAtoms(f))
-        : [];
+      const fragmentAtomCountsH = formulaLayerH ? formulaFragmentCounts(formulaLayerH.text) : [];
 
-      const fragmentTextsH = layer.text.split(';');
+      // expandLayerText handles both "2*1-6H" (multiplier) and "2-6H;1-6H" (semicolon)
+      const fragmentTextsH = expandLayerText(layer.text);
       const colorToAtoms = new Map<string, number[]>();
       let cumulativeOffsetH = 0;
       fragmentTextsH.forEach((fragText, fi) => {
@@ -175,13 +175,9 @@ export function buildHighlightSpecs(
     }
 
     case 't': {
-      // Multi-fragment: derive per-fragment atom counts from formula layer
       const formulaLayerT = layers.find(l => l.type === 'formula');
-      const fragmentAtomCountsT = formulaLayerT
-        ? formulaLayerT.text.split('.').map(f => countFormulaAtoms(f))
-        : [];
-
-      const fragmentTextsT = layer.text.split(';');
+      const fragmentAtomCountsT = formulaLayerT ? formulaFragmentCounts(formulaLayerT.text) : [];
+      const fragmentTextsT = expandLayerText(layer.text);
       const plusAtoms: number[] = [];
       const minusAtoms: number[] = [];
       let cumulativeOffsetT = 0;
@@ -237,13 +233,9 @@ export function buildHighlightSpecs(
       // Delegate to co-present t-layer atoms
       const tLayer = layers.find(l => l.type === 't');
       if (!tLayer) return [];
-      // Multi-fragment: derive per-fragment atom counts from formula layer
       const formulaLayerMS = layers.find(l => l.type === 'formula');
-      const fragmentAtomCountsMS = formulaLayerMS
-        ? formulaLayerMS.text.split('.').map(f => countFormulaAtoms(f))
-        : [];
-
-      const fragmentTextsMS = tLayer.text.split(';');
+      const fragmentAtomCountsMS = formulaLayerMS ? formulaFragmentCounts(formulaLayerMS.text) : [];
+      const fragmentTextsMS = expandLayerText(tLayer.text);
       const kAtoms: number[] = [];
       let cumulativeOffsetMS = 0;
       fragmentTextsMS.forEach((fragText, fi) => {

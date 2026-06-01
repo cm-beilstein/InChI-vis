@@ -2,7 +2,7 @@
 // Parses the N: field from Ketcher's getInchi(true) AuxInfo block.
 // Based on CONTEXT.md D-10/D-11 and RESEARCH.md Pattern 3.
 
-import { parseInchi, countFormulaAtoms } from './parseInchi';
+import { parseInchi, countFormulaAtoms, formulaFragmentCounts } from './parseInchi';
 import type { Layer, AuxMap } from './parseInchi';
 
 /**
@@ -14,21 +14,29 @@ export function buildAtomElements(layers: Layer[]): Record<number, string> {
   const formulaLayer = layers.find(l => l.type === 'formula');
   if (!formulaLayer) return {};
   const out: Record<number, string> = {};
-  // Parse element runs from the formula text: e.g. "C6H6" → [C,C,C,C,C,C]
-  // Assign canonical indices in formula order (Hill order: C first, H skipped, then rest alphabetically)
-  // We need to expand the formula into an atom list matching canonical order.
-  // The canonical numbering is the same order as the atom list in the formula layer.
-  const atoms = formulaLayer.atoms; // [1, 2, 3, ... N]
-  // Expand formula into element array
+  const atoms = formulaLayer.atoms; // [1, 2, ... totalAtoms] after enrichLayers fix
+
+  // Expand multi-fragment formulas before parsing element runs:
+  //   "2C6H6"    → "C6H6C6H6"   (multiplier notation)
+  //   "C7H8.C6H6" → "C7H8C6H6"  (dot-separator notation — dot is not alphanumeric, safe to remove)
+  const expandedFormula = (() => {
+    const t = formulaLayer.text;
+    const multMatch = t.match(/^(\d+)([A-Z].*)/);
+    if (multMatch) {
+      const n = parseInt(multMatch[1], 10);
+      return multMatch[2].repeat(n);
+    }
+    return t.replace(/\./g, '');
+  })();
+
   const elements: string[] = [];
   const re = /([A-Z][a-z]?)(\d*)/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(formulaLayer.text))) {
-    if (!m[1] || m[1] === 'H') continue; // Skip H — canonical indices cover heavy atoms only
+  while ((m = re.exec(expandedFormula))) {
+    if (!m[1] || m[1] === 'H') continue;
     const count = m[2] ? parseInt(m[2], 10) : 1;
     for (let i = 0; i < count; i++) elements.push(m[1]);
   }
-  // Assign: canonical atom[i] (1-based) → elements[i]
   atoms.forEach((canon, i) => {
     if (elements[i]) out[canon] = elements[i];
   });
@@ -57,28 +65,31 @@ export function parseAuxMapping(auxBody: string, formulaText?: string): AuxMap {
   if (!nPart) return {};
   const map: AuxMap = {};
 
-  if (formulaText && formulaText.includes('.')) {
-    // Multi-fragment: split formula by '.' to get per-fragment atom counts,
-    // split N: value by ';' to get per-fragment value lists,
-    // then apply canonicalOffset per fragment.
-    const fragmentFormulas = formulaText.split('.');
-    const fragmentAtomCounts = fragmentFormulas.map(f => countFormulaAtoms(f));
-    const nFragments = nPart.slice(2).split(';');
+  const nValue = nPart.slice(2);
+  // Detect multi-fragment from the N: semicolon separator — this covers both
+  // "C7H8.C6H6" (dot-separated) and "2C6H6" (multiplier) InChI formula formats.
+  const isMultiFragment = nValue.includes(';');
+
+  if (isMultiFragment) {
+    const fragmentAtomCounts = formulaText
+      ? formulaFragmentCounts(formulaText)
+      : nValue.split(';').map(seg => seg.split(',').length); // fallback: infer from N: field
+    const nFragments = nValue.split(';');
     let canonicalOffset = 0;
     nFragments.forEach((fragValues, fi) => {
       const values = fragValues.split(',');
       values.forEach((v, i) => {
         const n = parseInt(v, 10);
-        if (!isNaN(n)) map[canonicalOffset + i + 1] = n - 1; // canonical (1-based) → Ketcher index (0-based)
+        if (!isNaN(n)) map[canonicalOffset + i + 1] = n - 1; // N: uses global draw-order (1-based) → 0-based
       });
       canonicalOffset += fragmentAtomCounts[fi] ?? values.length;
     });
   } else {
-    // Single-fragment (original behavior)
-    const values = nPart.slice(2).split(',');
+    // Single-fragment
+    const values = nValue.split(',');
     values.forEach((v, i) => {
       const n = parseInt(v, 10);
-      if (!isNaN(n)) map[i + 1] = n - 1; // canonical (1-based) → Ketcher index (0-based)
+      if (!isNaN(n)) map[i + 1] = n - 1;
     });
   }
 
