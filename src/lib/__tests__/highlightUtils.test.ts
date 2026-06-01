@@ -141,7 +141,7 @@ describe('buildHighlightSpecs', () => {
   describe('INCHI-03: layer-wide highlights', () => {
     it('formula layer: returns specs with C atoms grouped by element color', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       // Should NOT be empty — C atoms should be grouped by --c-el-C color
       expect(specs.length).toBeGreaterThan(0);
       // All 6 atoms should appear in specs
@@ -152,7 +152,7 @@ describe('buildHighlightSpecs', () => {
 
     it('formula layer: atom color is elementColor resolved (--c-el-C)', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       // With identity resolveVarFn, color should be '--c-el-C'
       const cSpec = specs.find(s => s.atoms.includes(0));
       expect(cSpec).toBeDefined();
@@ -167,7 +167,7 @@ describe('buildHighlightSpecs', () => {
       });
       const mixedElements: Record<number, string> = { 1: 'C', 2: 'C', 3: 'N' };
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(mixedLayer, null, { 1: 0, 2: 1, 3: 2 }, mixedElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(mixedLayer, null, { 1: 0, 2: 1, 3: 2 }, mixedElements, [], allLayers, struct, resolveVarFn);
       const nSpec = specs.find(s => s.atoms.includes(2));
       expect(nSpec).toBeDefined();
       expect(nSpec!.color).toBe('--c-el-N');
@@ -175,14 +175,14 @@ describe('buildHighlightSpecs', () => {
 
     it('formula layer: bonds array is empty (no bond highlights)', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       const hasBonds = specs.some(s => s.bonds.length > 0);
       expect(hasBonds).toBe(false);
     });
 
     it('c-layer: atoms from bond endpoint set are returned', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs.length).toBeGreaterThan(0);
       const allAtomIds = specs.flatMap(s => s.atoms);
       expect(allAtomIds.length).toBeGreaterThan(0);
@@ -190,14 +190,14 @@ describe('buildHighlightSpecs', () => {
 
     it('c-layer: bonds array is non-empty (findBondId was called)', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       const hasBonds = specs.some(s => s.bonds.length > 0);
       expect(hasBonds).toBe(true);
     });
 
     it('c-layer: color is --c-conn', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(cLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs.length).toBeGreaterThan(0);
       expect(specs[0].color).toBe('--c-conn');
     });
@@ -205,7 +205,7 @@ describe('buildHighlightSpecs', () => {
     it('h-layer: atoms grouped by H-count color (count 1 → --c-hydro-1)', () => {
       // hLayer has text '1-6H' → all atoms get count 1
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(hLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(hLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs.length).toBeGreaterThan(0);
       const spec = specs[0];
       expect(spec.color).toBe('--c-hydro-1');
@@ -216,7 +216,7 @@ describe('buildHighlightSpecs', () => {
       const struct = makeMockStruct();
       const smallAuxMap: AuxMap = { 1: 0, 2: 1 };
       const smallElements: Record<number, string> = { 1: 'C', 2: 'C' };
-      const specs = buildHighlightSpecs(hLayerMulti, null, smallAuxMap, smallElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(hLayerMulti, null, smallAuxMap, smallElements, [], allLayers, struct, resolveVarFn);
       const hydro3Spec = specs.find(s => s.color === '--c-hydro-3');
       expect(hydro3Spec).toBeDefined();
       expect(hydro3Spec!.atoms).toContain(0); // canonical 1 → ketcher 0
@@ -226,7 +226,7 @@ describe('buildHighlightSpecs', () => {
       const struct = makeMockStruct();
       const smallAuxMap: AuxMap = { 3: 2, 4: 3 };
       const smallElements: Record<number, string> = { 3: 'C', 4: 'C' };
-      const specs = buildHighlightSpecs(hLayerMobile, null, smallAuxMap, smallElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(hLayerMobile, null, smallAuxMap, smallElements, [], allLayers, struct, resolveVarFn);
       const mobileSpec = specs.find(s => s.color === '--c-hydro-mobile');
       expect(mobileSpec).toBeDefined();
       expect(mobileSpec!.atoms).toContain(2); // canonical 3 → ketcher 2
@@ -235,7 +235,7 @@ describe('buildHighlightSpecs', () => {
 
     it('t-layer: plus-parity atoms get --c-stereo-plus', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(tLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(tLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       const plusSpec = specs.find(s => s.color === '--c-stereo-plus');
       expect(plusSpec).toBeDefined();
       expect(plusSpec!.atoms).toContain(0); // canonical 1 → ketcher 0
@@ -243,7 +243,7 @@ describe('buildHighlightSpecs', () => {
 
     it('t-layer: minus-parity atoms get --c-stereo-minus', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(tLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(tLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       const minusSpec = specs.find(s => s.color === '--c-stereo-minus');
       expect(minusSpec).toBeDefined();
       expect(minusSpec!.atoms).toContain(1); // canonical 2 → ketcher 1
@@ -251,13 +251,13 @@ describe('buildHighlightSpecs', () => {
 
     it('b-layer: returns empty array [] (no canvas highlight per canvas.jsx behavior)', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(bLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(bLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
     });
 
     it('m-layer: reads atoms from co-present t-layer, uses --c-stereo color', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(mLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(mLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs.length).toBeGreaterThan(0);
       expect(specs[0].color).toBe('--c-stereo');
       // Should include stereo atoms from t-layer (canonical 1,2 → ketcher 0,1)
@@ -268,7 +268,7 @@ describe('buildHighlightSpecs', () => {
 
     it('s-layer: reads atoms from co-present t-layer, uses --c-stereo color', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(sLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(sLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs.length).toBeGreaterThan(0);
       expect(specs[0].color).toBe('--c-stereo');
     });
@@ -276,32 +276,63 @@ describe('buildHighlightSpecs', () => {
     it('m-layer with no t-layer: returns empty array', () => {
       const struct = makeMockStruct();
       const noTLayers: Layer[] = [versionLayer, formulaLayer, mLayer];
-      const specs = buildHighlightSpecs(mLayer, null, auxMap, atomElements, noTLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(mLayer, null, auxMap, atomElements, [], noTLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
     });
 
     it('version layer: returns empty array []', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(versionLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(versionLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
     });
 
     it('q layer: returns empty array []', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
     });
 
     it('p layer: returns empty array []', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(pLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(pLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
     });
 
     it('i layer: returns empty array []', () => {
       const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(iLayer, null, auxMap, atomElements, allLayers, struct, resolveVarFn);
+      const specs = buildHighlightSpecs(iLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
+    });
+  });
+
+  describe('INCHI-05: formula layer with explicit H atoms (hAtomPoolIds)', () => {
+    it('formula layer with hAtomPoolIds: H pool IDs are appended with --c-el-H color', () => {
+      const struct = makeMockStruct();
+      // Simulate ethanol-like molecule: 2 C atoms (canonical 1,2 → ketcher 0,1) + 1 explicit H (pool id 7)
+      const hAtomPoolIds = [7];
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, hAtomPoolIds, allLayers, struct, resolveVarFn);
+      const hSpec = specs.find(s => s.atoms.includes(7));
+      expect(hSpec).toBeDefined();
+      expect(hSpec!.color).toBe('--c-el-H');
+    });
+
+    it('formula layer with empty hAtomPoolIds: no H spec appended', () => {
+      const struct = makeMockStruct();
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
+      // No H pool IDs — should not produce an H-colored spec
+      const hSpec = specs.find(s => s.color === '--c-el-H');
+      expect(hSpec).toBeUndefined();
+    });
+
+    it('formula layer with multiple hAtomPoolIds: all H IDs appear in one H spec', () => {
+      const struct = makeMockStruct();
+      const hAtomPoolIds = [10, 11, 12];
+      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, hAtomPoolIds, allLayers, struct, resolveVarFn);
+      const hSpec = specs.find(s => s.color === '--c-el-H');
+      expect(hSpec).toBeDefined();
+      expect(hSpec!.atoms).toContain(10);
+      expect(hSpec!.atoms).toContain(11);
+      expect(hSpec!.atoms).toContain(12);
     });
   });
 });
@@ -315,6 +346,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'element', el: 'N' },
         auxMap,
         mixedElements,
+        [],
         formulaLayer,
         struct,
         resolveVarFn,
@@ -330,6 +362,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'element', el: 'C' },
         auxMap,
         atomElements,
+        [],
         formulaLayer,
         struct,
         resolveVarFn,
@@ -344,6 +377,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'atom', canonical: 1 },
         auxMap,
         atomElements,
+        [],
         cLayer,
         struct,
         resolveVarFn,
@@ -363,6 +397,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'atom', canonical: 1 },
         auxMap,
         atomElements,
+        [],
         cLayer,
         struct,
         resolveVarFn,
@@ -377,6 +412,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'stereo', atom: 1, sign: '+' },
         auxMap,
         atomElements,
+        [],
         tLayer,
         struct,
         resolveVarFn,
@@ -392,6 +428,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'stereo', atom: 2, sign: '-' },
         auxMap,
         atomElements,
+        [],
         tLayer,
         struct,
         resolveVarFn,
@@ -406,6 +443,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'hAtoms', atoms: [1, 2], count: 1 },
         auxMap,
         atomElements,
+        [],
         hLayer,
         struct,
         resolveVarFn,
@@ -422,6 +460,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'hAtoms', atoms: [1], count: 3 },
         auxMap,
         atomElements,
+        [],
         hLayer,
         struct,
         resolveVarFn,
@@ -436,6 +475,7 @@ describe('buildSubHoverSpecs', () => {
         { kind: 'mobileH', atoms: [3, 4] },
         auxMap,
         atomElements,
+        [],
         hLayerMobile,
         struct,
         resolveVarFn,
@@ -446,66 +486,38 @@ describe('buildSubHoverSpecs', () => {
       expect(specs[0].color).toBe('--c-hydro-mobile');
     });
   });
-});
 
-// ─── INCHI-05: H sub-token highlight ─────────────────────────────────────────
-// Wave 0 RED tests — call buildSubHoverSpecs / buildHighlightSpecs with the
-// POST-06-01 signatures (hAtomPoolIds param inserted after atomElements).
-// These tests fail against the current implementation because the parameter
-// does not exist yet. 06-01 adds the parameter (with default []) to turn them GREEN.
-
-// Explicit H pool IDs — arbitrary values not in auxMap (which maps canonicals 1..6 → 0..5)
-const hAtomPoolIds = [10, 11, 12];
-const emptyHAtomPoolIds: number[] = [];
-
-describe('INCHI-05: H sub-token highlight', () => {
-  describe('buildSubHoverSpecs — element H branch', () => {
-    it('returns hAtomPoolIds as atoms when el is H and hAtomPoolIds is non-empty', () => {
+  describe('INCHI-05: element sub-hover H-branch', () => {
+    it('kind element H with hAtomPoolIds: returns spec with H pool IDs and --c-el-H color', () => {
       const struct = makeMockStruct();
-      // POST-06-01 signature: buildSubHoverSpecs(subHover, auxMap, atomElements, hAtomPoolIds, layer, struct, resolveVarFn)
-      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
-      const specs = buildSubHoverSpecs({ kind: 'element', el: 'H' }, auxMap, atomElements, hAtomPoolIds, formulaLayer, struct, resolveVarFn);
-      expect(specs).toHaveLength(1);
-      expect(specs[0].atoms).toEqual([10, 11, 12]);
-      expect(specs[0].bonds).toEqual([]);
+      const hAtomPoolIds = [7, 8];
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H' },
+        auxMap,
+        atomElements,
+        hAtomPoolIds,
+        formulaLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.length).toBeGreaterThan(0);
+      expect(specs[0].atoms).toContain(7);
+      expect(specs[0].atoms).toContain(8);
       expect(specs[0].color).toBe('--c-el-H');
     });
 
-    it('returns empty array (silent no-op) when el is H and hAtomPoolIds is empty', () => {
+    it('kind element H with empty hAtomPoolIds: silent no-op, returns []  (D-04)', () => {
       const struct = makeMockStruct();
-      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
-      const specs = buildSubHoverSpecs({ kind: 'element', el: 'H' }, auxMap, atomElements, emptyHAtomPoolIds, formulaLayer, struct, resolveVarFn);
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H' },
+        auxMap,
+        atomElements,
+        [],
+        formulaLayer,
+        struct,
+        resolveVarFn,
+      );
       expect(specs).toEqual([]);
-    });
-
-    it('non-H element sub-hover still works with hAtomPoolIds param (regression)', () => {
-      const struct = makeMockStruct();
-      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
-      const specs = buildSubHoverSpecs({ kind: 'element', el: 'C' }, auxMap, atomElements, emptyHAtomPoolIds, formulaLayer, struct, resolveVarFn);
-      expect(specs[0].atoms).toContain(0); // canonical 1 → ketcher 0
-      expect(specs[0].color).toBe('--c-el-C');
-    });
-  });
-
-  describe('buildHighlightSpecs formula layer — H pool IDs appended', () => {
-    it('formula layer with non-empty hAtomPoolIds includes H pool IDs in specs', () => {
-      const struct = makeMockStruct();
-      // POST-06-01 signature: buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVarFn)
-      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
-      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, hAtomPoolIds, allLayers, struct, resolveVarFn);
-      const allAtoms = specs.flatMap(s => s.atoms);
-      expect(allAtoms).toContain(10);
-      expect(allAtoms).toContain(11);
-      expect(allAtoms).toContain(12);
-    });
-
-    it('formula layer with empty hAtomPoolIds does not include phantom atoms in specs', () => {
-      const struct = makeMockStruct();
-      // @ts-expect-error — hAtomPoolIds param not yet in current signature (RED state)
-      const specs = buildHighlightSpecs(formulaLayer, null, auxMap, atomElements, emptyHAtomPoolIds, allLayers, struct, resolveVarFn);
-      const allAtoms = specs.flatMap(s => s.atoms);
-      expect(allAtoms).not.toContain(10);
-      expect(allAtoms).not.toContain(11);
     });
   });
 });

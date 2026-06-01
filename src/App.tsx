@@ -87,7 +87,7 @@ export default function App() {
           const result = parseInchiWithAux(raw);
           // D-12/D-13: empty canvas guard — no formula layer means empty or disconnected
           if (result.layers.length < 2) {
-            useInchiStore.getState().setInchiData('', [], {}, {});
+            useInchiStore.getState().setInchiData('', [], {}, {}, []);
             return;
           }
           // parseInchiWithAux returns canonical → 0-based mol-file rank (from AuxInfo N: field).
@@ -96,15 +96,23 @@ export default function App() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const poolIds: number[] = [];
           (ketcher.editor as any).render.ctab.molecule.atoms.forEach((_: unknown, id: number) => poolIds.push(id));
+          // Collect explicit H atom pool IDs from Ketcher render struct (INCHI-05)
+          const hAtomPoolIds: number[] = [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (ketcher.editor as any).render.ctab.molecule.atoms.forEach(
+            (atom: { label: string }, id: number) => {
+              if (atom.label === 'H') hAtomPoolIds.push(id);
+            }
+          );
           const actualAuxMap: Record<number, number> = {};
           for (const [canonStr, rank] of Object.entries(result.auxMap)) {
             const poolId = poolIds[rank as number];
             if (poolId !== undefined) actualAuxMap[Number(canonStr)] = poolId;
           }
-          useInchiStore.getState().setInchiData(result.inchi, result.layers, actualAuxMap, result.atomElements);
+          useInchiStore.getState().setInchiData(result.inchi, result.layers, actualAuxMap, result.atomElements, hAtomPoolIds);
         } catch {
           // getInchi() can throw on empty or disconnected canvas — reset to empty (D-12)
-          useInchiStore.getState().setInchiData('', [], {}, {});
+          useInchiStore.getState().setInchiData('', [], {}, {}, []);
         }
       }, 150);
     };

@@ -62,13 +62,14 @@ export function buildHighlightSpecs(
   subHover: SubHover | null,
   auxMap: AuxMap,
   atomElements: Record<number, string>,
+  hAtomPoolIds: number[] = [],
   layers: Layer[],
   struct: StructLike,
   resolveVarFn: (name: string) => string,
 ): HighlightSpec[] {
   // When subHover is active, delegate entirely to buildSubHoverSpecs (D-05)
   if (subHover !== null) {
-    return buildSubHoverSpecs(subHover, auxMap, atomElements, layer, struct, resolveVarFn);
+    return buildSubHoverSpecs(subHover, auxMap, atomElements, hAtomPoolIds, layer, struct, resolveVarFn);
   }
 
   // NON-SPATIAL layers — no canvas highlight (D-01)
@@ -88,6 +89,12 @@ export function buildHighlightSpecs(
         const color = resolveVarFn(stripVar(elementColor(el)));
         if (!colorToAtoms.has(color)) colorToAtoms.set(color, []);
         colorToAtoms.get(color)!.push(kId);
+      }
+      // Append explicit H atom pool IDs with H element color (D-05)
+      if (hAtomPoolIds.length > 0) {
+        const hColor = resolveVarFn(stripVar(elementColor('H')));
+        const existing = colorToAtoms.get(hColor) ?? [];
+        colorToAtoms.set(hColor, [...existing, ...hAtomPoolIds]);
       }
       const specs: HighlightSpec[] = [];
       for (const [color, atoms] of colorToAtoms) {
@@ -206,6 +213,7 @@ export function buildSubHoverSpecs(
   subHover: SubHover,
   auxMap: AuxMap,
   atomElements: Record<number, string>,
+  hAtomPoolIds: number[] = [],
   layer: Layer,
   struct: StructLike,
   resolveVarFn: (name: string) => string,
@@ -213,6 +221,13 @@ export function buildSubHoverSpecs(
   switch (subHover.kind) {
     case 'element': {
       const el = subHover.el!;
+      // Explicit H atoms: direct pool ID list, no canonical lookup (D-04, D-06)
+      if (el === 'H') {
+        if (hAtomPoolIds.length === 0) return []; // silent no-op per D-04
+        const color = resolveVarFn(stripVar(elementColor('H')));
+        return [{ atoms: hAtomPoolIds, bonds: [], rgroupAttachmentPoints: [], color }];
+      }
+      // Heavy-atom path (unchanged)
       const kAtoms = layer.atoms
         .filter(canon => atomElements[canon] === el)
         .map(canon => auxMap[canon])

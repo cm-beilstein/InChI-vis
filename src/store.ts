@@ -4,17 +4,18 @@ import type { Layer, AuxMap, SubHover } from './lib/parseInchi';
 
 // All v1 fields defined here per D-02.
 // hoverIdx and subHover are null until Phase 3 writes them.
-// No store changes needed in later phases — just new calls to setHover/setSubHover.
+// hAtomPoolIds added in Phase 6 (INCHI-05) for explicit H atom highlighting.
 interface InchiState {
   // Data fields
   inchi: string;
   layers: Layer[];
   auxMap: AuxMap;
   atomElements: Record<number, string>;
+  hAtomPoolIds: number[];
   hoverIdx: number | null;
   subHover: SubHover | null;
   // Actions
-  setInchiData: (inchi: string, layers: Layer[], auxMap: AuxMap, atomElements: Record<number, string>) => void;
+  setInchiData: (inchi: string, layers: Layer[], auxMap: AuxMap, atomElements: Record<number, string>, hAtomPoolIds?: number[]) => void;
   setHover: (idx: number | null) => void;
   setSubHover: (sub: SubHover | null) => void;
 }
@@ -31,9 +32,10 @@ export const useInchiStore = create<InchiState>()(
       layers: [],
       auxMap: {},
       atomElements: {},
+      hAtomPoolIds: [],
       hoverIdx: null,
       subHover: null,
-      setInchiData: (inchi, layers, auxMap, atomElements) => set({ inchi, layers, auxMap, atomElements }),
+      setInchiData: (inchi, layers, auxMap, atomElements, hAtomPoolIds = []) => set({ inchi, layers, auxMap, atomElements, hAtomPoolIds }),
       setHover: (idx) => set({ hoverIdx: idx }),
       setSubHover: (sub) => set({ subHover: sub }),
     }),
