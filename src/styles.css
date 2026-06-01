@@ -20,7 +20,7 @@
 
   /* Element-specific colors (used in formula layer + per-element halos) */
   --c-el-C:  oklch(0.50 0.015 250);
-  --c-el-H:  oklch(0.55 0.00  0);
+  --c-el-H:  oklch(0.65 0.15  60);
   --c-el-N:  oklch(0.50 0.16  250);
   --c-el-O:  oklch(0.55 0.18  25);
   --c-el-S:  oklch(0.62 0.14  85);
