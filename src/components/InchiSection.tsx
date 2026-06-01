@@ -12,8 +12,12 @@ import { LayerText } from './LayerText';
 import styles from './InchiSection.module.css';
 
 export function InchiSection() {
+  const inchi = useInchiStore(state => state.inchi);
   const layers = useInchiStore(state => state.layers);
   const hoverIdx = useInchiStore(state => state.hoverIdx);
+
+  // Verbatim segments from the raw Ketcher string — never reconstruct from layer.text.
+  const rawParts = inchi ? inchi.slice('InChI='.length).split('/') : [];
 
   const isEmpty = layers.length === 0;
 
@@ -57,7 +61,7 @@ export function InchiSection() {
                     }}
                   >
                     {l.prefix && <span className={styles.prefix}>{l.prefix}</span>}
-                    <LayerText layer={l} />
+                    <LayerText layer={l} rawText={(rawParts[i] ?? l.prefix + l.text).slice(l.prefix.length)} />
                   </span>
                 </React.Fragment>
               );

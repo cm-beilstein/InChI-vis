@@ -26,27 +26,33 @@ function subHoverProps(hit: SubHover) {
 }
 
 // Dispatches to the correct sub-renderer by layer type.
-// Verbatim port of app.jsx lines 116-128.
-export function LayerText({ layer }: { layer: Layer }) {
+// rawText must be the verbatim slice from the Ketcher InChI string (layer.prefix stripped).
+// Callers must source rawText from the raw inchi string — never reconstruct it.
+export function LayerText({ layer, rawText }: { layer: Layer; rawText: string }) {
   switch (layer.type) {
-    case 'formula': return <FormulaText text={layer.text} />;
-    case 'c':       return <ConnectionText text={layer.text} />;
+    case 'formula': return <FormulaText text={rawText} />;
+    case 'c':       return <ConnectionText text={rawText} />;
     case 't':
-    case 'b':       return <ParityText text={layer.text} />;
-    case 'h':       return <HLayerText text={layer.text} />;
-    default:        return <>{layer.text}</>;
+    case 'b':       return <ParityText text={rawText} />;
+    case 'h':       return <HLayerText text={rawText} />;
+    default:        return <>{rawText}</>;
   }
 }
 
 // Port of app.jsx FormulaText lines 138-156.
 // Uses EL_CLASS lookup (not "el-"+el).
+// Tracks `last` to emit literal chars between regex matches (e.g. "." in "C7H8.C6H6").
 function FormulaText({ text }: { text: string }) {
   const out: React.ReactNode[] = [];
   const re = /([A-Z][a-z]?)(\d*)/g;
   let m: RegExpExecArray | null;
   let key = 0;
+  const leadingMult = /^(\d+)(?=[A-Z])/.exec(text);
+  if (leadingMult) out.push(<span key={key++}>{leadingMult[1]}</span>);
+  let last = leadingMult ? leadingMult[1].length : 0;
   while ((m = re.exec(text)) !== null) {
     if (!m[1]) break;
+    if (m.index > last) out.push(<span key={key++}>{text.slice(last, m.index)}</span>);
     const el = m[1];
     out.push(
       <span
@@ -57,7 +63,9 @@ function FormulaText({ text }: { text: string }) {
         {el}{m[2]}
       </span>
     );
+    last = m.index + m[0].length;
   }
+  if (last < text.length) out.push(<span key={key++}>{text.slice(last)}</span>);
   return <>{out}</>;
 }
 
