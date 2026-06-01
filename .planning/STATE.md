@@ -2,22 +2,22 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-05-22T12:48:26.106Z"
+status: complete
+stopped_at: Phase 6 all plans executed — milestone v1.0 complete
+last_updated: "2026-06-01T07:43:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 20
-  completed_plans: 16
-  percent: 80
+  completed_plans: 20
+  percent: 100
 ---
 
 # Project State
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Executing Phase 6
+**Status:** COMPLETE — all 6 phases executed
 
 ## Current Phase
 
@@ -90,7 +90,7 @@ Plan: 1 of 4
 
 - [x] Run `npm install` and inspect `node_modules/ketcher-standalone/dist/` for exact WASM asset paths — CONFIRMED: `binaryWasm/indigo-ketcher-1.40.0.wasm`, `indigo-ketcher-norender-1.40.0.wasm`, `indigoWorker-5d0a61ab.js`, etc.
 - [x] Verify `staticResourcesUrl` correct value for Vite 8 — use `import.meta.env.BASE_URL` (resolves to `/explain-that-inchi/` in prod, `/` in dev)
-- [ ] Decide: include MAP-03 (shareable URL) in Phase 6 or defer to v2 — currently in Phase 6
+- [x] Decide: include MAP-03 (shareable URL) in Phase 6 or defer to v2 — deferred to v2
 
 ### Blockers
 
@@ -98,7 +98,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-05-22T12:06:19.363Z
-**Stopped at:** Phase 6 context gathered
-**Resume file:** .planning/phases/06-hydrogen-highlight-polish-and-deploy/06-CONTEXT.md
-**Next action:** Phase 2 — InChI parsing and live update loop (getInchi + editor.subscribe)
+**Last session:** 2026-06-01T07:43:00.000Z
+**Stopped at:** Phase 6 complete — all 4 plans executed (06-00, 06-01, 06-02, 06-03), 116/116 tests pass, worktrees cleaned up
+**Resume file:** none
+**Next action:** Run /gsd-verify-work to confirm Phase 6 goals met, then /gsd-complete-milestone to archive v1.0
