@@ -5,7 +5,7 @@
 // D-07: setSubHover wired on all sub-token spans (via LayerText).
 // D-08: hint text from formula layer.
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useInchiStore } from '../store';
 import { swatchVar } from '../lib/layerInfo';
 import { LayerText } from './LayerText';
@@ -18,6 +18,10 @@ export function InchiSection() {
 
   const [copied, setCopied] = useState(false);
 
+  // Guard against calling setCopied on an unmounted component (WR-02)
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
   // Verbatim segments from the raw Ketcher string — never reconstruct from layer.text.
   const rawParts = inchi ? inchi.slice('InChI='.length).split('/') : [];
 
@@ -27,7 +31,7 @@ export function InchiSection() {
     try {
       await navigator.clipboard.writeText(inchi);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => { if (mountedRef.current) setCopied(false); }, 1500);
     } catch {
       // Silent failure — clipboard API may be unavailable in some contexts
     }
