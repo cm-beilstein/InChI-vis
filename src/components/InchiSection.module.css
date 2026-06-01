@@ -162,6 +162,12 @@
   color: var(--c-formula);
 }
 
+.copyBtn:focus-visible {
+  outline: 2px solid var(--c-formula);
+  outline-offset: 2px;
+  color: var(--c-formula);
+}
+
 .copyBtn svg {
   width: 16px;
   height: 16px;
