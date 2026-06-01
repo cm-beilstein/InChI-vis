@@ -2,7 +2,7 @@
 // Parses the N: field from Ketcher's getInchi(true) AuxInfo block.
 // Based on CONTEXT.md D-10/D-11 and RESEARCH.md Pattern 3.
 
-import { parseInchi } from './parseInchi';
+import { parseInchi, countFormulaAtoms } from './parseInchi';
 import type { Layer, AuxMap } from './parseInchi';
 
 /**
@@ -51,16 +51,37 @@ export function buildAtomElements(layers: Layer[]): Record<number, string> {
  * caller (parseInchiWithAux) must account for that. Verify by drawing benzene
  * in the running app and logging: window.ketcher.getInchi(true).then(r => console.log(JSON.stringify(r)))
  */
-export function parseAuxMapping(auxBody: string): AuxMap {
+export function parseAuxMapping(auxBody: string, formulaText?: string): AuxMap {
   const parts = auxBody.split('/');
   const nPart = parts.find(p => p.startsWith('N:'));
   if (!nPart) return {};
-  const values = nPart.slice(2).split(',');
   const map: AuxMap = {};
-  values.forEach((v, i) => {
-    const n = parseInt(v, 10);
-    if (!isNaN(n)) map[i + 1] = n - 1; // canonical (1-based) → Ketcher index (0-based)
-  });
+
+  if (formulaText && formulaText.includes('.')) {
+    // Multi-fragment: split formula by '.' to get per-fragment atom counts,
+    // split N: value by ';' to get per-fragment value lists,
+    // then apply canonicalOffset per fragment.
+    const fragmentFormulas = formulaText.split('.');
+    const fragmentAtomCounts = fragmentFormulas.map(f => countFormulaAtoms(f));
+    const nFragments = nPart.slice(2).split(';');
+    let canonicalOffset = 0;
+    nFragments.forEach((fragValues, fi) => {
+      const values = fragValues.split(',');
+      values.forEach((v, i) => {
+        const n = parseInt(v, 10);
+        if (!isNaN(n)) map[canonicalOffset + i + 1] = n - 1; // canonical (1-based) → Ketcher index (0-based)
+      });
+      canonicalOffset += fragmentAtomCounts[fi] ?? values.length;
+    });
+  } else {
+    // Single-fragment (original behavior)
+    const values = nPart.slice(2).split(',');
+    values.forEach((v, i) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) map[i + 1] = n - 1; // canonical (1-based) → Ketcher index (0-based)
+    });
+  }
+
   return map;
 }
 
@@ -90,10 +111,11 @@ export function parseInchiWithAux(raw: string): {
   const inchiStr = raw.slice(0, idx);
   const auxBody = raw.slice(idx + sep.length);
   const layers = parseInchi(inchiStr);
+  const formulaLayer = layers.find(l => l.type === 'formula');
   return {
     inchi: inchiStr,
     layers,
-    auxMap: parseAuxMapping(auxBody),
+    auxMap: parseAuxMapping(auxBody, formulaLayer?.text ?? ''),
     atomElements: buildAtomElements(layers),
   };
 }
