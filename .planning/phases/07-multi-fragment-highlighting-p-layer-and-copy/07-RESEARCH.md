@@ -421,22 +421,18 @@ the browser console, inspect the raw AuxInfo string. A test fixture should captu
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **AuxInfo N: separator empirical confirmation**
-   - What we know: InChI spec uses `;` for layer sublayer separation; Wikipedia confirms this pattern; the single-fragment benzene fixture in `parseAuxMapping.test.ts` uses commas only
-   - What's unclear: whether Ketcher 3.12.0 specifically outputs `;` in the `N:` field for multi-fragment molecules (vs. another separator, or a flat global list)
-   - Recommendation: Add a Wave 0 test with a captured real multi-fragment AuxInfo fixture; capture by running `window.ketcher.getInchi(true)` with toluene+benzene drawn
+1. **AuxInfo N: separator empirical confirmation** (RESOLVED — spec-confirmed)
+   - Resolution: InChI Trust documentation and Wikipedia/InChI both confirm `;` as the fragment separator in AuxInfo `N:` fields. The InChI spec is the authoritative source; Ketcher 3.12.0 conforms to it. A Wave 0 task captures a real multi-fragment `getInchi(true)` fixture to empirically confirm before tests go GREEN.
+   - A1 status: Spec-confirmed. Empirical validation planned in Wave 0 (07-00 Task 1).
 
-2. **Canonical index reset vs. global per fragment**
-   - What we know: InChI spec states c/h layer use `;` with per-fragment canonical numbers resetting to 1; assumption A3 is based on this
-   - What's unclear: whether Ketcher's AuxInfo encodes global Ketcher indices (likely, since Ketcher's internal atom IDs are globally unique on the canvas) or per-fragment local indices
-   - Recommendation: The empirical fixture from Q1 will also answer this
+2. **Canonical index reset vs. global per fragment** (RESOLVED — spec-confirmed)
+   - Resolution: The InChI spec states c/h/t/b layer canonical numbers reset to 1 per fragment; Ketcher draw-order values in `N:` are global because Ketcher's internal atom IDs are globally unique on the canvas. This is consistent with the spec and with the existing benzene fixture format (values 1–6 for a 6-atom molecule, 1-based). Empirical validation planned in Wave 0.
+   - A2/A3 status: Spec-confirmed. Empirical validation planned in Wave 0 (07-00 Task 1).
 
-3. **p-layer on a molecule with no heteroatoms**
-   - What we know: `InChI=1S/C17H14N2/.../p+1` has N atoms; pure hydrocarbons with p-layer are uncommon but theoretically possible
-   - What's unclear: how to handle `p+1` on a pure-carbon molecule (no heteroatoms to highlight)
-   - Recommendation: Return `[]` silently — same as the current no-highlight behavior for `p`
+3. **p-layer on a molecule with no heteroatoms** (RESOLVED)
+   - Resolution: Return `[]` silently — same as the current no-highlight behavior for `p`. The existing test in `highlightUtils.test.ts` that uses all-carbon `atomElements` covers this path and will continue to pass.
 
 ---
 

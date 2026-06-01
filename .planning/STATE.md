@@ -2,46 +2,46 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: complete
-stopped_at: Phase 6 all plans executed — milestone v1.0 complete
-last_updated: "2026-06-01T07:43:00.000Z"
+status: in_progress
+stopped_at: null
+last_updated: "2026-06-01T12:00:00.000Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 20
+  total_plans: 23
   completed_plans: 20
-  percent: 100
+  percent: 87
 ---
 
 # Project State
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** COMPLETE — all 6 phases executed
+**Status:** IN PROGRESS — Phase 7 planned, ready to execute
 
 ## Current Phase
 
-Phase 2 — Data Pipeline (READY TO EXECUTE — 3/3 plans planned)
+Phase 7 — Multi-Fragment Highlighting, p-Layer, and Copy (PLANNED — 3/3 plans ready)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 6 — hydrogen-highlight-polish-and-deploy
+**Current focus:** Phase 7 — multi-fragment-highlighting-p-layer-and-copy
 
 ## Current Position
 
-Phase: 6 (hydrogen-highlight-polish-and-deploy) — EXECUTING
-Plan: 1 of 4
+Phase: 7 (multi-fragment-highlighting-p-layer-and-copy) — READY TO EXECUTE
+Plan: 0 of 3
 
-- **Phase:** 2 — Data Pipeline (PLANNED)
-- **Plan:** 3 plans ready — 02-01, 02-02, 02-03
-- **Status:** Phase 2 planned; ready to execute
-- **Progress:** 1/6 phases complete
+- **Phase:** 7 — Multi-Fragment Highlighting, p-Layer, and Copy (PLANNED)
+- **Plan:** 3 plans ready — 07-00, 07-01, 07-02
+- **Status:** Phase 7 planned; ready to execute
+- **Progress:** 6/7 phases complete
 
 ```
-[████░░░░░░░░░░░░░░░░░░░░░] 17%
+[████████████████████████░] 87%
 ```
 
 ## Performance Metrics
@@ -98,7 +98,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-06-01T07:43:00.000Z
-**Stopped at:** Phase 6 complete — all 4 plans executed (06-00, 06-01, 06-02, 06-03), 116/116 tests pass, worktrees cleaned up
-**Resume file:** none
+**Last session:** 2026-06-01T07:32:19.263Z
+**Stopped at:** context exhaustion at 75% (2026-06-01)
+**Resume file:** None
 **Next action:** Run /gsd-verify-work to confirm Phase 6 goals met, then /gsd-complete-milestone to archive v1.0

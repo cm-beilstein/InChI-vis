@@ -155,7 +155,7 @@ Plans:
 
 **Success Criteria** (what must be TRUE):
 1. For `InChI=1S/C7H8.C6H6/c1-7-5-3-2-4-6-7;1-2-4-6-5-3-1/h2-6H,1H3;1-6H`, hovering the formula layer highlights all 13 heavy atoms; hovering the `c` layer highlights the correct bonds and atoms for both fragments independently
-2. For `InChI=1S/C17H14N2/...p+1`, hovering the `p` layer highlights the protonation-site atoms (from `q` layer if present, else all N/O heteroatoms from the formula)
+2. For `InChI=1S/C17H14N2/...p+1`, hovering the `p` layer highlights all heteroatom (non-C, non-H) atoms from the formula — the q-layer stores only a single net-charge integer and cannot identify per-atom protonation sites
 3. A copy icon appears at the right end of the InChI display box; clicking it copies the verbatim InChI string to the clipboard and shows a brief "Copied!" confirmation
 4. All existing highlight tests continue to pass; new unit tests cover multi-fragment `parseAuxMapping`, multi-fragment `enrichLayers`, and `buildHighlightSpecs` for the `p` layer type
 
