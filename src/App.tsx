@@ -5,7 +5,6 @@ import { Header } from './components/Header';
 import { KetcherPanel } from './components/KetcherPanel';
 import { InchiSection } from './components/InchiSection';
 import { Explanation } from './components/Explanation';
-import { Footnote } from './components/Footnote';
 import { parseInchiWithAux } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
 import { useKetcherHighlights } from './hooks/useKetcherHighlights';
@@ -150,7 +149,6 @@ export default function App() {
         isLoading={isLoading}
       />
       <InchiSection />
-      <Footnote />
       <Explanation />
     </div>
   );

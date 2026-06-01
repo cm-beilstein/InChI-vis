@@ -15,48 +15,55 @@ export function InchiSection() {
   const layers = useInchiStore(state => state.layers);
   const hoverIdx = useInchiStore(state => state.hoverIdx);
 
-  if (layers.length === 0) return null;
+  const isEmpty = layers.length === 0;
 
   return (
     <section className={styles.inchiSection}>
-<div
+      <div
         className={styles.inchiDisplay}
-        onMouseLeave={() => {
+        data-empty={isEmpty ? 'true' : undefined}
+        onMouseLeave={isEmpty ? undefined : () => {
           useInchiStore.getState().setHover(null);
           useInchiStore.getState().setSubHover(null);
         }}
       >
-        <span className={styles.inchiPrefix}>InChI=</span>
-        {layers.map((l, i) => {
-          const isActive = hoverIdx === i;
-          const isDim = hoverIdx !== null && hoverIdx !== i;
-          const tokenColor = `var(--c-${swatchVar(l.type)})`;
-          const bgColor = `var(--c-${swatchVar(l.type)}-bg)`;
-          return (
-            <React.Fragment key={i}>
-              {i > 0 && <span className={styles.inchiSlash}>/</span>}
-              <span
-                className={[
-                  styles.inchiLayer,
-                  isActive ? styles.active : '',
-                  isDim ? styles.dim : '',
-                ].filter(Boolean).join(' ')}
-                data-layer={l.type}
-                style={{
-                  color: tokenColor,
-                  ...(isActive ? { background: bgColor } : {}),
-                }}
-                onMouseEnter={() => {
-                  useInchiStore.getState().setHover(i);
-                  useInchiStore.getState().setSubHover(null);
-                }}
-              >
-                {l.prefix && <span className={styles.prefix}>{l.prefix}</span>}
-                <LayerText layer={l} />
-              </span>
-            </React.Fragment>
-          );
-        })}
+        {isEmpty ? (
+          <span className={styles.emptyHint}>Draw a molecule above to see its InChI.</span>
+        ) : (
+          <>
+            <span className={styles.inchiPrefix}>InChI=</span>
+            {layers.map((l, i) => {
+              const isActive = hoverIdx === i;
+              const isDim = hoverIdx !== null && hoverIdx !== i;
+              const tokenColor = `var(--c-${swatchVar(l.type)})`;
+              const bgColor = `var(--c-${swatchVar(l.type)}-bg)`;
+              return (
+                <React.Fragment key={i}>
+                  {i > 0 && <span className={styles.inchiSlash}>/</span>}
+                  <span
+                    className={[
+                      styles.inchiLayer,
+                      isActive ? styles.active : '',
+                      isDim ? styles.dim : '',
+                    ].filter(Boolean).join(' ')}
+                    data-layer={l.type}
+                    style={{
+                      color: tokenColor,
+                      ...(isActive ? { background: bgColor } : {}),
+                    }}
+                    onMouseEnter={() => {
+                      useInchiStore.getState().setHover(i);
+                      useInchiStore.getState().setSubHover(null);
+                    }}
+                  >
+                    {l.prefix && <span className={styles.prefix}>{l.prefix}</span>}
+                    <LayerText layer={l} />
+                  </span>
+                </React.Fragment>
+              );
+            })}
+          </>
+        )}
       </div>
     </section>
   );
