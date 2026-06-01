@@ -51,8 +51,8 @@ describe('whiteAtomLabels', () => {
     svg.append(nEl, oEl);
     const specs: HighlightSpec[] = [{ atoms: [5, 6], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(80,150,255)' }];
     whiteAtomLabels(svg, specs);
-    expect((nEl as HTMLElement).style.fill).toBe('white');
-    expect((oEl as HTMLElement).style.fill).toBe('white');
+    expect((nEl as unknown as HTMLElement).style.fill).toBe('white');
+    expect((oEl as unknown as HTMLElement).style.fill).toBe('white');
   });
 
   it('does NOT set fill on C atoms (no visible label in skeletal formula)', () => {
@@ -61,7 +61,7 @@ describe('whiteAtomLabels', () => {
     svg.append(cEl);
     const specs: HighlightSpec[] = [{ atoms: [3], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(80,150,255)' }];
     whiteAtomLabels(svg, specs);
-    expect((cEl as HTMLElement).style.fill).toBe('');
+    expect((cEl as unknown as HTMLElement).style.fill).toBe('');
   });
 
   it('skips atoms with no matching DOM element without throwing', () => {
@@ -80,7 +80,7 @@ describe('whiteAtomLabels', () => {
       { atoms: [2], bonds: [], rgroupAttachmentPoints: [], color: 'rgb(4,5,6)' },
     ];
     whiteAtomLabels(svg, specs);
-    expect((nEl as HTMLElement).style.fill).toBe('white');
-    expect((clEl as HTMLElement).style.fill).toBe('white');
+    expect((nEl as unknown as HTMLElement).style.fill).toBe('white');
+    expect((clEl as unknown as HTMLElement).style.fill).toBe('white');
   });
 });

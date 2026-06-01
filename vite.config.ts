@@ -28,7 +28,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     rolldownOptions: {
-      define: processShim,
+      transform: {
+        define: processShim,
+      },
     },
   },
   plugins: [
