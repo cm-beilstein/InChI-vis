@@ -274,8 +274,17 @@ export function buildSubHoverSpecs(
         const color = resolveVarFn(stripVar(elementColor('H')));
         return [{ atoms: hAtomPoolIds, bonds: [], rgroupAttachmentPoints: [], color }];
       }
-      // Heavy-atom path (unchanged)
-      const kAtoms = layer.atoms
+      // Restrict to a specific fragment's canonical range when fragIndex is set.
+      // Used for dot-separated multi-fragment formulas (e.g. C7H8.C6H6).
+      let atomsToCheck = layer.atoms;
+      if (subHover.fragIndex !== undefined) {
+        const fragCounts = formulaFragmentCounts(layer.text);
+        let fragStart = 0;
+        for (let i = 0; i < subHover.fragIndex; i++) fragStart += fragCounts[i] ?? 0;
+        const fragEnd = fragStart + (fragCounts[subHover.fragIndex] ?? 0);
+        atomsToCheck = layer.atoms.filter(c => c > fragStart && c <= fragEnd);
+      }
+      const kAtoms = atomsToCheck
         .filter(canon => atomElements[canon] === el)
         .map(canon => auxMap[canon])
         .filter((id): id is number => id !== undefined);
@@ -285,17 +294,17 @@ export function buildSubHoverSpecs(
     }
 
     case 'atom': {
-      const kAtomId = auxMap[subHover.canonical!];
-      if (kAtomId === undefined) return [];
-      // Collect incident bonds
+      // canonicals is set for 2* identical-fragment layers (one canonical per fragment).
+      // Falls back to the single canonical field for single-fragment and ;-separated layers.
+      const canonIds = subHover.canonicals ?? (subHover.canonical != null ? [subHover.canonical] : []);
+      const kAtomIds = canonIds.map(c => auxMap[c]).filter((id): id is number => id !== undefined);
+      if (kAtomIds.length === 0) return [];
       const incidentBonds: number[] = [];
       struct.bonds.forEach((bond, bid) => {
-        if (bond.begin === kAtomId || bond.end === kAtomId) {
-          incidentBonds.push(bid);
-        }
+        if (kAtomIds.includes(bond.begin) || kAtomIds.includes(bond.end)) incidentBonds.push(bid);
       });
       const color = resolveVarFn('--c-conn');
-      return [{ atoms: [kAtomId], bonds: incidentBonds, rgroupAttachmentPoints: [], color }];
+      return [{ atoms: kAtomIds, bonds: incidentBonds, rgroupAttachmentPoints: [], color }];
     }
 
     case 'stereo': {

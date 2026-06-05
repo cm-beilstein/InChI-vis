@@ -32,7 +32,13 @@ export type AuxMap = Record<number, number>; // canonical 1-based → Ketcher 0-
 export interface SubHover {
   kind: 'element' | 'atom' | 'stereo' | 'hAtoms' | 'mobileH';
   el?: string;
+  // Fragment index for element hovers in dot-separated multi-fragment formulas.
+  // Absent for single-fragment and N* (identical-fragment) formulas.
+  fragIndex?: number;
   canonical?: number;
+  // For 2* identical-fragment layers: all globally-offset canonicals (one per fragment).
+  // buildSubHoverSpecs uses canonicals when present, falling back to canonical otherwise.
+  canonicals?: number[];
   atom?: number;
   sign?: string;
   atoms?: number[];

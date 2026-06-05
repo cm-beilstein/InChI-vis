@@ -76,29 +76,38 @@ export function useKetcherHighlights(
     const struct = editorAny.render.ctab.molecule as StructLike;
     const highlightEditor = editorAny as { highlights: { clear(): void; create(...args: HighlightSpec[]): void } };
 
-    // Always clear first — prevents stale highlight accumulation (D-04).
-    // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
-    if (hoverIdx === null) {
-      highlightEditor.highlights.clear();
-      return;
-    }
-    const layer = layers[hoverIdx];
-    if (!layer) {
-      highlightEditor.highlights.clear();
-      return;
-    }
-    // Non-spatial layers: clear canvas, update explanation card only (D-01)
-    // 'b' is also non-spatial — matches NON_SPATIAL guard in buildHighlightSpecs
-    if (['version', 'q', 'i', 'b'].includes(layer.type)) {
-      highlightEditor.highlights.clear();
-      return;
-    }
+    // Guard: highlights.create/clear both call editor.update() synchronously, which
+    // fires the editor change event. Without this flag, each highlight triggers
+    // getInchi(true), which rebuilds the molecule struct and changes pool IDs,
+    // making the auxMap stale for multi-fragment molecules (D-04).
+    if (_isHighlightingRef) _isHighlightingRef.current = true;
+    try {
+      // Always clear first — prevents stale highlight accumulation.
+      // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
+      if (hoverIdx === null) {
+        highlightEditor.highlights.clear();
+        return;
+      }
+      const layer = layers[hoverIdx];
+      if (!layer) {
+        highlightEditor.highlights.clear();
+        return;
+      }
+      // Non-spatial layers: clear canvas, update explanation card only (D-01)
+      // 'b' is also non-spatial — matches NON_SPATIAL guard in buildHighlightSpecs
+      if (['version', 'q', 'i', 'b'].includes(layer.type)) {
+        highlightEditor.highlights.clear();
+        return;
+      }
 
-    const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVar);
-    applyKetcherHighlights(highlightEditor, specs);
-    if (specs.length > 0) {
-      const svgRoot = editorAny.render.paper.canvas as Element;
-      whiteAtomLabels(svgRoot, specs);
+      const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVar);
+      applyKetcherHighlights(highlightEditor, specs);
+      if (specs.length > 0) {
+        const svgRoot = editorAny.render.paper.canvas as Element;
+        whiteAtomLabels(svgRoot, specs);
+      }
+    } finally {
+      if (_isHighlightingRef) _isHighlightingRef.current = false;
     }
   }, [hoverIdx, subHover, layers, auxMap, atomElements, hAtomPoolIds, isReady]);
   // Note: ketcherRef is a ref — intentionally not in deps (stable reference)

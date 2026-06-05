@@ -8,6 +8,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useInchiStore } from '../store';
 import { swatchVar } from '../lib/layerInfo';
+import { formulaFragmentCounts } from '../lib/parseInchi';
 import { LayerText } from './LayerText';
 import styles from './InchiSection.module.css';
 
@@ -15,6 +16,9 @@ export function InchiSection() {
   const inchi = useInchiStore(state => state.inchi);
   const layers = useInchiStore(state => state.layers);
   const hoverIdx = useInchiStore(state => state.hoverIdx);
+
+  const formulaLayer = layers.find(l => l.type === 'formula');
+  const fragCounts = formulaLayer ? formulaFragmentCounts(formulaLayer.text) : [];
 
   const [copied, setCopied] = useState(false);
 
@@ -77,7 +81,7 @@ export function InchiSection() {
                     }}
                   >
                     {l.prefix && <span className={styles.prefix}>{l.prefix}</span>}
-                    <LayerText layer={l} rawText={(rawParts[i] ?? l.prefix + l.text).slice(l.prefix.length)} />
+                    <LayerText layer={l} rawText={(rawParts[i] ?? l.prefix + l.text).slice(l.prefix.length)} fragCounts={fragCounts} />
                   </span>
                 </React.Fragment>
               );

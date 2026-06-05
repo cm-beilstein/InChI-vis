@@ -66,8 +66,25 @@ export function parseAuxMapping(auxBody: string, formulaText?: string): AuxMap {
   const map: AuxMap = {};
 
   const nValue = nPart.slice(2);
-  // Detect multi-fragment from the N: semicolon separator — this covers both
-  // "C7H8.C6H6" (dot-separated) and "2C6H6" (multiplier) InChI formula formats.
+
+  // Handle "n*vals" multiplier notation (identical fragments, e.g. N:2*1,3,5,2,6,4).
+  // Values are LOCAL 1-based ranks within each fragment; global rank = fragOffset + (localRank-1).
+  const multNMatch = nValue.match(/^(\d+)\*([\s\S]*)$/);
+  if (multNMatch) {
+    const n = parseInt(multNMatch[1], 10);
+    const fragValues = multNMatch[2].split(',');
+    const atomsPerFrag = fragValues.length;
+    for (let fi = 0; fi < n; fi++) {
+      const fragOffset = fi * atomsPerFrag;
+      fragValues.forEach((v, i) => {
+        const localRank = parseInt(v, 10);
+        if (!isNaN(localRank)) map[fragOffset + i + 1] = fragOffset + (localRank - 1);
+      });
+    }
+    return map;
+  }
+
+  // Detect multi-fragment from the N: semicolon separator — "C7H8.C6H6" dot-notation.
   const isMultiFragment = nValue.includes(';');
 
   if (isMultiFragment) {
