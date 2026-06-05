@@ -151,6 +151,49 @@ describe('INCHI-06: multi-fragment enrichLayers', () => {
   });
 });
 
+describe('INCHI-07: N*fragment;fragment mixed multiplier notation (2C7H8.C6H6)', () => {
+  // InChI with formula 2C7H8.C6H6 → 3 fragments: toluene, toluene, benzene
+  // c layer: "2*1-7-5-3-2-4-6-7;1-2-4-6-5-3-1" — N* only multiplies its own segment, not the rest
+  // h layer: "2*2-6H,1H3;1-6H"
+  const INCHI = 'InChI=1S/2C7H8.C6H6/c2*1-7-5-3-2-4-6-7;1-2-4-6-5-3-1/h2*2-6H,1H3;1-6H';
+
+  it('formulaLayer.atoms has 20 entries (7+7+6 heavy atoms)', () => {
+    const layers = parseInchi(INCHI);
+    const formulaLayer = layers.find(l => l.type === 'formula')!;
+    expect(formulaLayer.atoms).toHaveLength(20);
+    expect(formulaLayer.atoms[19]).toBe(20);
+  });
+
+  it('cLayer.bonds does NOT contain spurious cross-fragment bond [7, 1]', () => {
+    const layers = parseInchi(INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    // [7, 1] appears when ";" is silently skipped — end of toluene bonds to start of benzene
+    expect(cLayer.bonds).not.toContainEqual([7, 1]);
+  });
+
+  it('cLayer.atoms does not exceed total atom count of 20', () => {
+    const layers = parseInchi(INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    expect(cLayer.atoms.filter(a => a > 20)).toHaveLength(0);
+  });
+
+  it('cLayer.bonds contains benzene fragment bond [15, 16] (atom 1+offset14, atom 2+offset14)', () => {
+    const layers = parseInchi(INCHI);
+    const cLayer = layers.find(l => l.type === 'c')!;
+    // benzene (fragment 3): text "1-2-4-6-5-3-1", offset = 7+7 = 14
+    // first bond: [1+14, 2+14] = [15, 16]
+    expect(cLayer.bonds).toContainEqual([15, 16]);
+  });
+
+  it('hLayer.atoms contains atom 15 (benzene fragment atom 1 with offset 14)', () => {
+    const layers = parseInchi(INCHI);
+    const hLayer = layers.find(l => l.type === 'h')!;
+    // benzene h layer "1-6H" with offset 14 → atoms 15–20 present
+    expect(hLayer.atoms).toContain(15);
+    expect(hLayer.atoms).toContain(20);
+  });
+});
+
 describe('parseStereoAtoms', () => {
   it('extracts atom numbers from stereo notation', () => {
     expect(parseStereoAtoms('2-,5+')).toEqual([2, 5]);

@@ -79,6 +79,63 @@ describe('INCHI-06: multi-fragment N: parsing', () => {
   });
 });
 
+describe('INCHI-07: mixed N*;N* multiplier notation in N: field (2C7H8.3C6H6)', () => {
+  // AuxInfo N: field for 2C7H8.3C6H6: two toluene groups (local ranks) then three benzene groups (local ranks)
+  // N:2*1,3,5,2,6,4,7;3*1,2,3,4,5,6
+  //   toluene×2: local [1,3,5,2,6,4,7] → applied at offsets 0 and 7
+  //   benzene×3: local [1,2,3,4,5,6]   → applied at offsets 14, 20, 26
+  const FORMULA = '2C7H8.3C6H6';
+  const NVALUE = '2*1,3,5,2,6,4,7;3*1,2,3,4,5,6';
+  const AUXBODY = `1/0/N:${NVALUE}/`;
+
+  it('produces 32 entries (7+7+6+6+6 atoms)', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(Object.keys(map)).toHaveLength(32);
+  });
+
+  it('canonical 1 (toluene-1 local-rank-1, offset 0) → Ketcher index 0', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(map[1]).toBe(0); // fragOffset=0, localRank=1 → 0+(1-1)=0
+  });
+
+  it('canonical 8 (toluene-2 local-rank-1, offset 7) → Ketcher index 7', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(map[8]).toBe(7); // fragOffset=7, localRank=1 → 7+(1-1)=7
+  });
+
+  it('canonical 15 (benzene-1 local-rank-1, offset 14) → Ketcher index 14', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(map[15]).toBe(14); // fragOffset=14, localRank=1 → 14+(1-1)=14
+  });
+
+  it('canonical 21 (benzene-2 local-rank-1, offset 20) → Ketcher index 20', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(map[21]).toBe(20);
+  });
+
+  it('canonical 27 (benzene-3 local-rank-1, offset 26) → Ketcher index 26', () => {
+    const map = parseAuxMapping(AUXBODY, FORMULA);
+    expect(map[27]).toBe(26);
+  });
+});
+
+describe('INCHI-07: buildAtomElements for mixed formula 2C7H8.3C6H6', () => {
+  const INCHI = 'InChI=1S/2C7H8.3C6H6/c2*1-7-5-3-2-4-6-7;3*1-2-4-6-5-3-1/h2*2-6H,1H3;3*1-6H';
+  const AUXBODY = '1/0/N:2*1,3,5,2,6,4,7;3*1,2,3,4,5,6/';
+
+  it('parseInchiWithAux produces auxMap with 32 entries', () => {
+    const raw = INCHI + '\nAuxInfo=' + AUXBODY;
+    const result = parseInchiWithAux(raw);
+    expect(Object.keys(result.auxMap)).toHaveLength(32);
+  });
+
+  it('atomElements has entries for all 32 atoms (no missing labels)', () => {
+    const raw = INCHI + '\nAuxInfo=' + AUXBODY;
+    const result = parseInchiWithAux(raw);
+    expect(Object.keys(result.atomElements)).toHaveLength(32);
+  });
+});
+
 describe('parseInchiWithAux', () => {
   it('splits real Ketcher 3.12.0 getInchi(true) output into inchi, layers, and auxMap', () => {
     const raw = 'InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H\nAuxInfo=' + BENZENE_AUXINFO_BODY;

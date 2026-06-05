@@ -23,7 +23,7 @@ export function buildAtomElements(layers: Layer[]): Record<number, string> {
   const expandedFormula = (() => {
     const t = formulaLayer.text;
     const multMatch = t.match(/^(\d+)([A-Z].*)/);
-    if (multMatch) {
+    if (multMatch && !t.includes('.')) {
       const n = parseInt(multMatch[1], 10);
       return multMatch[2].repeat(n);
     }
@@ -75,48 +75,50 @@ export function parseAuxMapping(auxBody: string, formulaText?: string): AuxMap {
 
   const nValue = nPart.slice(2);
 
-  // Handle "n*vals" multiplier notation (identical fragments, e.g. N:2*1,3,5,2,6,4).
-  // Values are LOCAL 1-based ranks within each fragment; global rank = fragOffset + (localRank-1).
-  const multNMatch = nValue.match(/^(\d+)\*([\s\S]*)$/);
-  if (multNMatch) {
-    const n = parseInt(multNMatch[1], 10);
-    const fragValues = multNMatch[2].split(',');
-    const atomsPerFrag = fragValues.length;
-    for (let fi = 0; fi < n; fi++) {
-      const fragOffset = fi * atomsPerFrag;
-      fragValues.forEach((v, i) => {
-        const localRank = parseInt(v, 10);
-        if (!isNaN(localRank)) map[fragOffset + i + 1] = fragOffset + (localRank - 1);
-      });
-    }
-    return map;
-  }
-
-  // Detect multi-fragment from the N: semicolon separator — "C7H8.C6H6" dot-notation.
-  const isMultiFragment = nValue.includes(';');
-
-  if (isMultiFragment) {
-    const fragmentAtomCounts = formulaText
-      ? formulaFragmentCounts(formulaText)
-      : nValue.split(';').map(seg => seg.split(',').length); // fallback: infer from N: field
-    const nFragments = nValue.split(';');
-    let canonicalOffset = 0;
-    nFragments.forEach((fragValues, fi) => {
-      const values = fragValues.split(',');
-      values.forEach((v, i) => {
-        const n = parseInt(v, 10);
-        if (!isNaN(n)) map[canonicalOffset + i + 1] = n - 1; // N: uses global draw-order (1-based) → 0-based
-      });
-      canonicalOffset += fragmentAtomCounts[fi] ?? values.length;
-    });
-  } else {
-    // Single-fragment
+  // Single-fragment, no multiplier — global Ketcher draw-order values.
+  if (!nValue.includes(';') && !/^\d+\*/.test(nValue)) {
     const values = nValue.split(',');
     values.forEach((v, i) => {
       const n = parseInt(v, 10);
       if (!isNaN(n)) map[i + 1] = n - 1;
     });
+    return map;
   }
+
+  // Multi-fragment or multiplied.
+  // Segments with "N*vals" use LOCAL 1-based ranks (fragOffset + localRank - 1).
+  // Plain segments use GLOBAL 1-based Ketcher draw-order (n - 1).
+  const fragmentAtomCounts = formulaText ? formulaFragmentCounts(formulaText) : null;
+  const segments = nValue.split(';');
+  let globalOffset = 0;
+  let fragFormulaIdx = 0;
+
+  segments.forEach(seg => {
+    const segMult = seg.match(/^(\d+)\*([\s\S]*)$/);
+    if (segMult) {
+      const n = parseInt(segMult[1], 10);
+      const localValues = segMult[2].split(',');
+      const atomsPerFrag = fragmentAtomCounts?.[fragFormulaIdx] ?? localValues.length;
+      for (let fi = 0; fi < n; fi++) {
+        const fragOffset = globalOffset + fi * atomsPerFrag;
+        localValues.forEach((v, i) => {
+          const localRank = parseInt(v, 10);
+          if (!isNaN(localRank)) map[fragOffset + i + 1] = fragOffset + (localRank - 1);
+        });
+        fragFormulaIdx++;
+      }
+      globalOffset += n * atomsPerFrag;
+    } else {
+      const values = seg.split(',');
+      values.forEach((v, i) => {
+        const n = parseInt(v, 10);
+        if (!isNaN(n)) map[globalOffset + i + 1] = n - 1;
+      });
+      const atomsForFrag = fragmentAtomCounts?.[fragFormulaIdx] ?? values.length;
+      globalOffset += atomsForFrag;
+      fragFormulaIdx++;
+    }
+  });
 
   return map;
 }

@@ -199,11 +199,6 @@ export function formulaFragmentCounts(formulaText: string): number[] {
  *   "1-2-4-6-5-3-1"                — single fragment     → ["1-2-4-6-5-3-1"]
  */
 export function expandLayerText(text: string): string[] {
-  const multMatch = text.match(/^(\d+)\*([\s\S]*)$/);
-  if (multMatch) {
-    const n = parseInt(multMatch[1], 10);
-    return Array(n).fill(multMatch[2]) as string[];
-  }
   return text.split(';').flatMap(seg => {
     const segMult = seg.match(/^(\d+)\*([\s\S]*)$/);
     if (segMult) {
