@@ -4,7 +4,7 @@ An interactive web tool for understanding [InChI](https://iupac.org/what-we-do/d
 
 Draw a molecule in the embedded editor — the InChI is computed live and each layer is colour-coded and interactive. Hover a layer chunk to highlight the corresponding atoms in the drawing and read a plain-English explanation.
 
-**Live:** `https://<your-username>.github.io/explain-that-inchi/`
+**Live:** `https://cm-beilstein.github.io/explain-that-inchi/`
 
 ---
 
@@ -28,16 +28,6 @@ npm run build
 ```
 
 Output is written to `dist/`. The build includes the InChI WASM library and a `coi-serviceworker.js` that sets the required `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` headers on GitHub Pages.
-
----
-
-## Deploy to GitHub Pages
-
-Push to the `master` branch — the GitHub Actions workflow in `.github/workflows/deploy.yml` builds the project and publishes `dist/` to the `gh-pages` branch automatically.
-
-First-time setup:
-1. In your GitHub repository settings, go to **Pages** → **Source** → select **Deploy from a branch** → branch `gh-pages`, folder `/ (root)`.
-2. Push a commit to `master` to trigger the first deploy.
 
 ---
 

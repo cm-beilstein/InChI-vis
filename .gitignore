@@ -26,3 +26,7 @@ node_modules/.tmp/
 .env
 .env.local
 .env.*.local
+
+memory/
+
+design_handoff_explain_that_inchi/
