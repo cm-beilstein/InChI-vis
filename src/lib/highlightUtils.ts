@@ -274,15 +274,12 @@ export function buildSubHoverSpecs(
         const color = resolveVarFn(stripVar(elementColor('H')));
         return [{ atoms: hAtomPoolIds, bonds: [], rgroupAttachmentPoints: [], color }];
       }
-      // Restrict to a specific fragment's canonical range when fragIndex is set.
-      // Used for dot-separated multi-fragment formulas (e.g. C7H8.C6H6).
+      // Restrict to the canonical ID range of the hovered fragment or group.
+      // Used for dot-separated formulas (e.g. C7H8.C6H6, C7H8.2C6H6).
       let atomsToCheck = layer.atoms;
-      if (subHover.fragIndex !== undefined) {
-        const fragCounts = formulaFragmentCounts(layer.text);
-        let fragStart = 0;
-        for (let i = 0; i < subHover.fragIndex; i++) fragStart += fragCounts[i] ?? 0;
-        const fragEnd = fragStart + (fragCounts[subHover.fragIndex] ?? 0);
-        atomsToCheck = layer.atoms.filter(c => c > fragStart && c <= fragEnd);
+      if (subHover.canonRange !== undefined) {
+        const [lo, hi] = subHover.canonRange;
+        atomsToCheck = layer.atoms.filter(c => c >= lo && c <= hi);
       }
       const kAtoms = atomsToCheck
         .filter(canon => atomElements[canon] === el)

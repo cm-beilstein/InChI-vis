@@ -6,6 +6,7 @@
 import React from 'react';
 import { useInchiStore } from '../store';
 import type { Layer, SubHover } from '../lib/parseInchi';
+import { formulaFragmentCounts } from '../lib/parseInchi';
 import styles from './InchiSection.module.css';
 
 // Static lookup — avoids dynamic class name construction which breaks CSS Modules.
@@ -43,19 +44,23 @@ export function LayerText({ layer, rawText, fragCounts = [] }: { layer: Layer; r
 
 // Port of app.jsx FormulaText lines 138-156.
 // Uses EL_CLASS lookup (not "el-"+el).
-// For N* notation, emits element hovers without fragIndex (highlights all fragments).
-// For dot-separated notation, emits fragIndex per fragment so hover is fragment-scoped.
+// For single dot-segment (including pure N* like "2C6H6"): no canonRange — hovers all fragments.
+// For multiple dot-segments: computes inclusive canonRange per segment so hover is scoped to
+// that fragment or group (e.g. "C7" in "C7H8.2C6H6" scopes to canonicals 1-7 only;
+// "C6" in "2C6H6" portion scopes to 8-19, covering both benzene fragments).
 function FormulaText({ text }: { text: string }) {
   const out: React.ReactNode[] = [];
   const re = /([A-Z][a-z]?)(\d*)/g;
   let m: RegExpExecArray | null;
   let key = 0;
 
-  // N* identical-fragment prefix: hover highlights all fragments — no fragIndex.
-  const leadingMult = /^(\d+)(?=[A-Z])/.exec(text);
-  if (leadingMult) {
-    out.push(<span key={key++}>{leadingMult[1]}</span>);
-    let last = leadingMult[1].length;
+  const dotSegments = text.split('.');
+
+  if (dotSegments.length === 1) {
+    // Single dot-segment (pure N* or single fragment) — no scoping needed.
+    const leadingMult = /^(\d+)(?=[A-Z])/.exec(text);
+    if (leadingMult) out.push(<span key={key++}>{leadingMult[1]}</span>);
+    let last = leadingMult ? leadingMult[1].length : 0;
     while ((m = re.exec(text)) !== null) {
       if (!m[1]) break;
       if (m.index > last) out.push(<span key={key++}>{text.slice(last, m.index)}</span>);
@@ -72,26 +77,42 @@ function FormulaText({ text }: { text: string }) {
     return <>{out}</>;
   }
 
-  // Dot-separated or single-fragment: emit fragIndex when multiple fragments present.
-  const fragments = text.split('.');
-  const isMultiFrag = fragments.length > 1;
-  fragments.forEach((frag, fi) => {
-    if (fi > 0) out.push(<span key={key++}>.</span>);
+  // Multiple dot-segments: compute canonical range per segment and scope element hovers.
+  const fragCounts = formulaFragmentCounts(text);
+  let globalFragIdx = 0;
+
+  dotSegments.forEach((seg, si) => {
+    if (si > 0) out.push(<span key={key++}>.</span>);
+
+    // How many actual fragments does this dot-segment represent?
+    const segMultMatch = /^(\d+)(?=[A-Z])/.exec(seg);
+    const segFragN = segMultMatch ? parseInt(segMultMatch[1], 10) : 1;
+
+    // Inclusive canonical range [lo, hi] for all fragments in this dot-segment.
+    let canonStart = 0;
+    for (let i = 0; i < globalFragIdx; i++) canonStart += fragCounts[i] ?? 0;
+    let canonEnd = canonStart;
+    for (let i = 0; i < segFragN; i++) canonEnd += fragCounts[globalFragIdx + i] ?? 0;
+    const canonRange: [number, number] = [canonStart + 1, canonEnd];
+
+    if (segMultMatch) out.push(<span key={key++}>{segMultMatch[1]}</span>);
     re.lastIndex = 0;
-    let last = 0;
-    while ((m = re.exec(frag)) !== null) {
+    let last = segMultMatch ? segMultMatch[1].length : 0;
+    while ((m = re.exec(seg)) !== null) {
       if (!m[1]) break;
-      if (m.index > last) out.push(<span key={key++}>{frag.slice(last, m.index)}</span>);
+      if (m.index > last) out.push(<span key={key++}>{seg.slice(last, m.index)}</span>);
       const el = m[1];
       out.push(
         <span key={key++} className={[EL_CLASS[el] ?? '', styles.inchiSubtoken].filter(Boolean).join(' ')}
-          {...subHoverProps({ kind: 'element', el, ...(isMultiFrag ? { fragIndex: fi } : {}) })}>
+          {...subHoverProps({ kind: 'element', el, canonRange })}>
           {el}{m[2]}
         </span>
       );
       last = m.index + m[0].length;
     }
-    if (last < frag.length) out.push(<span key={key++}>{frag.slice(last)}</span>);
+    if (last < seg.length) out.push(<span key={key++}>{seg.slice(last)}</span>);
+
+    globalFragIdx += segFragN;
   });
   return <>{out}</>;
 }
@@ -139,13 +160,29 @@ function ConnectionText({ text, fragCounts }: { text: string; fragCounts: number
     return <>{parts}</>;
   }
 
-  // ; separated different-fragment notation: offset each fragment's canonical IDs.
+  // ; separated notation: offset each fragment's canonical IDs.
+  // A segment may itself carry a N* multiplier (e.g. "2*1-2-4-6-5-3-1" in the mixed case).
   const segments = text.split(';');
   let cumOffset = 0;
-  segments.forEach((seg, fi) => {
-    if (fi > 0) parts.push(<span key={key++}>;</span>);
-    renderSegment(seg, cumOffset);
-    cumOffset += fragCounts[fi] ?? 0;
+  let fragIdx = 0;
+  segments.forEach((seg, si) => {
+    if (si > 0) parts.push(<span key={key++}>;</span>);
+    const segMult = seg.match(/^(\d+)\*([\s\S]*)$/);
+    if (segMult) {
+      const n = parseInt(segMult[1], 10);
+      const atomsPerFrag = fragCounts[fragIdx] ?? 0;
+      parts.push(<span key={key++}>{segMult[1]}*</span>);
+      renderSegment(segMult[2], 0, (localN) => ({
+        canonical: localN + cumOffset,
+        canonicals: Array.from({ length: n }, (_, fi) => localN + cumOffset + fi * atomsPerFrag),
+      }));
+      cumOffset += n * atomsPerFrag;
+      fragIdx += n;
+    } else {
+      renderSegment(seg, cumOffset);
+      cumOffset += fragCounts[fragIdx] ?? 0;
+      fragIdx += 1;
+    }
   });
   return <>{parts}</>;
 }
@@ -297,12 +334,63 @@ function HLayerText({ text, fragCounts }: { text: string; fragCounts: number[] }
   }
 
   // ; separated notation: apply per-fragment offsets.
+  // A segment may itself carry a N* multiplier (e.g. "2*1-6H" in the mixed case).
   const segments = text.split(';');
   let cumOffset = 0;
-  segments.forEach((seg, fi) => {
-    if (fi > 0) parts.push(<span key={key++}>;</span>);
-    renderSegment(seg, cumOffset);
-    cumOffset += fragCounts[fi] ?? 0;
+  let fragIdx = 0;
+  segments.forEach((seg, si) => {
+    if (si > 0) parts.push(<span key={key++}>;</span>);
+    const segMult = seg.match(/^(\d+)\*([\s\S]*)$/);
+    if (segMult) {
+      const n = parseInt(segMult[1], 10);
+      const atomsPerFrag = fragCounts[fragIdx] ?? 0;
+      const baseOffset = cumOffset;
+      parts.push(<span key={key++}>{segMult[1]}*</span>);
+      // Render pattern once visually; expand atoms across all n fragment copies.
+      let buf = '', i = 0;
+      const pattern = segMult[2];
+      const flush2 = () => { if (buf) { parts.push(<span key={key++}>{buf}</span>); buf = ''; } };
+      while (i < pattern.length) {
+        const c = pattern[i];
+        if (c === '(') {
+          flush2();
+          const end = pattern.indexOf(')', i);
+          if (end < 0) { buf += c; i++; continue; }
+          const inside = pattern.slice(i, end + 1);
+          const match = inside.match(/\(H\d*,([^)]+)\)/);
+          const atoms = match
+            ? Array.from({ length: n }, (_, fi) => expandAtoms(match[1], baseOffset + fi * atomsPerFrag)).flat()
+            : [];
+          parts.push(
+            <span key={key++} className={[styles.hydroMobile, styles.inchiSubtoken].join(' ')}
+              {...subHoverProps({ kind: 'mobileH', atoms })}
+            >{inside}</span>
+          );
+          i = end + 1; continue;
+        }
+        if (c === 'H') {
+          let j = i + 1;
+          while (j < pattern.length && /\d/.test(pattern[j])) j++;
+          const count = j > i + 1 ? parseInt(pattern.slice(i + 1, j), 10) : 1;
+          const atoms = Array.from({ length: n }, (_, fi) => expandAtoms(buf.replace(/^,/, ''), baseOffset + fi * atomsPerFrag)).flat();
+          const hydroClass = [(styles as Record<string, string>)[`hydro${Math.min(count, 4)}`], styles.inchiSubtoken].join(' ');
+          parts.push(
+            <span key={key++} className={hydroClass} {...subHoverProps({ kind: 'hAtoms', atoms, count })}>
+              {buf + pattern.slice(i, j)}
+            </span>
+          );
+          buf = ''; i = j; continue;
+        }
+        buf += c; i++;
+      }
+      flush2();
+      cumOffset += n * atomsPerFrag;
+      fragIdx += n;
+    } else {
+      renderSegment(seg, cumOffset);
+      cumOffset += fragCounts[fragIdx] ?? 0;
+      fragIdx += 1;
+    }
   });
   return <>{parts}</>;
 }

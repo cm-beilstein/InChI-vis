@@ -32,9 +32,10 @@ export type AuxMap = Record<number, number>; // canonical 1-based → Ketcher 0-
 export interface SubHover {
   kind: 'element' | 'atom' | 'stereo' | 'hAtoms' | 'mobileH';
   el?: string;
-  // Fragment index for element hovers in dot-separated multi-fragment formulas.
-  // Absent for single-fragment and N* (identical-fragment) formulas.
-  fragIndex?: number;
+  // Inclusive canonical ID range [lo, hi] for element hovers in multi-fragment formulas.
+  // Restricts highlights to the hovered fragment or group of identical fragments.
+  // Absent for single-fragment and pure-N* formulas (hover highlights everything).
+  canonRange?: [number, number];
   canonical?: number;
   // For 2* identical-fragment layers: all globally-offset canonicals (one per fragment).
   // buildSubHoverSpecs uses canonicals when present, falling back to canonical otherwise.
@@ -162,13 +163,22 @@ export function countFormulaAtoms(formulaText: string): number {
  * Returns the per-fragment heavy-atom counts for a formula layer text.
  *
  * InChI uses two multi-fragment notations:
- *   "C7H8.C6H6"  — dot-separated different components → [7, 6]
- *   "2C6H6"      — multiplier for identical components → [6, 6]
- *   "C6H6"       — single component                   → [6]
+ *   "C7H8.C6H6"    — dot-separated different components → [7, 6]
+ *   "2C6H6"        — multiplier for identical components → [6, 6]
+ *   "C7H8.2C6H6"  — mixed: dot-separated with multiplied sub-group → [7, 6, 6]
+ *   "C6H6"         — single component                   → [6]
  */
 export function formulaFragmentCounts(formulaText: string): number[] {
   if (formulaText.includes('.')) {
-    return formulaText.split('.').map(f => countFormulaAtoms(f));
+    return formulaText.split('.').flatMap(seg => {
+      const multMatch = seg.match(/^(\d+)([A-Z])/);
+      if (multMatch) {
+        const n = parseInt(multMatch[1], 10);
+        const base = countFormulaAtoms(seg.slice(multMatch[1].length));
+        return Array(n).fill(base) as number[];
+      }
+      return [countFormulaAtoms(seg)];
+    });
   }
   const multMatch = formulaText.match(/^(\d+)([A-Z])/);
   if (multMatch) {
@@ -182,10 +192,11 @@ export function formulaFragmentCounts(formulaText: string): number[] {
 /**
  * Expands a layer text segment into per-fragment strings.
  *
- * Two InChI multi-fragment formats are handled:
- *   "2*1-2-4-6-5-3-1"       — multiplier notation → ["1-2-4-6-5-3-1", "1-2-4-6-5-3-1"]
- *   "1-7-5-3-2-4-6-7;1-2-4" — semicolon notation  → ["1-7-5-3-2-4-6-7", "1-2-4"]
- *   "1-2-4-6-5-3-1"         — single fragment     → ["1-2-4-6-5-3-1"]
+ * Three InChI multi-fragment formats are handled:
+ *   "2*1-2-4-6-5-3-1"              — top-level multiplier → ["1-2-4-6-5-3-1", "1-2-4-6-5-3-1"]
+ *   "1-7-5-3-2-4-6-7;1-2-4"       — semicolon notation   → ["1-7-5-3-2-4-6-7", "1-2-4"]
+ *   "1-7-5-3-2-4-6-7;2*1-2-4-6-5-3-1" — mixed           → ["1-7-5-3-2-4-6-7", "1-2-4-6-5-3-1", "1-2-4-6-5-3-1"]
+ *   "1-2-4-6-5-3-1"                — single fragment     → ["1-2-4-6-5-3-1"]
  */
 export function expandLayerText(text: string): string[] {
   const multMatch = text.match(/^(\d+)\*([\s\S]*)$/);
@@ -193,7 +204,14 @@ export function expandLayerText(text: string): string[] {
     const n = parseInt(multMatch[1], 10);
     return Array(n).fill(multMatch[2]) as string[];
   }
-  return text.split(';');
+  return text.split(';').flatMap(seg => {
+    const segMult = seg.match(/^(\d+)\*([\s\S]*)$/);
+    if (segMult) {
+      const n = parseInt(segMult[1], 10);
+      return Array(n).fill(segMult[2]) as string[];
+    }
+    return [seg];
+  });
 }
 
 /**

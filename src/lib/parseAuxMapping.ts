@@ -17,8 +17,9 @@ export function buildAtomElements(layers: Layer[]): Record<number, string> {
   const atoms = formulaLayer.atoms; // [1, 2, ... totalAtoms] after enrichLayers fix
 
   // Expand multi-fragment formulas before parsing element runs:
-  //   "2C6H6"    → "C6H6C6H6"   (multiplier notation)
-  //   "C7H8.C6H6" → "C7H8C6H6"  (dot-separator notation — dot is not alphanumeric, safe to remove)
+  //   "2C6H6"      → "C6H6C6H6"       (top-level multiplier)
+  //   "C7H8.C6H6"  → "C7H8C6H6"       (dot-separated)
+  //   "C7H8.2C6H6" → "C7H8C6H6C6H6"  (mixed: dot + multiplied sub-group)
   const expandedFormula = (() => {
     const t = formulaLayer.text;
     const multMatch = t.match(/^(\d+)([A-Z].*)/);
@@ -26,7 +27,14 @@ export function buildAtomElements(layers: Layer[]): Record<number, string> {
       const n = parseInt(multMatch[1], 10);
       return multMatch[2].repeat(n);
     }
-    return t.replace(/\./g, '');
+    if (t.includes('.')) {
+      return t.split('.').map(seg => {
+        const sm = seg.match(/^(\d+)([A-Z].*)/);
+        if (sm) return sm[2].repeat(parseInt(sm[1], 10));
+        return seg;
+      }).join('');
+    }
+    return t;
   })();
 
   const elements: string[] = [];
