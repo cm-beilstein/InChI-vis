@@ -60,7 +60,7 @@ export function whiteAtomLabels(svgRoot: Element, specs: HighlightSpec[]): void 
 export function useKetcherHighlights(
   ketcherRef: React.RefObject<Ketcher | null>,
   isReady: boolean,
-  _isHighlightingRef?: React.RefObject<boolean>,
+  _isHighlightingRef?: React.MutableRefObject<boolean>,
 ): void {
   const hoverIdx     = useInchiStore(s => s.hoverIdx);
   const subHover     = useInchiStore(s => s.subHover);

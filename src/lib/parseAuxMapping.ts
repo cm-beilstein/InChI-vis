@@ -2,7 +2,7 @@
 // Parses the N: field from Ketcher's getInchi(true) AuxInfo block.
 // Based on CONTEXT.md D-10/D-11 and RESEARCH.md Pattern 3.
 
-import { parseInchi, countFormulaAtoms, formulaFragmentCounts } from './parseInchi';
+import { parseInchi, formulaFragmentCounts } from './parseInchi';
 import type { Layer, AuxMap } from './parseInchi';
 
 /**
