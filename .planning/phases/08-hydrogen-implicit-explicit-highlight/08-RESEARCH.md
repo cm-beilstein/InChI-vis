@@ -487,12 +487,13 @@ return;
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Atom SVG position read strategy**
    - What we know: `whiteAtomLabels` finds `[data-atom-id]` elements reliably; `highlights.create()` is synchronous
    - What's unclear: Whether `getBBox()` on the parent group or reading `x`/`y` SVG attributes gives the atom center in SVG user-space coordinates
    - Recommendation: In Wave 0 or the first task of Plan 01, add a `console.log` to inspect the live SVG structure of an atom element during highlight; verify and update `renderHBadges` accordingly before writing the main implementation
+   - **RESOLVED:** Executor empirically verifies during Plan 08-01 Task 1 implementation per Assumption A1 note; `getBBox()` fallback strategies documented in PATTERNS.md.
 
 ---
 

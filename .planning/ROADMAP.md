@@ -24,6 +24,7 @@
 **Requirements**: EDIT-01, PLSH-02
 
 **Success Criteria** (what must be TRUE):
+
 1. `npm run dev` starts without errors; browser shows the Ketcher editor mounted in the page
 2. Drawing any molecule in the editor and calling `getInchi()` from the browser console returns a valid InChI string
 3. `highlights.create` can be called from the console without throwing; at least one atom changes color
@@ -33,6 +34,7 @@
 **Plans**: 2 plans
 
 Plans:
+
 - [x] 01-01-PLAN.md — Project scaffold: Vite config, deps, design tokens, coi-serviceworker, HTML entry (complete 2026-05-19)
 - [x] 01-02-PLAN.md — React shell: App, Header, KetcherPanel with real Editor and loading overlay (complete 2026-05-19)
 
@@ -45,6 +47,7 @@ Plans:
 **Requirements**: INCHI-01
 
 **Success Criteria** (what must be TRUE):
+
 1. Drawing a molecule and pausing produces an updated InChI string in the React dev tools state within 150ms of the last change
 2. `auxMap` in state contains a correct canonical-to-Ketcher index mapping (verifiable by console inspection for a known molecule)
 3. `parseAuxMapping` has a passing unit test using captured real `getInchi(true)` output from Ketcher 3.12.0
@@ -54,6 +57,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+
 - [x] 02-01-PLAN.md — Vitest config fix + parsing library (parseInchi.ts, parseAuxMapping.ts) + unit test stubs (complete 2026-05-20)
 - [x] 02-02-PLAN.md — Zustand 5 store with all v1 fields and typed actions (complete 2026-05-20)
 - [x] 02-03-PLAN.md — App.tsx subscription wiring (debounce + generation guard) + real AuxInfo fixture (complete 2026-05-20)
@@ -67,6 +71,7 @@ Plans:
 **Requirements**: INCHI-02, EXPL-01, EXPL-02, EXPL-03, PLSH-03
 
 **Success Criteria** (what must be TRUE):
+
 1. The InChI string is displayed with each layer chunk in its design-token accent color, separated by `/`; sub-spans for formula elements, H-counts, and stereo parities are visible
 2. Hovering a layer chunk dims all other chunks and updates the left explanation card with the layer's prose description and reading-code block
 3. The right legend card lists all 11 layer types with color swatches; hovering a row slides in a tooltip with description and example syntax
@@ -76,6 +81,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
+
 - [x] 03-01-PLAN.md — InChI section layout and layer strip (complete 2026-05-21)
 - [x] 03-02-PLAN.md — FormulaText, HLayerText, ParityText, ConnectionText sub-token components (complete 2026-05-21)
 - [x] 03-03-PLAN.md — Explanation card and layerInfo prose (complete 2026-05-21)
@@ -91,6 +97,7 @@ Plans:
 **Requirements**: INCHI-03, INCHI-04
 
 **Success Criteria** (what must be TRUE):
+
 1. Hovering a layer chunk (e.g. the `c` connection layer) highlights the corresponding atoms and bonds in the Ketcher canvas in the layer's accent color
 2. Moving the cursor off the layer chunk clears all highlights; the canvas returns to its default appearance
 3. Hovering a sub-token (element symbol, atom number, parity token, H-group) overrides the layer highlight with a targeted per-atom or per-bond highlight; the layer-wide highlight is fully suppressed
@@ -99,6 +106,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+
 - [x] 04-01-PLAN.md — Wave 0 test scaffolding for highlight spec builders (complete 2026-05-21)
 - [x] 04-02-PLAN.md — buildHighlightSpecs, buildSubHoverSpecs, useKetcherHighlights hook (complete 2026-05-21)
 - [x] 04-03-PLAN.md — Wire useKetcherHighlights into App.tsx + UAT (complete 2026-05-22)
@@ -112,6 +120,7 @@ Plans:
 **Requirements**: MAP-01, MAP-02, EDIT-02, EDIT-03
 
 **Success Criteria** (what must be TRUE):
+
 1. The mapping strip below the InChI display shows each atom's Ketcher index paired with its canonical InChI index; identity pairs are visually dimmed, divergent pairs are highlighted green
 2. Clicking a preset molecule in the sidebar loads it into the canvas and the full pipeline (InChI generation, layer parsing, mapping strip, explanation card) updates correctly within one debounce cycle
 3. The canvas overlay shows the current molecule name, molecular formula, and heavy-atom count for both drawn and preset molecules
@@ -120,6 +129,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+
 - [x] 05-01-PLAN.md — molecules.ts data, deriveMappingPairs, MappingStrip + Footnote components (complete 2026-05-22)
 - [x] 05-02-PLAN.md — KetcherPanel 2-column grid layout, canvas overlay, mol-list sidebar (complete 2026-05-22)
 - [x] 05-03-PLAN.md — App.tsx wiring: selectedMolId state, handleMolSelect, render MappingStrip + Footnote (complete 2026-05-22)
@@ -133,6 +143,7 @@ Plans:
 **Requirements**: INCHI-05, PLSH-01
 
 **Success Criteria** (what must be TRUE):
+
 1. When explicit hydrogens are shown in the canvas and the user hovers the H sub-token in the molecular formula layer, the hydrogen atoms are highlighted in the Ketcher canvas
 2. An empty canvas or invalid/disconnected structure shows a placeholder message in the InChI display instead of an error or blank space
 3. `vite build` produces a clean static bundle; deploying to Netlify or GitHub Pages serves the app with WASM assets loading correctly (no 404s, `crossOriginIsolated` check passes)
@@ -141,6 +152,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
+
 - [ ] 06-00-PLAN.md — Wave 0 test stubs: InchiSection empty-state tests (PLSH-01) + highlightUtils H-branch tests (INCHI-05)
 - [ ] 06-01-PLAN.md — INCHI-05: hAtomPoolIds store field, App.tsx H pool collection, highlightUtils H-branch, useKetcherHighlights threading
 - [ ] 06-02-PLAN.md — PLSH-01: InchiSection empty-state render + CSS; Footnote removed from App.tsx (D-03)
@@ -155,6 +167,7 @@ Plans:
 **Requirements**: INCHI-06, INCHI-07, PLSH-04
 
 **Success Criteria** (what must be TRUE):
+
 1. For `InChI=1S/C7H8.C6H6/c1-7-5-3-2-4-6-7;1-2-4-6-5-3-1/h2-6H,1H3;1-6H`, hovering the formula layer highlights all 13 heavy atoms; hovering the `c` layer highlights the correct bonds and atoms for both fragments independently
 2. For `InChI=1S/C17H14N2/...p+1`, hovering the `p` layer highlights all heteroatom (non-C, non-H) atoms from the formula — the q-layer stores only a single net-charge integer and cannot identify per-atom protonation sites
 3. A copy icon appears at the right end of the InChI display box; clicking it copies the verbatim InChI string to the clipboard and shows a brief "Copied!" confirmation
@@ -163,6 +176,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+
 - [x] 07-00-PLAN.md — Wave 0 RED test stubs: multi-fragment parseAuxMapping + enrichLayers (INCHI-06), p-layer highlight (INCHI-07), copy button (PLSH-04) (complete 2026-06-01)
 - [x] 07-01-PLAN.md — INCHI-06: fix parseAuxMapping fragment offset + fix enrichLayers c/h/t/b per-fragment parsing (complete 2026-06-01)
 - [x] 07-02-PLAN.md — INCHI-07: p-layer case in buildHighlightSpecs; PLSH-04: copy button in InchiSection (complete 2026-06-01)
@@ -176,6 +190,7 @@ Plans:
 **Requirements**: INCHI-08
 
 **Success Criteria** (what must be TRUE):
+
 1. The h-layer text (e.g. `1-6H,7H2,(H,3,4)`) is rendered as individually hoverable spans per comma-separated group; hovering each span highlights only the atoms in that group
 2. Hovering a fixed-H group (e.g. `7H2`) shows an `H2` SVG text badge above the heavy atom in the canvas, injected and removed with the same lifecycle as highlights
 3. When an explicit H atom is drawn and the corresponding h-layer sub-token is hovered, the H atom, its bonded heavy atom, and the bond between them are all highlighted
@@ -185,7 +200,12 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 08-00-PLAN.md — Wave 0 RED test stubs: renderHBadges, cleanHBadges, explicit-H bond path
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 08-01-PLAN.md — Implement renderHBadges + cleanHBadges + extend case 'hAtoms' (GREEN pass)
 
 **UI hint**: yes
