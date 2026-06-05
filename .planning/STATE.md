@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: executing
-stopped_at: paused after renderHBadges three-part fix (2026-06-05)
-last_updated: "2026-06-05T12:24:14Z"
+milestone_name: MVP
+status: complete
+stopped_at: v1.0 milestone archived 2026-06-05
+last_updated: "2026-06-05T00:00:00Z"
 progress:
   total_phases: 8
   completed_phases: 8
@@ -16,48 +16,24 @@ progress:
 # Project State
 
 **Project:** Explain that InChI
-**Milestone:** v1.0
-**Status:** Executing Phase 08
-
-## Current Phase
-
-Phase 7 — Multi-Fragment Highlighting, p-Layer, and Copy (COMPLETE 2026-06-01)
+**Milestone:** v1.0 MVP — ✅ SHIPPED 2026-06-05
+**Status:** Complete
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-18)
+See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** Phase 08 — hydrogen-implicit-explicit-highlight
+**Current focus:** Planning next milestone (v2.0) — run `/gsd-new-milestone`
 
-## Current Position
+## Milestone Archive
 
-Phase: 08 (hydrogen-implicit-explicit-highlight) — EXECUTING
-Plan: 1 of 2
+- Full details: `.planning/MILESTONES.md`
+- Roadmap archive: `.planning/milestones/v1.0-ROADMAP.md`
+- Requirements archive: `.planning/milestones/v1.0-REQUIREMENTS.md`
+- Git tag: `v1.0`
 
-- **Phase:** 7 — Multi-Fragment Highlighting, p-Layer, and Copy (COMPLETE)
-- **Plan:** 3/3 complete — 07-00, 07-01, 07-02
-- **Status:** All phases complete; 135 tests passing; TypeScript clean
-- **Progress:** 7/7 phases complete
-
-```
-[█████████████████████████] 100%
-```
-
-## Performance Metrics
-
-- Plans completed: 2 (01-01-PLAN.md — 5 min, 01-02-PLAN.md — 6 min, 2026-05-19)
-- Plans total: 2 (Phase 1)
-- Phases completed: 1 / 6
-
-| Phase | Plan | Duration | Tasks | Files | Date |
-|-------|------|----------|-------|-------|------|
-| 01-scaffold-and-ketcher-mount | 01 | 5min | 2 | 12 | 2026-05-19 |
-| 01-scaffold-and-ketcher-mount | 02 | 6min | 2 | 7 | 2026-05-19 |
-
-## Accumulated Context
-
-### Key Decisions
+## Key Decisions (carry-forward)
 
 - Use `@vitejs/plugin-react` (esbuild), NOT the SWC variant — SWC crashes on Ketcher packages (issue #5565)
 - All three Ketcher packages (`ketcher-react`, `ketcher-standalone`, `ketcher-core`) pinned to exactly 3.12.0
@@ -65,40 +41,16 @@ Plan: 1 of 2
 - Ketcher `<Editor>` must never be conditionally rendered — WASM re-initializes on remount
 - CSS Modules + CSS custom properties for styling — preserves the oklch token system from design handoff
 - `vite-plugin-static-copy` required to copy WASM/worker assets; `assetsInlineLimit: 0` to prevent base64 inlining
-- React state ownership is flat on `App`; Ketcher ref stored in `useRef`, never in state
-- `@vitejs/plugin-react` must be v6.x (not 4.x) for Vite 8 compatibility — v4.x peer dep does not support Vite 8; v6 still uses esbuild (not SWC)
-- `vite-plugin-static-copy` must be v4.x (not 2.x) for Vite 8 compatibility — API unchanged
-- `vite-plugin-static-copy` v4 requires `rename: {stripBase: true}` for flat copy — v4 default preserves full directory structure (unlike v2)
-- Use `@import ... layer(layerName)` syntax for CSS layer assignment — `@import` inside `@layer {}` blocks is invalid per CSS spec; Vite follows the spec
-- Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Vitest 3 bundles Vite 6 internally, causing Plugin type conflicts when using vitest/config defineConfig in the same file as Vite 8 plugins
+- Separate `vitest.config.ts` for Vite 8 + Vitest 3 — Plugin type conflict if merged
+- `getInchi(true)` returns concatenated string — split on `AuxInfo=`, not destructuring
+- Stale closures in `editor.subscribe` — read state through `useRef` in handler
 
-### Research Flags (require empirical validation during implementation)
+## Known Open Items at v1.0 Close
 
-- **Phase 2:** `getInchi(true)` exact return format — split on `AuxInfo=` prefix; verify against real 3.12.0 output and write unit test
-- **Phase 2:** COOP/COEP requirement — check `crossOriginIsolated` after first mount; add `coi-serviceworker` if needed (coi-serviceworker.js is already in place from Plan 01)
-- **Phase 4:** `highlights.create` multi-call accumulation — confirm sequential calls accumulate correctly in 3.12.0
+- Phase 8 badge positioning: tweaked but not browser-verified before context exhaustion
+- b-layer highlighting + legend hover trigger: landed in last commit — not browser-verified
+- MAP-03 (shareable URL): deferred to v2
 
-### Critical Pitfalls to Watch
-
-1. SWC plugin crash — use esbuild-based plugin (enforced: @vitejs/plugin-react@^6.0.0)
-2. Ketcher CSS polluting design tokens — wrap in `@layer ketcher-reset { }` (done: appended to src/styles.css)
-3. WASM/worker 404 in production — `vite-plugin-static-copy` + `assetsInlineLimit: 0` (done: configured)
-4. `getInchi(true)` returns concatenated string — split on `AuxInfo=`, not destructuring
-5. Stale closures in `editor.subscribe` — read state through `useRef` in handler
-
-### TODOs
-
-- [x] Run `npm install` and inspect `node_modules/ketcher-standalone/dist/` for exact WASM asset paths — CONFIRMED: `binaryWasm/indigo-ketcher-1.40.0.wasm`, `indigo-ketcher-norender-1.40.0.wasm`, `indigoWorker-5d0a61ab.js`, etc.
-- [x] Verify `staticResourcesUrl` correct value for Vite 8 — use `import.meta.env.BASE_URL` (resolves to `/explain-that-inchi/` in prod, `/` in dev)
-- [x] Decide: include MAP-03 (shareable URL) in Phase 6 or defer to v2 — deferred to v2
-
-### Blockers
+## Blockers
 
 None
-
-## Session Continuity
-
-**Last session:** 2026-06-05T11:30:09.878Z
-**Stopped at:** context exhaustion at 76% (2026-06-05)
-**Resume file:** None
-**Next action:** /gsd-complete-milestone to archive v1.0

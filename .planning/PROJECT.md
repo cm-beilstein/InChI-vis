@@ -4,82 +4,104 @@
 
 A single-page public web tool for chemists and chemistry students to understand the structure of an InChI (IUPAC International Chemical Identifier) string. Users draw a molecule in an embedded Ketcher editor; the InChI is computed live and displayed below with each layer colour-coded and interactive. Hovering over a layer highlights the corresponding atoms or bonds in the molecule canvas and surfaces a per-layer explanation card.
 
+Shipped as a static build to GitHub Pages (no server, no backend). All InChI computation runs in-browser via Ketcher's built-in WASM library.
+
 ## Core Value
 
 Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
+
+## Current State
+
+**Version:** v1.0 MVP — shipped 2026-06-05
+
+- 8 phases, 25 plans, 186 commits, ~4,773 LOC TypeScript
+- Tech stack: Vite 8 + React 18 + TypeScript + Ketcher 3.12.0 (WASM) + Zustand 5 + CSS Modules
+- 135+ unit/integration tests passing; TypeScript clean
+- Deployed to GitHub Pages via GitHub Actions CD
 
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ EDIT-01: Embedded Ketcher standalone editor, no backend — v1.0
+- ✓ EDIT-02: Preset molecule sidebar loads molecule into canvas on click — v1.0
+- ✓ EDIT-03: Canvas overlay: molecule name, formula, heavy-atom count — v1.0
+- ✓ INCHI-01: Live InChI generation, debounced ≤150ms, WASM-based — v1.0
+- ✓ INCHI-02: Color-coded layer chunks with sub-spans per design tokens — v1.0
+- ✓ INCHI-03: Layer hover highlights matching atoms/bonds in Ketcher canvas — v1.0
+- ✓ INCHI-04: Sub-token hover overrides layer highlight with targeted highlight — v1.0
+- ✓ INCHI-05: Hovering H sub-token highlights explicit hydrogen atoms — v1.0
+- ✓ INCHI-06: Multi-fragment molecules highlight correct atoms/bonds per fragment — v1.0
+- ✓ INCHI-07: Hovering p-layer highlights protonation-site atoms — v1.0
+- ✓ INCHI-08: Per-group h-layer sub-tokens with implicit H badge, explicit H bond highlight, mobile-H highlight — v1.0
+- ✓ EXPL-01: Left explanation card: prose + reading-code on hover — v1.0
+- ✓ EXPL-02: Right legend card: 11 layer types, color swatches, tooltips — v1.0
+- ✓ EXPL-03: Idle state shows default explanation card content — v1.0
+- ✓ MAP-01: Mapping strip: Ketcher index → canonical index; identity dimmed, divergent green — v1.0
+- ✓ MAP-02: Footnote strip: InChI definition + keyboard hint legend — v1.0
+- ✓ PLSH-01: Empty/invalid structure shows placeholder, not error — v1.0
+- ✓ PLSH-02: WASM initialisation loading state shown until Ketcher is ready — v1.0
+- ✓ PLSH-03: Typography, color tokens, spacing, hover transitions match handoff — v1.0
+- ✓ PLSH-04: Copy-to-clipboard button copies verbatim InChI string with visual confirmation — v1.0
 
-### Active
+### Active (v2 candidates)
 
-- [ ] Embed real `ketcher-react` editor with `StandaloneStructServiceProvider` (no backend required)
-- [ ] Live InChI generation from Ketcher's current structure via its built-in WASM InChI library
-- [ ] Parse aux-info atom mapping (canonical# → Ketcher atom index) from `getInchi(true)`
-- [ ] InChI string displayed as clickable, colour-coded layer chunks per the design token system
-- [ ] Layer-level hover: highlights matching atoms/bonds in Ketcher canvas, dims other layers, updates explanation card
-- [ ] Sub-token hover (formula element, c-layer atom, t/b-layer parity token, h-layer group) with layer-wide suppression
-- [ ] Mapping strip: Ketcher → canonical numbering, identity pairs dimmed, divergent pairs highlighted green
-- [ ] Explanation panel: left card (current-layer prose + reading code), right card (full layer legend with tooltips)
-- [ ] Example molecule list (5 presets) that loads via `ketcher.setMolecule()`
-- [ ] Pixel-perfect typography (IBM Plex Sans/Serif/Mono), colour tokens, and layout from the design handoff
-- [ ] Graceful empty/invalid-structure handling in the InChI display
-- [ ] Static build deployable to GitHub Pages or Netlify (no server required)
+- [ ] MAP-03: Current molecule state encoded in URL (hash or query param) for bookmarking/sharing — deferred from v1 during Phase 6 planning
+- [ ] ACCS-01: Full keyboard navigation of the InChI layer display (Tab through layers, Enter to activate hover)
+- [ ] ACCS-02: Screen reader labels on all layer color swatches and legend rows
+- [ ] CONT-01: Additional preset molecules beyond the 10 in v1 (e.g. amino acids, common drugs)
+- [ ] CONT-02: Molecule search by name or InChI string
+- [ ] APPR-01: Dark mode toggle with adapted design tokens
+- [ ] APPR-02: Print styles for the explanation panel
 
 ### Out of Scope
 
-- Backend / server — ketcher-standalone runs entirely in-browser via WASM
-- User accounts or persistence — stateless tool, no login
-- Mobile-native app — web-first; responsive enough to be usable but not optimised for touch
-- Additional molecules beyond the 5 in the handoff — content expansion deferred
+| Feature | Reason |
+|---------|--------|
+| Backend / Indigo server | ketcher-standalone runs entirely in-browser via WASM |
+| User accounts / persistence | Stateless educational tool; URL sharing covers the core use case |
+| 3D structure viewer | InChI is a 2D notation; 3D adds scope without illuminating InChI |
+| Database / substructure search | Shifts product identity away from the explainer tool |
+| Mobile-native app | Web-first; Ketcher canvas is not well-suited to touch input |
+| Language localisation | English-only for v1; deferred |
 
 ## Context
 
-The design reference lives in `./design_handoff_explain_that_inchi/`. The files there include:
-- `styles.css` — canonical design tokens (copy verbatim)
-- `molecules.js` — 5 preset molecules + InChI parsers (`parseInchi`, `parseConnectionBonds`, `parseHydrogenAtoms`, `parseMobileHydrogens`, `parseStereoAtoms`) — port as-is
-- `layers-info.js` — per-layer copy (`LAYER_INFO`), `readingFor()` function — port as-is
-- `app.jsx` — reference for `LayerText`, `MappingStrip`, `Explanation`, `Legend` component structure
-- `canvas.jsx` — SVG stand-in for the molecule editor; replace entirely with `ketcher-react`
-
-The parsers and layer content are final and transfer directly. The molecule canvas and InChI generation are the only parts that change from mock to real.
-
-## Constraints
-
-- **Tech stack**: Vite + React 18 + TypeScript — matches what `ketcher-react` expects
-- **No backend**: `ketcher-standalone` provides WASM InChI; everything runs in-browser
-- **Styling**: vanilla CSS modules or Tailwind — must preserve the CSS variable token system from `styles.css`
-- **Deployment**: static build (GitHub Pages or Netlify); no server-side rendering
-- **Fidelity**: high — colour palette, typography, spacing, and hover behaviour are final from the handoff
+- Design reference: `./design_handoff_explain_that_inchi/` (styles.css, molecules.js, layers-info.js, app.jsx, canvas.jsx)
+- Deployed: GitHub Pages (`gh-pages` branch), GitHub Actions workflow at `.github/workflows/deploy.yml`
+- All parsers ported from design handoff JS and TypeScript-ified with tests
+- Highlight system: `buildHighlightSpecs` / `buildSubHoverSpecs` → `useKetcherHighlights` hook → `highlights.create` Ketcher API
+- Atom mapping: `getInchi(true)` returns InChI + AuxInfo; AuxInfo parsed to canonical→Ketcher pool-ID map
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Vite + React 18 + TypeScript | Specified in design handoff; required by `ketcher-react` | — Pending |
-| `ketcher-standalone` (no Indigo backend) | Browser-only deployment requirement | — Pending |
-| Port parsers from `molecules.js` verbatim | Parsers are final, tested, and domain-correct | — Pending |
-| Aux-info `getInchi(true)` for atom mapping | Only source of canonical→Ketcher mapping needed for highlights | — Pending |
+| Vite + React 18 + TypeScript | Specified in design handoff; required by ketcher-react | ✓ Good — no issues |
+| ketcher-standalone (no Indigo backend) | Browser-only deployment requirement | ✓ Good — works perfectly |
+| Port parsers from molecules.js verbatim | Parsers are final, tested, and domain-correct | ✓ Good — saved significant time |
+| Aux-info getInchi(true) for atom mapping | Only source of canonical→Ketcher mapping | ✓ Good — canonical approach confirmed |
+| @vitejs/plugin-react v6 (esbuild, not SWC) | SWC crashes on Ketcher packages (issue #5565) | ✓ Good — esbuild works cleanly |
+| All Ketcher packages pinned to 3.12.0 | Avoid version skew between ketcher-react/standalone/core | ✓ Good — no version conflicts |
+| StandaloneStructServiceProvider at module level | WASM re-initializes if created inside component | ✓ Good — critical architectural choice |
+| Separate vitest.config.ts from vite.config.ts | Vitest 3 bundles Vite 6 internally; Plugin type conflict if merged | ✓ Good — clean separation |
+| vite-plugin-static-copy v4 + assetsInlineLimit:0 | WASM assets must be served as files, not base64-inlined | ✓ Good — no WASM 404s |
+| CSS Modules + CSS custom properties | Preserves oklch token system; Tailwind 3.x doesn't support oklch | ✓ Good — zero token conflicts |
+| MAP-03 (shareable URL) deferred to v2 | Scope management during Phase 6 | — Pending (v2 Active) |
+| getInchi(true) split on AuxInfo= prefix | Concatenated string, not destructurable | ✓ Good — robust parsing |
+| useRef for editor.subscribe handler | Avoids stale closures in event subscription | ✓ Good — prevents subtle bugs |
+
+## Constraints
+
+- **Tech stack**: Vite + React 18 + TypeScript — matches what `ketcher-react` expects
+- **No backend**: `ketcher-standalone` provides WASM InChI; everything runs in-browser
+- **Styling**: CSS modules + CSS custom properties — preserves the oklch token system from `styles.css`
+- **Deployment**: static build (GitHub Pages); no server-side rendering
+- **Fidelity**: high — colour palette, typography, spacing, and hover behaviour are final from the handoff
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
-
 ---
-*Last updated: 2026-05-18 after initialization*
+*Last updated: 2026-06-05 after v1.0 milestone*
