@@ -202,7 +202,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 08-00-PLAN.md — Wave 0 RED test stubs: renderHBadges, cleanHBadges, explicit-H bond path
+- [x] 08-00-PLAN.md — Wave 0 RED test stubs: renderHBadges, cleanHBadges, explicit-H bond path
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -248,7 +248,7 @@ Plans:
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
 | 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
 | 7. Multi-Fragment Highlighting, p-Layer, and Copy | 3/3 | Complete | 2026-06-01 |
-| 8. Hydrogen Implicit & Explicit Highlight | 0/2 | In Progress | — |
+| 8. Hydrogen Implicit & Explicit Highlight | 1/2 | In Progress|  |
 
 ---
 *Roadmap created: 2026-05-18*

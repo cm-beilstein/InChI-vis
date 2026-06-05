@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 08 UI-SPEC approved
-last_updated: "2026-06-05T10:35:00.295Z"
+stopped_at: Phase 08 planning complete — 2 plans ready
+last_updated: "2026-06-05T10:37:32.784Z"
 progress:
   total_phases: 8
   completed_phases: 7
@@ -17,7 +17,7 @@ progress:
 
 **Project:** Explain that InChI
 **Milestone:** v1.0
-**Status:** Ready to execute
+**Status:** Executing Phase 08
 
 ## Current Phase
 
@@ -28,12 +28,12 @@ Phase 7 — Multi-Fragment Highlighting, p-Layer, and Copy (COMPLETE 2026-06-01)
 See: .planning/PROJECT.md (updated 2026-05-18)
 
 **Core value:** Every chunk of an InChI string is hoverable, explained, and linked back to the atoms in the drawing — demystifying a notation that most chemists treat as opaque.
-**Current focus:** v1.0 milestone complete — ready for /gsd-complete-milestone
+**Current focus:** Phase 08 — hydrogen-implicit-explicit-highlight
 
 ## Current Position
 
-Phase: 7 (multi-fragment-highlighting-p-layer-and-copy) — COMPLETE
-Plan: 3 of 3
+Phase: 08 (hydrogen-implicit-explicit-highlight) — EXECUTING
+Plan: 1 of 2
 
 - **Phase:** 7 — Multi-Fragment Highlighting, p-Layer, and Copy (COMPLETE)
 - **Plan:** 3/3 complete — 07-00, 07-01, 07-02
@@ -98,7 +98,7 @@ None
 
 ## Session Continuity
 
-**Last session:** 2026-06-05T08:57:50.797Z
-**Stopped at:** Phase 08 UI-SPEC approved
-**Resume file:** .planning/phases/08-hydrogen-implicit-explicit-highlight/08-UI-SPEC.md
+**Last session:** 2026-06-05T10:35:39.381Z
+**Stopped at:** Phase 08 planning complete — 2 plans ready
+**Resume file:** .planning/phases/08-hydrogen-implicit-explicit-highlight/08-01-PLAN.md
 **Next action:** /gsd-complete-milestone to archive v1.0
