@@ -5,7 +5,7 @@ export function Header() {
         Explain that <em>InChI</em>
       </h1>
       <div className="meta">
-        <div>InChI v<b>1.07.3</b> · standard</div>
+        <div>InChI v<b>1.06</b> · standard</div>
         <div><a href="https://www.inchi-trust.org/" target="_blank" rel="noopener noreferrer">International Chemical Identifier</a></div>
       </div>
     </header>
