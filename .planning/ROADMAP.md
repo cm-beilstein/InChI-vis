@@ -1,8 +1,8 @@
 # Roadmap: Explain that InChI
 
-**Milestone:** v1.0
+**Milestone:** v1.1
 **Created:** 2026-05-18
-**Phases:** 7 | **Requirements:** 19
+**Phases:** 8 | **Requirements:** 20
 
 ## Phases
 
@@ -13,6 +13,7 @@
 - [x] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline (complete 2026-05-22)
 - [x] **Phase 6: Hydrogen Highlight, Polish, and Deploy** — Hovering H sub-token highlights explicit hydrogens; empty-canvas placeholder; static build deployed (complete 2026-06-01)
 - [x] **Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy** — Correct highlight mapping for multi-fragment molecules; p-layer protonation site highlighting; copy-to-clipboard button (complete 2026-06-01)
+- [ ] **Phase 8: Hydrogen Implicit & Explicit Highlight** — Per-group h-layer sub-tokens; H-count SVG badge for implicit H; explicit H atom + bond highlight; mobile-H tautomeric group highlight
 
 ## Phase Details
 
@@ -168,6 +169,23 @@ Plans:
 
 **UI hint**: no
 
+### Phase 8: Hydrogen Implicit & Explicit Highlight
+
+**Goal**: Every comma-separated group in the h-layer is independently hoverable; hovering shows an H-count SVG badge above implicit-H heavy atoms; explicit H atoms highlight with their bond; mobile-H tautomeric groups highlight all candidate atoms
+**Depends on**: Phase 7
+**Requirements**: INCHI-08
+
+**Success Criteria** (what must be TRUE):
+1. The h-layer text (e.g. `1-6H,7H2,(H,3,4)`) is rendered as individually hoverable spans per comma-separated group; hovering each span highlights only the atoms in that group
+2. Hovering a fixed-H group (e.g. `7H2`) shows an `H2` SVG text badge above the heavy atom in the canvas, injected and removed with the same lifecycle as highlights
+3. When an explicit H atom is drawn and the corresponding h-layer sub-token is hovered, the H atom, its bonded heavy atom, and the bond between them are all highlighted
+4. Hovering a mobile-H group `(H,3,4)` highlights all listed candidate atoms in `--c-hydro-mobile`
+5. All existing highlight tests pass; new unit tests cover sub-token parsing, badge injection lifecycle, and explicit-H bond lookup
+
+**Plans**: TBD — determined after research
+
+**UI hint**: yes
+
 ## Requirement Coverage
 
 | Requirement | Phase | Description |
@@ -191,8 +209,9 @@ Plans:
 | INCHI-06 | Phase 7 | Multi-fragment molecules highlight correct atoms/bonds per fragment on layer hover |
 | INCHI-07 | Phase 7 | Hovering p-layer highlights protonation-site atoms (q-layer or heteroatom fallback) |
 | PLSH-04 | Phase 7 | Copy-to-clipboard button copies verbatim InChI string with visual confirmation |
+| INCHI-08 | Phase 8 | Per-group h-layer sub-tokens with implicit H badge, explicit H bond highlight, and mobile-H group highlight |
 
-**Coverage:** 19/19 requirements mapped ✓
+**Coverage:** 20/20 requirements mapped ✓
 
 ## Progress
 
@@ -205,7 +224,8 @@ Plans:
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
 | 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
 | 7. Multi-Fragment Highlighting, p-Layer, and Copy | 3/3 | Complete | 2026-06-01 |
+| 8. Hydrogen Implicit & Explicit Highlight | 0/? | Planned | — |
 
 ---
 *Roadmap created: 2026-05-18*
-*Updated: 2026-06-01 — Phase 7 complete; all 7 phases done, 23/23 plans*
+*Updated: 2026-06-05 — Phase 8 added (hydrogen implicit/explicit highlight)*
