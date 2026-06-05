@@ -182,7 +182,11 @@ Plans:
 4. Hovering a mobile-H group `(H,3,4)` highlights all listed candidate atoms in `--c-hydro-mobile`
 5. All existing highlight tests pass; new unit tests cover sub-token parsing, badge injection lifecycle, and explicit-H bond lookup
 
-**Plans**: TBD — determined after research
+**Plans**: 2 plans
+
+Plans:
+- [ ] 08-00-PLAN.md — Wave 0 RED test stubs: renderHBadges, cleanHBadges, explicit-H bond path
+- [ ] 08-01-PLAN.md — Implement renderHBadges + cleanHBadges + extend case 'hAtoms' (GREEN pass)
 
 **UI hint**: yes
 
@@ -224,7 +228,7 @@ Plans:
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
 | 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
 | 7. Multi-Fragment Highlighting, p-Layer, and Copy | 3/3 | Complete | 2026-06-01 |
-| 8. Hydrogen Implicit & Explicit Highlight | 0/? | Planned | — |
+| 8. Hydrogen Implicit & Explicit Highlight | 0/2 | In Progress | — |
 
 ---
 *Roadmap created: 2026-05-18*
