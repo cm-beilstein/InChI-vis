@@ -312,13 +312,38 @@ export function buildSubHoverSpecs(
     }
 
     case 'hAtoms': {
-      const kAtoms = (subHover.atoms ?? [])
-        .map(c => auxMap[c])
-        .filter((id): id is number => id !== undefined);
-      if (kAtoms.length === 0) return [];
+      // Phase 8: split into explicit-H vs implicit-H paths (D-07)
+      // Explicit H atoms (pool ID in hAtomPoolIds) → include H pool ID, bonded heavy atom, and bond
+      // Implicit H atoms (pool ID not in hAtomPoolIds) → include only the heavy atom pool ID
+      const canonAtoms = subHover.atoms ?? [];
+      const heavyKAtoms: number[] = [];
+      const explicitHKAtoms: number[] = [];
+      const bondIds: number[] = [];
+
+      for (const canon of canonAtoms) {
+        const kId = auxMap[canon];
+        if (kId === undefined) continue;
+        if (hAtomPoolIds.includes(kId)) {
+          // Explicit H atom in canvas — collect it, find bonded heavy atom and bond
+          explicitHKAtoms.push(kId);
+          struct.bonds.forEach((bond, bid) => {      // same forEach as case 'atom'
+            if (bond.begin === kId || bond.end === kId) {
+              const heavyId = bond.begin === kId ? bond.end : bond.begin;
+              if (!heavyKAtoms.includes(heavyId)) heavyKAtoms.push(heavyId);
+              bondIds.push(bid);
+            }
+          });
+        } else {
+          // Implicit H — highlight the heavy atom only (no bond)
+          heavyKAtoms.push(kId);
+        }
+      }
+
+      const allAtoms = [...heavyKAtoms, ...explicitHKAtoms];
+      if (allAtoms.length === 0) return [];
       const colorVar = hydroColor(subHover.count!) ?? 'var(--c-hydro-1)';
       const color = resolveVarFn(stripVar(colorVar));
-      return [{ atoms: kAtoms, bonds: [], rgroupAttachmentPoints: [], color }];
+      return [{ atoms: allAtoms, bonds: bondIds, rgroupAttachmentPoints: [], color }];
     }
 
     case 'mobileH': {

@@ -8,6 +8,7 @@ import type { Ketcher } from 'ketcher-core';
 import { useInchiStore } from '../store';
 import { buildHighlightSpecs, resolveVar } from '../lib/highlightUtils';
 import type { HighlightSpec, StructLike } from '../lib/highlightUtils';
+import type { SubHover, AuxMap } from '../lib/parseInchi';
 
 /**
  * Applies highlight specs to the Ketcher editor.
@@ -51,6 +52,67 @@ export function whiteAtomLabels(svgRoot: Element, specs: HighlightSpec[]): void 
 }
 
 /**
+ * Injects SVG <text data-h-badge="true"> badges above each atom listed in subHover.atoms.
+ * Called AFTER applyKetcherHighlights (SVG is synchronously redrawn by that point).
+ *
+ * Badge text:
+ *  - kind='hAtoms' count=1 → "H"
+ *  - kind='hAtoms' count=N → "HN" (e.g. "H2", "H3")
+ *  - kind='mobileH' → "H?" (italic)
+ *
+ * Atom center is read from the parent group bounding box (Assumption A1).
+ * Guards on null element and missing getBBox (JSDOM safety).
+ */
+export function renderHBadges(
+  svgRoot: Element,
+  subHover: SubHover,
+  auxMap: AuxMap,
+  resolveVarFn: (name: string) => string,
+): void {
+  const ns = 'http://www.w3.org/2000/svg';
+  const isMobile = subHover.kind === 'mobileH';
+  const count = subHover.kind === 'hAtoms' ? (subHover.count ?? 1) : null;
+  const colorVar = isMobile ? '--c-hydro-mobile' : `--c-hydro-${Math.min(count!, 4)}`;
+  const fill = resolveVarFn(colorVar);
+  const text = isMobile ? 'H?' : count === 1 ? 'H' : `H${count}`;
+
+  for (const canonAtom of subHover.atoms ?? []) {
+    const poolId = auxMap[canonAtom];
+    if (poolId === undefined) continue;
+    const atomEl = svgRoot.querySelector(`[data-atom-id="${poolId}"]`);
+    if (!atomEl) continue;
+    // Read atom center via parent group bounding box (A1 — empirical verify needed)
+    const parentGroup = atomEl.closest('g') ?? atomEl;
+    const bbox = (parentGroup as SVGGraphicsElement).getBBox?.();
+    if (!bbox) continue;
+    const cx = bbox.x + bbox.width / 2;
+    const cy = bbox.y + bbox.height / 2;
+
+    const badge = document.createElementNS(ns, 'text');
+    badge.setAttribute('data-h-badge', 'true');
+    badge.setAttribute('x', String(cx));
+    badge.setAttribute('y', String(cy + 20));    // +20 per design handoff canvas.jsx line 203
+    badge.setAttribute('text-anchor', 'middle');
+    badge.setAttribute('dominant-baseline', 'central');
+    badge.setAttribute('font-size', '12');
+    badge.setAttribute('font-weight', '500');
+    badge.setAttribute('pointer-events', 'none');
+    if (isMobile) badge.setAttribute('font-style', 'italic');
+    badge.style.fill = fill;
+    badge.textContent = text;
+    svgRoot.appendChild(badge);
+  }
+}
+
+/**
+ * Removes all SVG badge elements injected by renderHBadges.
+ * Must be called on all highlight-clear paths to prevent badge persistence (D-03, D-06).
+ */
+export function cleanHBadges(svgRoot: Element): void {
+  svgRoot.querySelectorAll('[data-h-badge]').forEach(el => el.remove());
+}
+
+/**
  * React hook that subscribes to Zustand hover state and drives Ketcher canvas highlights.
  * Called from App.tsx once Ketcher is ready (isReady = true).
  *
@@ -86,25 +148,35 @@ export function useKetcherHighlights(
       // Also clears on hoverIdx=null (idle) and non-spatial layers (D-01).
       if (hoverIdx === null) {
         highlightEditor.highlights.clear();
+        const svgRoot = editorAny.render.paper.canvas as Element;
+        cleanHBadges(svgRoot);
         return;
       }
       const layer = layers[hoverIdx];
       if (!layer) {
         highlightEditor.highlights.clear();
+        const svgRoot = editorAny.render.paper.canvas as Element;
+        cleanHBadges(svgRoot);
         return;
       }
       // Non-spatial layers: clear canvas, update explanation card only (D-01)
       // 'b' is also non-spatial — matches NON_SPATIAL guard in buildHighlightSpecs
       if (['version', 'q', 'i', 'b'].includes(layer.type)) {
         highlightEditor.highlights.clear();
+        const svgRoot = editorAny.render.paper.canvas as Element;
+        cleanHBadges(svgRoot);
         return;
       }
 
       const specs = buildHighlightSpecs(layer, subHover, auxMap, atomElements, hAtomPoolIds, layers, struct, resolveVar);
       applyKetcherHighlights(highlightEditor, specs);
+      const svgRoot = editorAny.render.paper.canvas as Element;
+      cleanHBadges(svgRoot);
       if (specs.length > 0) {
-        const svgRoot = editorAny.render.paper.canvas as Element;
         whiteAtomLabels(svgRoot, specs);
+        if (subHover && (subHover.kind === 'hAtoms' || subHover.kind === 'mobileH')) {
+          renderHBadges(svgRoot, subHover, auxMap, resolveVar);
+        }
       }
     } finally {
       if (_isHighlightingRef) _isHighlightingRef.current = false;
