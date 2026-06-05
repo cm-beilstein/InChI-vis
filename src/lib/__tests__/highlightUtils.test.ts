@@ -31,6 +31,28 @@ function makeMockStruct(): StructLike {
   };
 }
 
+/**
+ * Phase 8: Mock struct with an explicit H atom.
+ * Bonds 0–5 are the same benzene ring as makeMockStruct.
+ * Bond 6 connects pool 0 (heavy atom) to pool 6 (explicit H atom).
+ */
+function makeMockStructWithExplicitH(): StructLike {
+  return {
+    findBondId: vi.fn().mockReturnValue(99),
+    bonds: {
+      forEach: vi.fn((cb) => {
+        cb({ begin: 0, end: 1 }, 0);
+        cb({ begin: 1, end: 2 }, 1);
+        cb({ begin: 2, end: 3 }, 2);
+        cb({ begin: 3, end: 4 }, 3);
+        cb({ begin: 4, end: 5 }, 4);
+        cb({ begin: 5, end: 0 }, 5);
+        cb({ begin: 0, end: 6 }, 6); // bond 6: explicit H (pool 6) bonded to heavy atom (pool 0)
+      }),
+    },
+  };
+}
+
 // Helper to make a basic layer
 function makeLayer(overrides: Partial<Layer>): Layer {
   return {
@@ -670,6 +692,68 @@ describe('buildSubHoverSpecs', () => {
         resolveVarFn,
       );
       expect(specs).toEqual([]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 8: explicit-H bond path in case 'hAtoms' (RED tests)
+  // -------------------------------------------------------------------------
+  describe('case hAtoms — Phase 8 explicit-H bond path', () => {
+    it('regression: implicit H (pool ID NOT in hAtomPoolIds) → spec.atoms has heavy atom, spec.bonds is empty', () => {
+      // canonical 1 → pool 0; pool 0 is NOT in hAtomPoolIds (empty) → implicit H
+      const struct = makeMockStructWithExplicitH();
+      const specs = buildSubHoverSpecs(
+        { kind: 'hAtoms', atoms: [1], count: 1 },
+        { 1: 0 }, // canonical 1 → pool 0
+        atomElements,
+        [], // no explicit H atoms
+        hLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.length).toBeGreaterThan(0);
+      expect(specs[0].atoms).toContain(0); // heavy atom pool 0
+      expect(specs[0].bonds).toHaveLength(0); // no explicit H → no bonds
+    });
+
+    it('explicit H (pool ID IN hAtomPoolIds) → spec.atoms includes explicit H pool ID and bonded heavy atom pool ID; spec.bonds includes bond ID', () => {
+      // canonical 7 → pool 6; pool 6 IS in hAtomPoolIds → explicit H
+      // bond 6 connects pool 6 (explicit H) to pool 0 (heavy atom)
+      const struct = makeMockStructWithExplicitH();
+      const specs = buildSubHoverSpecs(
+        { kind: 'hAtoms', atoms: [7], count: 1 },
+        { 7: 6 }, // canonical 7 → pool 6 (explicit H)
+        atomElements,
+        [6], // pool 6 is an explicit H atom
+        hLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.length).toBeGreaterThan(0);
+      expect(specs[0].atoms).toContain(6); // explicit H pool ID
+      expect(specs[0].atoms).toContain(0); // bonded heavy atom pool ID
+      expect(specs[0].bonds).toContain(6); // bond ID between H (pool 6) and heavy atom (pool 0)
+    });
+
+    it('mixed atoms (some explicit H, some implicit) → spec.atoms includes all; spec.bonds includes only explicit-H bond IDs', () => {
+      // canonical 1 → pool 0 (implicit H), canonical 7 → pool 6 (explicit H)
+      const struct = makeMockStructWithExplicitH();
+      const specs = buildSubHoverSpecs(
+        { kind: 'hAtoms', atoms: [1, 7], count: 1 },
+        { 1: 0, 7: 6 }, // 1→pool 0 (implicit), 7→pool 6 (explicit)
+        atomElements,
+        [6], // only pool 6 is explicit H
+        hLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.length).toBeGreaterThan(0);
+      expect(specs[0].atoms).toContain(0); // implicit heavy atom
+      expect(specs[0].atoms).toContain(6); // explicit H atom
+      // bonds must include the explicit H bond (6) but NOT 0 or 1 (those are ring bonds)
+      expect(specs[0].bonds).toContain(6);
+      expect(specs[0].bonds).not.toContain(0);
+      expect(specs[0].bonds).not.toContain(1);
     });
   });
 });
