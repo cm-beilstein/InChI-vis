@@ -45,7 +45,7 @@ export const LAYER_INFO: Record<LayerType, LayerInfoEntry> = {
     title: 'Hydrogen layer',
     accent: 'var(--c-hydro)',
     blurb:
-      "Where the hydrogens live. '1H3' means atom 1 carries three H. Ranges like '1-6H' apply to each atom in the range. Parenthesised groups like '(H,3,4)' are mobile (tautomeric) protons shared between atoms.",
+      "Where the hydrogens live. '1H3' means atom 1 carries three H. Ranges like '1-6H' apply to each atom in the range. Parenthesised groups like '(H,3,4)' are mobile (tautomeric) protons shared between atoms. Implicit hydrogens are shown as badges on the canvas when you hover this layer.",
     egLabel: 'Reads as',
   },
   q: {
@@ -195,6 +195,22 @@ export function parseStereoParities(text: string): Record<number, string> {
 
 export function parityColor(sign: string): string {
   return sign === '+' ? 'var(--c-stereo-plus)' : 'var(--c-stereo-minus)';
+}
+
+// ---------------------------------------------------------------------------
+// parseBondStereoEntries — parses b-layer text into atom-pair + sign tuples.
+// b-layer format: "9-4+,12-6-" → [{a1:9, a2:4, sign:'+'}, {a1:12, a2:6, sign:'-'}]
+// Distinct from parseStereoParities (t-layer) which uses "atomN+/-" single-atom notation.
+// ---------------------------------------------------------------------------
+
+export type BondStereoEntry = { a1: number; a2: number; sign: string };
+
+export function parseBondStereoEntries(text: string): BondStereoEntry[] {
+  const entries: BondStereoEntry[] = [];
+  for (const m of text.matchAll(/(\d+)-(\d+)([+-])/g)) {
+    entries.push({ a1: parseInt(m[1], 10), a2: parseInt(m[2], 10), sign: m[3] });
+  }
+  return entries;
 }
 
 // ---------------------------------------------------------------------------

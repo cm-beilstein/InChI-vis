@@ -9,6 +9,8 @@ import type { LayerType } from '../lib/parseInchi';
 import styles from './Legend.module.css';
 import expStyles from './Explanation.module.css';
 
+const { setHover, setSubHover } = useInchiStore.getState();
+
 interface LegendLayerDef {
   type: LayerType;
   key: string;
@@ -39,6 +41,7 @@ interface LegendProps {
 export function Legend({ activeType }: LegendProps) {
   const layers = useInchiStore(state => state.layers);
   const presentTypes = new Set(layers.map(l => l.type));
+  const layerIndexByType = new Map(layers.map((l, i) => [l.type, i]));
 
   return (
     <div className={`${expStyles.card} ${expStyles.legendCard}`}>
@@ -57,11 +60,14 @@ export function Legend({ activeType }: LegendProps) {
         const isActive = l.type === activeType;
         const color = `var(--c-${swatchVar(l.type)})`;
         const info = LAYER_INFO[l.type];
+        const layerIdx = layerIndexByType.get(l.type);
         return (
           <div
             key={l.type}
             className={[styles.legendRow, !present ? styles.muted : ''].filter(Boolean).join(' ')}
             style={isActive ? { background: `var(--c-${swatchVar(l.type)}-bg)` } : undefined}
+            onMouseEnter={present && layerIdx !== undefined ? () => { setSubHover(null); setHover(layerIdx); } : undefined}
+            onMouseLeave={present && layerIdx !== undefined ? () => setHover(null) : undefined}
           >
             <span className={styles.sw} style={{ background: color }} />
             <span

@@ -17,6 +17,7 @@ import {
   hydroColor,
   parityColor,
   parseStereoParities,
+  parseBondStereoEntries,
 } from './layerInfo';
 
 export type HighlightSpec = {
@@ -76,7 +77,7 @@ export function buildHighlightSpecs(
   }
 
   // NON-SPATIAL layers — no canvas highlight (D-01)
-  if (['version', 'q', 'i', 'b'].includes(layer.type)) {
+  if (['version', 'q', 'i'].includes(layer.type)) {
     return [];
   }
 
@@ -226,6 +227,44 @@ export function buildHighlightSpecs(
       }
       if (heteroIds.length === 0) return [];
       return [{ atoms: heteroIds, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-proton') }];
+    }
+
+    case 'b': {
+      // Double-bond stereo (E/Z): highlight the two atoms and the bond between them.
+      // b-layer format: "9-4+,12-6-" — each entry is a canonical atom pair + E/Z sign.
+      const formulaLayerB = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsB = formulaLayerB ? formulaFragmentCounts(formulaLayerB.text) : [];
+      const fragmentTextsB = expandLayerText(layer.text);
+      const plusAtoms: number[] = [];
+      const minusAtoms: number[] = [];
+      const plusBonds: number[] = [];
+      const minusBonds: number[] = [];
+      let cumulativeOffsetB = 0;
+      fragmentTextsB.forEach((fragText, fi) => {
+        for (const { a1, a2, sign } of parseBondStereoEntries(fragText)) {
+          const kA1 = auxMap[a1 + cumulativeOffsetB];
+          const kA2 = auxMap[a2 + cumulativeOffsetB];
+          if (kA1 === undefined || kA2 === undefined) continue;
+          const bid = struct.findBondId(kA1, kA2);
+          if (sign === '+') {
+            plusAtoms.push(kA1, kA2);
+            if (bid !== null) plusBonds.push(bid);
+          } else {
+            minusAtoms.push(kA1, kA2);
+            if (bid !== null) minusBonds.push(bid);
+          }
+        }
+        cumulativeOffsetB += fragmentAtomCountsB[fi] ?? 0;
+      });
+
+      const specs: HighlightSpec[] = [];
+      if (plusAtoms.length > 0 || plusBonds.length > 0) {
+        specs.push({ atoms: plusAtoms, bonds: plusBonds, rgroupAttachmentPoints: [], color: resolveVarFn('--c-stereo-plus') });
+      }
+      if (minusAtoms.length > 0 || minusBonds.length > 0) {
+        specs.push({ atoms: minusAtoms, bonds: minusBonds, rgroupAttachmentPoints: [], color: resolveVarFn('--c-stereo-minus') });
+      }
+      return specs;
     }
 
     case 'm':

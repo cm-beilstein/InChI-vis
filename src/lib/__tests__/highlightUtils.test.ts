@@ -271,10 +271,13 @@ describe('buildHighlightSpecs', () => {
       expect(minusSpec!.atoms).toContain(1); // canonical 2 → ketcher 1
     });
 
-    it('b-layer: returns empty array [] (no canvas highlight per canvas.jsx behavior)', () => {
+    it('b-layer: highlights the double-bond atom pair and the bond with stereo-plus color', () => {
       const struct = makeMockStruct();
       const specs = buildHighlightSpecs(bLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
-      expect(specs).toEqual([]);
+      expect(specs).toHaveLength(1);
+      expect(specs[0].color).toBe('--c-stereo-plus');
+      expect(specs[0].atoms).toEqual(expect.arrayContaining([0, 1]));
+      expect(specs[0].bonds).toContain(99); // findBondId(0,1) in mock struct
     });
 
     it('m-layer: reads atoms from co-present t-layer, uses --c-stereo color', () => {
