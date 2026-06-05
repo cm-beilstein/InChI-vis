@@ -13,7 +13,7 @@
 - [x] **Phase 5: Mapping Strip and Preset Molecules** — Atom-numbering strip and preset molecule list wired to the full draw-to-display pipeline (complete 2026-05-22)
 - [x] **Phase 6: Hydrogen Highlight, Polish, and Deploy** — Hovering H sub-token highlights explicit hydrogens; empty-canvas placeholder; static build deployed (complete 2026-06-01)
 - [x] **Phase 7: Multi-Fragment Highlighting, p-Layer, and Copy** — Correct highlight mapping for multi-fragment molecules; p-layer protonation site highlighting; copy-to-clipboard button (complete 2026-06-01)
-- [ ] **Phase 8: Hydrogen Implicit & Explicit Highlight** — Per-group h-layer sub-tokens; H-count SVG badge for implicit H; explicit H atom + bond highlight; mobile-H tautomeric group highlight
+- [x] **Phase 8: Hydrogen Implicit & Explicit Highlight** — Per-group h-layer sub-tokens; H-count SVG badge for implicit H; explicit H atom + bond highlight; mobile-H tautomeric group highlight (completed 2026-06-05)
 
 ## Phase Details
 
@@ -206,7 +206,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 08-01-PLAN.md — Implement renderHBadges + cleanHBadges + extend case 'hAtoms' (GREEN pass)
+- [x] 08-01-PLAN.md — Implement renderHBadges + cleanHBadges + extend case 'hAtoms' (GREEN pass)
 
 **UI hint**: yes
 
@@ -248,7 +248,7 @@ Plans:
 | 5. Mapping Strip and Preset Molecules | 3/3 | Complete | 2026-05-22 |
 | 6. Hydrogen Highlight, Polish, and Deploy | 4/4 | Complete | 2026-06-01 |
 | 7. Multi-Fragment Highlighting, p-Layer, and Copy | 3/3 | Complete | 2026-06-01 |
-| 8. Hydrogen Implicit & Explicit Highlight | 1/2 | In Progress|  |
+| 8. Hydrogen Implicit & Explicit Highlight | 2/2 | Complete   | 2026-06-05 |
 
 ---
 *Roadmap created: 2026-05-18*
