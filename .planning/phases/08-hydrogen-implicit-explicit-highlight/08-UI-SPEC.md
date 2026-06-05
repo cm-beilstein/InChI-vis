@@ -1,7 +1,8 @@
 ---
 phase: 8
 slug: hydrogen-implicit-explicit-highlight
-status: draft
+status: approved
+reviewed_at: 2026-06-05
 shadcn_initialized: false
 preset: none
 created: 2026-06-05
