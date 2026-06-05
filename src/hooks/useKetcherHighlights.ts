@@ -68,35 +68,119 @@ export function renderHBadges(
   subHover: SubHover,
   auxMap: AuxMap,
   resolveVarFn: (name: string) => string,
+  hAtomPoolIds: number[] = [],
+  struct?: StructLike,
 ): void {
   const ns = 'http://www.w3.org/2000/svg';
   const isMobile = subHover.kind === 'mobileH';
-  const count = subHover.kind === 'hAtoms' ? (subHover.count ?? 1) : null;
-  const colorVar = isMobile ? '--c-hydro-mobile' : `--c-hydro-${Math.min(count!, 4)}`;
-  const fill = resolveVarFn(colorVar);
-  const text = isMobile ? 'H?' : count === 1 ? 'H' : `H${count}`;
+  const totalCount = subHover.kind === 'hAtoms' ? (subHover.count ?? 1) : null;
 
+  // First pass: resolve atom centers, per-atom implicit H counts, and badge directions.
+  // implicitCount = totalCount − bonded explicit H atoms; atoms at ≤ 0 are skipped.
+  //
+  // Badge direction: largest angular gap among ALL bond directions visible in the SVG.
+  // This avoids collisions with both bond lines and already-drawn explicit H labels in
+  // one unified pass, replacing the earlier avoidDir + centroid-fallback approach.
+  const centers: Array<{ cx: number; cy: number; implicitCount: number; dir?: { dx: number; dy: number } }> = [];
   for (const canonAtom of subHover.atoms ?? []) {
     const poolId = auxMap[canonAtom];
     if (poolId === undefined) continue;
+
+    // Count bonded explicit H to derive implicitCount; skip atom if all H are drawn.
+    let implicitCount = totalCount ?? 1;
+    if (!isMobile && struct && hAtomPoolIds.length > 0) {
+      let explicitH = 0;
+      struct.bonds.forEach(bond => {
+        if (bond.begin === poolId || bond.end === poolId) {
+          const neighbor = bond.begin === poolId ? bond.end : bond.begin;
+          if (hAtomPoolIds.includes(neighbor)) explicitH++;
+        }
+      });
+      implicitCount = (totalCount ?? 1) - explicitH;
+      if (implicitCount <= 0) continue;
+    }
+
     const atomEl = svgRoot.querySelector(`[data-atom-id="${poolId}"]`);
     if (!atomEl) continue;
-    // Read atom center via parent group bounding box (A1 — empirical verify needed)
     const parentGroup = atomEl.closest('g') ?? atomEl;
     const bbox = (parentGroup as SVGGraphicsElement).getBBox?.();
     if (!bbox) continue;
     const cx = bbox.x + bbox.width / 2;
     const cy = bbox.y + bbox.height / 2;
 
+    // Collect angles to every bonded neighbor whose SVG element is present.
+    // Includes both heavy-atom bonds (bond lines) and explicit H atoms.
+    let dir: { dx: number; dy: number } | undefined;
+    if (struct) {
+      const angles: number[] = [];
+      struct.bonds.forEach(bond => {
+        if (bond.begin === poolId || bond.end === poolId) {
+          const neighbor = bond.begin === poolId ? bond.end : bond.begin;
+          const nEl = svgRoot.querySelector(`[data-atom-id="${neighbor}"]`);
+          if (!nEl) return;
+          const nGroup = nEl.closest('g') ?? nEl;
+          const nBbox = (nGroup as SVGGraphicsElement).getBBox?.();
+          if (!nBbox) return;
+          const ndx = (nBbox.x + nBbox.width / 2) - cx;
+          const ndy = (nBbox.y + nBbox.height / 2) - cy;
+          if (Math.abs(ndx) > 0.5 || Math.abs(ndy) > 0.5) angles.push(Math.atan2(ndy, ndx));
+        }
+      });
+      if (angles.length > 0) {
+        // Place badge at the midpoint of the largest angular gap — the "open" direction
+        // that avoids all bond lines and drawn H labels around this atom.
+        angles.sort((a, b) => a - b);
+        let maxGap = 0;
+        let badgeAngle = -Math.PI / 2;
+        for (let i = 0; i < angles.length; i++) {
+          const a1 = angles[i];
+          const a2 = angles[(i + 1) % angles.length];
+          const gap = a2 > a1 ? a2 - a1 : a2 + 2 * Math.PI - a1;
+          if (gap > maxGap) { maxGap = gap; badgeAngle = a1 + gap / 2; }
+        }
+        dir = { dx: Math.cos(badgeAngle), dy: Math.sin(badgeAngle) };
+      }
+    }
+
+    centers.push({ cx, cy, implicitCount, dir });
+  }
+  if (centers.length === 0) return;
+
+  // Centroid fallback for atoms where no neighbor SVG positions were available.
+  const centX = centers.reduce((s, c) => s + c.cx, 0) / centers.length;
+  const centY = centers.reduce((s, c) => s + c.cy, 0) / centers.length;
+  const OFFSET = 18;
+
+  for (const { cx, cy, implicitCount, dir } of centers) {
+    let dx: number, dy: number;
+    if (dir) {
+      dx = dir.dx;
+      dy = dir.dy;
+    } else {
+      dx = cx - centX;
+      dy = cy - centY;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1) { dx = 0; dy = -1; }
+      else { dx /= len; dy /= len; }
+    }
+
+    const colorVar = isMobile ? '--c-hydro-mobile' : `--c-hydro-${Math.min(implicitCount, 4)}`;
+    const fill = resolveVarFn(colorVar);
+    const text = isMobile ? 'H?' : implicitCount === 1 ? 'H' : `H${implicitCount}`;
+
     const badge = document.createElementNS(ns, 'text');
     badge.setAttribute('data-h-badge', 'true');
-    badge.setAttribute('x', String(cx));
-    badge.setAttribute('y', String(cy + 20));    // +20 per design handoff canvas.jsx line 203
+    badge.setAttribute('x', String(cx + dx * OFFSET));
+    badge.setAttribute('y', String(cy + dy * OFFSET));
     badge.setAttribute('text-anchor', 'middle');
     badge.setAttribute('dominant-baseline', 'central');
     badge.setAttribute('font-size', '12');
     badge.setAttribute('font-weight', '500');
     badge.setAttribute('pointer-events', 'none');
+    // White halo painted under the fill so badges remain readable over bond lines.
+    badge.setAttribute('stroke', 'white');
+    badge.setAttribute('stroke-width', '3');
+    badge.setAttribute('paint-order', 'stroke fill');
     if (isMobile) badge.setAttribute('font-style', 'italic');
     badge.style.fill = fill;
     badge.textContent = text;
@@ -175,7 +259,7 @@ export function useKetcherHighlights(
       if (specs.length > 0) {
         whiteAtomLabels(svgRoot, specs);
         if (subHover && (subHover.kind === 'hAtoms' || subHover.kind === 'mobileH')) {
-          renderHBadges(svgRoot, subHover, auxMap, resolveVar);
+          renderHBadges(svgRoot, subHover, auxMap, resolveVar, hAtomPoolIds, struct);
         }
       }
     } finally {

@@ -1,53 +1,56 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-05T11:53:05Z",
+  "timestamp": "2026-06-05T12:24:14Z",
   "phase": "08",
   "phase_name": "hydrogen-implicit-explicit-highlight",
   "phase_dir": ".planning/phases/08-hydrogen-implicit-explicit-highlight",
-  "plan": "post-completion bugfix",
+  "plan": "post-completion bugfix (continued)",
   "task": 2,
   "total_tasks": 2,
   "status": "paused",
   "completed_tasks": [
     {
       "id": 1,
-      "description": "Root cause identified + radial offset fix applied to renderHBadges",
-      "status": "done"
+      "description": "Three-part fix to renderHBadges: explicit-H awareness + angular-gap placement",
+      "status": "done",
+      "detail": "Fix 1: skip badge when implicitCount <= 0 (all H explicit). Fix 2: per-atom residual badge count (H/H2/H3). Fix 3: unified angular-gap algorithm — badge at midpoint of largest gap among all bond+explicit-H neighbor directions. 171 tests passing."
     }
   ],
   "current_task": {
     "id": 2,
-    "description": "Browser verification: confirm badges appear outside ring perimeter on benzene / ring molecules"
+    "description": "Browser verification on the anabasine-like InChI"
   },
   "context_notes": {
-    "bug_summary": "H badges for implicit hydrogens were colliding with bonds and hidden behind them on ring molecules.",
-    "root_cause": "renderHBadges used a fixed +20 downward SVG offset. For atoms in the upper half of a ring, +20 pushes the badge INTO the ring interior, landing it on a bond line. For adjacent ring atoms, all badges cluster at the same y-zone.",
-    "fix_applied": "Two-pass radial offset in src/hooks/useKetcherHighlights.ts: first pass collects all atom centers via getBBox(), computes centroid, second pass offsets each badge 18px AWAY from the centroid (unit vector from centroid to atom). Single-atom fallback: offset straight up (-y). Added paint-order='stroke fill' with white stroke halo (stroke-width=3) for readability over any residual bond-line overlap.",
-    "tests": "165/165 passing after fix",
-    "stale_handoff_note": "Previous HANDOFF.json was from Phase 07 multi-fragment bug — all those files were already committed before this session. This handoff supersedes it."
+    "molecule_under_test": "InChI=1S/C10H14N2/c1-12-7-3-5-10(12)9-4-2-6-11-8-9/h2,4,6,8,10H,3,5,7H2,1H3/t10-/m0/s1",
+    "algorithm_detail": "For each heavy atom needing a badge: collect atan2 angles to ALL bonded neighbors in SVG (heavy atoms + explicit H). Sort, find largest gap, badge at gap midpoint. Fallback to centroid-based when no neighbor SVG positions available.",
+    "tests": "171/171 passing"
   },
   "uncommitted_files": [
-    "src/hooks/useKetcherHighlights.ts"
+    "src/hooks/useKetcherHighlights.ts",
+    "src/hooks/__tests__/useKetcherHighlights.test.ts",
+    ".planning/STATE.md",
+    ".planning/config.json",
+    ".planning/phases/08-hydrogen-implicit-explicit-highlight/08-PATTERNS.md"
   ],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Browser test: draw benzene (or load a ring molecule preset), hover individual h-layer sub-tokens — confirm badges appear OUTSIDE the ring, not inside or on bond lines",
-      "context": "Radial offset fix needs empirical verification in the live Ketcher SVG; unit tests mock getBBox() so they cannot verify actual visual placement",
+      "action": "Browser verify on anabasine InChI: (a) fully-explicit atoms show no badge, (b) mixed explicit/implicit atoms show residual count badge, (c) badge does not land on a bond line, (d) methyl CH2 (1 explicit H removed) shows 'H' badge away from bond and explicit H",
+      "context": "getBBox() mocked in tests — actual visual placement requires browser verification",
       "blocking": true
     }
   ],
   "decisions": [
     {
-      "decision": "Radial offset from centroid (18px) instead of fixed +20 downward",
-      "rationale": "Fixed downward offset always goes INTO ring interiors for upper-ring atoms; radial offset pushes badges outward regardless of atom position in ring",
+      "decision": "Unified angular-gap algorithm replaces avoidDir + centroid fallback",
+      "rationale": "avoidDir only avoided explicit H; centroid avoided rings. Neither avoided bond lines. Gap algorithm handles all three in one pass.",
       "phase": "08"
     },
     {
-      "decision": "White stroke halo (stroke-width=3, paint-order=stroke fill) on badge text",
-      "rationale": "Ensures readability even if badge still overlaps a bond line edge due to tight ring geometry",
+      "decision": "implicitCount = totalCount - bonded-explicit-H-count per atom",
+      "rationale": "Previous binary skip (any explicit H -> no badge) missed the mixed case where an atom has both explicit and remaining implicit H.",
       "phase": "08"
     }
   ],
-  "next_action": "Browser verify badge placement on ring molecules (esp. benzene), commit src/hooks/useKetcherHighlights.ts with fix(08) message, then run /gsd-complete-milestone"
+  "next_action": "Browser verify. If OK: commit all modified files with 'fix(08): angular-gap badge placement + explicit-H-aware implicit count', then /gsd-complete-milestone"
 }

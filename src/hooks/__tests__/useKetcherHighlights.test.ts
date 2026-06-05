@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { applyKetcherHighlights, whiteAtomLabels, renderHBadges, cleanHBadges } from '../useKetcherHighlights';
-import type { HighlightSpec } from '../../lib/highlightUtils';
+import type { HighlightSpec, StructLike } from '../../lib/highlightUtils';
 import type { SubHover, AuxMap } from '../../lib/parseInchi';
 
 function makeMockEditor() {
@@ -167,6 +167,141 @@ describe('renderHBadges', () => {
 
     expect(() => renderHBadges(svg, subHover, auxMap, resolveVarFn)).not.toThrow();
     expect(svg.querySelectorAll('[data-h-badge]').length).toBe(0);
+  });
+
+  it('skips badge for heavy atom that already has an explicit H bonded in the canvas', () => {
+    // canonical 1 → pool 0 (heavy atom), pool 5 = explicit H bonded to pool 0
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 50);
+    svg.appendChild(g0);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1], count: 1 };
+    const auxMap: AuxMap = { 1: 0 };
+    const hAtomPoolIds = [5];
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: { forEach: (cb) => { cb({ begin: 0, end: 5 }, 0); } },
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(0);
+  });
+
+  it('renders badge for heavy atom that has NO explicit H bonded (implicit H only)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 50);
+    svg.appendChild(g0);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1], count: 1 };
+    const auxMap: AuxMap = { 1: 0 };
+    const hAtomPoolIds = [5]; // pool 5 is H, but bonded to pool 3 (different atom)
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: { forEach: (cb) => { cb({ begin: 3, end: 5 }, 0); } },
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(1);
+  });
+
+  it('renders badges for a mix: atoms with implicit H get badges, atoms with explicit H do not', () => {
+    // canonical 1 → pool 0 (implicit H only), canonical 2 → pool 1 (has explicit H pool 5 bonded)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 50);
+    const g1 = makeAtomGroup(1, 200, 50);
+    svg.append(g0, g1);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1, 2], count: 1 };
+    const auxMap: AuxMap = { 1: 0, 2: 1 };
+    const hAtomPoolIds = [5];
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: { forEach: (cb) => { cb({ begin: 1, end: 5 }, 0); } }, // pool 1 has explicit H (pool 5)
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    // pool 0 (canonical 1) → no explicit H bonded → badge rendered
+    // pool 1 (canonical 2) → explicit H (pool 5) bonded → no badge
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(1);
+  });
+
+  it('places implicit H badge in the largest angular gap — away from bonded explicit H and bond lines', () => {
+    // Heavy atom pool 0 at (100,100); explicit H pool 5 directly above at (100,70).
+    // Only one neighbor in SVG → gap is the full circle minus that direction.
+    // Gap midpoint = opposite direction → badge goes downward (badge y > heavy center y).
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 100); // center: (110, 108)
+    const g5 = makeAtomGroup(5, 100, 70);  // center: (110, 78) — above g0
+    svg.append(g0, g5);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1], count: 2 };
+    const auxMap: AuxMap = { 1: 0 };
+    const hAtomPoolIds = [5];
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: { forEach: (cb) => { cb({ begin: 0, end: 5 }, 0); } },
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    const badge = svg.querySelector('[data-h-badge]');
+    expect(badge).not.toBeNull();
+    // Only neighbor is above → gap midpoint is below → badge y > 108
+    const badgeY = parseFloat(badge!.getAttribute('y')!);
+    expect(badgeY).toBeGreaterThan(108);
+  });
+
+  it('avoids bond lines: badge placed in the open sector when heavy atom is bonded to a heavy neighbor', () => {
+    // Heavy atom pool 0 at (100,100); heavy neighbor pool 1 at (140,100) — directly to the right.
+    // No explicit H. Largest gap is the left half (opposite to the bond).
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 100); // center: (110, 108)
+    const g1 = makeAtomGroup(1, 140, 100); // center: (150, 108) — to the right
+    svg.append(g0, g1);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1], count: 1 };
+    const auxMap: AuxMap = { 1: 0 };
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: { forEach: (cb) => { cb({ begin: 0, end: 1 }, 0); } },
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, [], struct);
+
+    const badge = svg.querySelector('[data-h-badge]');
+    expect(badge).not.toBeNull();
+    // Neighbor is to the right (angle 0°) → gap midpoint is left (angle 180°) → badge x < 110
+    const badgeX = parseFloat(badge!.getAttribute('x')!);
+    expect(badgeX).toBeLessThan(110);
+  });
+
+  it('shows residual implicit H badge when atom has some explicit H but not all (e.g. H3 total, 1 explicit → H2 badge)', () => {
+    // Reproduces the case: methyl group drawn with 2 explicit H, InChI h-layer says H3 → 1 implicit H remains
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const g0 = makeAtomGroup(0, 100, 50);
+    svg.appendChild(g0);
+
+    const subHover: SubHover = { kind: 'hAtoms', atoms: [1], count: 3 }; // InChI says 3H total
+    const auxMap: AuxMap = { 1: 0 };
+    const hAtomPoolIds = [5, 6]; // 2 explicit H atoms (pool 5 and 6) bonded to pool 0
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: {
+        forEach: (cb) => {
+          cb({ begin: 0, end: 5 }, 0); // pool 0 bonded to explicit H pool 5
+          cb({ begin: 0, end: 6 }, 1); // pool 0 bonded to explicit H pool 6
+        },
+      },
+    };
+
+    renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    const badges = svg.querySelectorAll('[data-h-badge]');
+    expect(badges.length).toBe(1);
+    expect(badges[0].textContent).toBe('H'); // 3 total − 2 explicit = 1 implicit → "H"
   });
 });
 
