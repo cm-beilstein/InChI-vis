@@ -1,16 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: MVP
-status: complete
-stopped_at: v1.0 milestone archived 2026-06-05
-last_updated: "2026-06-05T00:00:00Z"
+milestone_name: milestone
+status: completed
+last_updated: "2026-06-08T11:52:27.330Z"
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 25
-  completed_plans: 25
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
