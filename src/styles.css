@@ -147,7 +147,6 @@ body {
   background: var(--bg-canvas);
   border: 1px solid var(--line);
   border-radius: 6px;
-  overflow: hidden; /* clips Ketcher's own toolbar/canvas overflow; safe because modals anchor to .canvasWrap, not this element */
   min-height: 380px;
 }
 .ketcher .toolbar {
