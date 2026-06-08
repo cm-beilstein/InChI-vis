@@ -340,18 +340,27 @@ describe('buildHighlightSpecs', () => {
       expect(specs).toEqual([]);
     });
 
-    it('q layer: returns [] when no atoms have formal charge in Ketcher struct', () => {
-      const struct = makeMockStruct(); // atoms.forEach is a no-op
-      const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
-      expect(specs).toEqual([]);
-    });
-
-    it('q layer: highlights Ketcher atoms with non-zero formal charge', () => {
-      const struct = makeMockStructWithCharge(); // pool id 2 has charge +1
+    it('q layer: highlights all atoms in the charged fragment (single fragment)', () => {
+      // qLayer.text = '+1', formulaLayer = C6H6 (6 heavy atoms) → all 6 atoms highlighted
+      const struct = makeMockStruct();
       const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toHaveLength(1);
       expect(specs[0].color).toBe('--c-charge');
-      expect(specs[0].atoms).toEqual([2]);
+      expect(specs[0].atoms).toEqual([0, 1, 2, 3, 4, 5]);
+    });
+
+    it('q layer multi-fragment: only highlights atoms in the charged fragment', () => {
+      // CuSO4-like: q '+2;' → fragment 1 (Cu, 1 atom) charged; fragment 2 (H2O4S, 5 heavy atoms) not
+      const cuSo4FormulaLayer = makeLayer({ type: 'formula', text: 'Cu.H2O4S', atoms: [1, 2, 3, 4, 5, 6] });
+      const cuSo4QLayer = makeLayer({ type: 'q', prefix: 'q', text: '+2;', atoms: [] });
+      const cuSo4AuxMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+      const cuSo4Elements: Record<number, string> = { 1: 'Cu', 2: 'O', 3: 'O', 4: 'O', 5: 'O', 6: 'S' };
+      const localLayers: Layer[] = [cuSo4FormulaLayer, cuSo4QLayer];
+      const struct = makeMockStruct();
+      const specs = buildHighlightSpecs(cuSo4QLayer, null, cuSo4AuxMap, cuSo4Elements, [], localLayers, struct, resolveVarFn);
+      expect(specs).toHaveLength(1);
+      expect(specs[0].color).toBe('--c-charge');
+      expect(specs[0].atoms).toEqual([0]); // only Cu (pool id 0)
     });
 
     it('p layer: returns empty array []', () => {
@@ -420,6 +429,27 @@ describe('INCHI-07: p-layer highlight', () => {
     const localAllLayers: Layer[] = [versionLayer, makeLayer({ type: 'formula', text: 'C3', atoms: [1, 2, 3] }), pLayer];
     const specs = buildHighlightSpecs(pLayer, null, smallAuxMap, atomElements_all_C, [], localAllLayers, struct, resolveVarFn);
     expect(specs).toEqual([]);
+  });
+
+  it('p layer with mobile-H sites: highlights only mobile-H bearing atoms, not all heteroatoms', () => {
+    // CuSO4: /h;(H2,1,2,3,4) — no mobile H on Cu (fragment 1), mobile H on oxygens (local 1-4 of fragment 2)
+    // Cu (canonical 1, pool 0) must NOT be highlighted; S (canonical 6, pool 5) must NOT be highlighted
+    const cuSo4FormulaLayer = makeLayer({ type: 'formula', text: 'Cu.H2O4S', atoms: [1, 2, 3, 4, 5, 6] });
+    const cuSo4HLayer = makeLayer({ type: 'h', prefix: 'h', text: ';(H2,1,2,3,4)', atoms: [] });
+    const cuSo4PLayer = makeLayer({ type: 'p', prefix: 'p', text: '-2', atoms: [] });
+    const cuSo4AuxMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+    const cuSo4Elements: Record<number, string> = { 1: 'Cu', 2: 'O', 3: 'O', 4: 'O', 5: 'O', 6: 'S' };
+    const localLayers: Layer[] = [cuSo4FormulaLayer, cuSo4HLayer, cuSo4PLayer];
+    const struct = makeMockStruct();
+    const specs = buildHighlightSpecs(cuSo4PLayer, null, cuSo4AuxMap, cuSo4Elements, [], localLayers, struct, resolveVarFn);
+    expect(specs).toHaveLength(1);
+    expect(specs[0].color).toBe('--c-proton');
+    expect(specs[0].atoms).not.toContain(0); // Cu must not be highlighted
+    expect(specs[0].atoms).not.toContain(5); // S must not be highlighted
+    expect(specs[0].atoms).toContain(1);     // O (canonical 2 → pool 1)
+    expect(specs[0].atoms).toContain(2);     // O (canonical 3 → pool 2)
+    expect(specs[0].atoms).toContain(3);     // O (canonical 4 → pool 3)
+    expect(specs[0].atoms).toContain(4);     // O (canonical 5 → pool 4)
   });
 });
 

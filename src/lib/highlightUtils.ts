@@ -216,8 +216,27 @@ export function buildHighlightSpecs(
     }
 
     case 'p': {
-      // Protonation site highlighting: collect heteroatom canonical indices (not C, not H)
-      // and highlight them with --c-proton color. Pure-carbon molecules return [] silently.
+      // Primary: highlight mobile-H bearing atoms from the /h layer (the actual protonation sites).
+      // Fallback: all heteroatoms, for molecules with no mobile-H notation.
+      const hLayerP = layers.find(l => l.type === 'h');
+      if (hLayerP) {
+        const formulaLayerP = layers.find(l => l.type === 'formula');
+        const fragmentAtomCountsP = formulaLayerP ? formulaFragmentCounts(formulaLayerP.text) : [];
+        const fragmentTextsP = expandLayerText(hLayerP.text);
+        const mobileKAtoms: number[] = [];
+        let cumulativeOffsetP = 0;
+        fragmentTextsP.forEach((fragText, fi) => {
+          parseMobileHydrogens(fragText).forEach(c => {
+            const kId = auxMap[c + cumulativeOffsetP];
+            if (kId !== undefined) mobileKAtoms.push(kId);
+          });
+          cumulativeOffsetP += fragmentAtomCountsP[fi] ?? 0;
+        });
+        if (mobileKAtoms.length > 0) {
+          return [{ atoms: mobileKAtoms, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-proton') }];
+        }
+      }
+      // Fallback: collect heteroatom canonical indices (not C, not H)
       const heteroIds: number[] = [];
       for (const [canonStr, el] of Object.entries(atomElements)) {
         if (el === 'C' || el === 'H') continue;
@@ -231,10 +250,23 @@ export function buildHighlightSpecs(
     }
 
     case 'q': {
-      // /q is a net charge with no atom indices — find charged atoms from the Ketcher struct directly.
+      // /q text is per-fragment (semicolon-separated), e.g. "+2;" means fragment 1 charged, fragment 2 not.
+      // Highlight all atoms in fragments that carry a non-zero charge — no struct scan needed.
+      const formulaLayerQ = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsQ = formulaLayerQ ? formulaFragmentCounts(formulaLayerQ.text) : [];
+      const qFragments = layer.text.split(';');
       const chargedIds: number[] = [];
-      struct.atoms.forEach((atom, poolId) => {
-        if (atom.charge != null && atom.charge !== 0) chargedIds.push(poolId);
+      let cumulativeOffsetQ = 0;
+      qFragments.forEach((qText, fi) => {
+        const trimmed = qText.trim();
+        const fragCount = fragmentAtomCountsQ[fi] ?? 0;
+        if (trimmed && trimmed !== '0') {
+          for (let i = 1; i <= fragCount; i++) {
+            const kId = auxMap[cumulativeOffsetQ + i];
+            if (kId !== undefined) chargedIds.push(kId);
+          }
+        }
+        cumulativeOffsetQ += fragCount;
       });
       if (chargedIds.length === 0) return [];
       return [{ atoms: chargedIds, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-charge') }];
