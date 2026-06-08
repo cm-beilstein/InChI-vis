@@ -147,7 +147,7 @@ body {
   background: var(--bg-canvas);
   border: 1px solid var(--line);
   border-radius: 6px;
-  overflow: hidden;
+  overflow: hidden; /* clips Ketcher's own toolbar/canvas overflow; safe because modals anchor to .canvasWrap, not this element */
   min-height: 380px;
 }
 .ketcher .toolbar {
@@ -192,33 +192,6 @@ body {
     radial-gradient(circle at 12px 12px, oklch(0.92 0.008 250) 1px, transparent 1.5px) 0 0 / 24px 24px,
     var(--bg-canvas);
   overflow: hidden;
-}
-.canvas-wrap .canvas-meta {
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-faint);
-  letter-spacing: 0.04em;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  z-index: 2;
-}
-.canvas-wrap .canvas-meta b {
-  color: var(--ink-soft);
-  font-weight: 500;
-}
-.canvas-wrap .canvas-meta .dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: oklch(0.65 0.15 145);
-  box-shadow: 0 0 0 3px oklch(0.65 0.15 145 / 0.18);
-  animation: pulse 2.4s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
 }
 
 .canvas-wrap svg.molecule {
@@ -308,6 +281,7 @@ body {
   background: var(--bg-panel);
   overflow-y: auto;
   max-height: 460px;
+  border-radius: 0 5px 5px 0; /* preserve visual rounding since parent lost overflow:hidden */
 }
 .mol-list-header {
   font-family: var(--font-mono);

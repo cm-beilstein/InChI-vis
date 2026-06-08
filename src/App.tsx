@@ -29,10 +29,6 @@ export default function App() {
   // after setMolecule() — separate from isHighlightingRef (RESEARCH.md Pitfall 4)
   const isSettingMoleculeRef = useRef(false);
 
-  // Subscribe to layers and atomElements for KetcherPanel canvas overlay (D-06)
-  const layers = useInchiStore(s => s.layers);
-  const atomElements = useInchiStore(s => s.atomElements);
-
   // Bridge hover state → Ketcher canvas highlights (Phase 4)
   useKetcherHighlights(ketcherRef, isReady, isHighlightingRef);
 
@@ -127,13 +123,6 @@ export default function App() {
     };
   }, [isReady]); // ketcherRef is a ref — not a React dependency
 
-  // Derive KetcherPanel props from store and local state (D-06)
-  const formula = layers.length > 0 ? layers[0].text : null;
-  const heavyAtomCount = Object.keys(atomElements).length;
-  const molName = selectedMolId
-    ? (MOLECULES.find(m => m.id === selectedMolId)?.name ?? null)
-    : null;
-
   return (
     <div className="app">
       <Header />
@@ -143,9 +132,6 @@ export default function App() {
         structServiceProvider={structServiceProvider}
         selectedMolId={selectedMolId}
         onMolSelect={handleMolSelect}
-        molName={molName}
-        formula={formula}
-        heavyAtomCount={heavyAtomCount}
         isLoading={isLoading}
       />
       <InchiSection />

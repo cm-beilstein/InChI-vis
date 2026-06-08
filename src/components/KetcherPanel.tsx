@@ -4,17 +4,12 @@ import { MOLECULES } from '../data/molecules';
 import styles from './KetcherPanel.module.css';
 
 interface KetcherPanelProps {
-  // Existing
   isReady: boolean;
   onInit: (ketcher: Ketcher) => void;
   structServiceProvider: StructServiceProvider;
-  // New Phase 5 props
   selectedMolId: string | null;
   onMolSelect: (id: string) => void;
-  molName: string | null;        // preset name for overlay; null = user-drawn (no name shown)
-  formula: string | null;        // from store layers[0].text; null = empty canvas (overlay hidden)
-  heavyAtomCount: number;        // from Object.keys(atomElements).length
-  isLoading: boolean;            // true while PubChem fetch in-flight (disables buttons)
+  isLoading: boolean;
 }
 
 export function KetcherPanel({
@@ -23,9 +18,6 @@ export function KetcherPanel({
   structServiceProvider,
   selectedMolId,
   onMolSelect,
-  molName,
-  formula,
-  heavyAtomCount,
   isLoading,
 }: KetcherPanelProps) {
   return (
@@ -35,7 +27,7 @@ export function KetcherPanel({
       </div>
       <div className={styles.ketcher}>
         {/* Canvas column: Editor + loading overlay + canvas-meta overlay */}
-        <div className={styles.canvasWrap}>
+        <div className={`${styles.canvasWrap} canvas-wrap`}>
           {/* Editor is ALWAYS rendered — never conditional. Removing and remounting
               causes WASM to re-initialize from scratch. */}
           <Editor
@@ -51,15 +43,7 @@ export function KetcherPanel({
               Loading editor…
             </div>
           )}
-          {/* Canvas meta overlay — only when canvas is non-empty (D-06) */}
-          {formula !== null && (
-            <div className="canvas-meta">
-              <span className="dot" />
-              {molName && <span><b>{molName}</b></span>}
-              <span>{formula}</span>
-              <span>· {heavyAtomCount} heavy atom{heavyAtomCount === 1 ? '' : 's'}</span>
-            </div>
-          )}
+
         </div>
         {/* Mol-list sidebar — hidden on narrow viewports via global CSS media query */}
         <div className="mol-list">
