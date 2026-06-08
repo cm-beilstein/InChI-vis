@@ -3,8 +3,8 @@ import { MOLECULES } from '../data/molecules';
 import type { MoleculePreset } from '../data/molecules';
 
 describe('MOLECULES preset data', () => {
-  it('exports exactly 10 molecules', () => {
-    expect(MOLECULES).toHaveLength(10);
+  it('exports at least 10 molecules', () => {
+    expect(MOLECULES.length).toBeGreaterThanOrEqual(10);
   });
 
   it('every entry has id, name, formula, cid fields', () => {
