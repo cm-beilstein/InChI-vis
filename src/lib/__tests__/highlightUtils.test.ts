@@ -340,8 +340,18 @@ describe('buildHighlightSpecs', () => {
       expect(specs).toEqual([]);
     });
 
-    it('q layer: highlights all atoms in the charged fragment (single fragment)', () => {
-      // qLayer.text = '+1', formulaLayer = C6H6 (6 heavy atoms) → all 6 atoms highlighted
+    it('q layer single fragment: highlights only the formally-charged atom within the fragment', () => {
+      // makeMockStructWithCharge has pool id 2 with charge +1; qLayer.text = '+1', C6H6 (6 atoms)
+      // Should pick only pool id 2, not all 6 atoms
+      const struct = makeMockStructWithCharge();
+      const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
+      expect(specs).toHaveLength(1);
+      expect(specs[0].color).toBe('--c-charge');
+      expect(specs[0].atoms).toEqual([2]);
+    });
+
+    it('q layer single fragment: falls back to all fragment atoms when no formal charges in struct', () => {
+      // makeMockStruct has no charged atoms (atoms.forEach is a no-op) → delocalized charge fallback
       const struct = makeMockStruct();
       const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toHaveLength(1);
@@ -349,18 +359,32 @@ describe('buildHighlightSpecs', () => {
       expect(specs[0].atoms).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
-    it('q layer multi-fragment: only highlights atoms in the charged fragment', () => {
-      // CuSO4-like: q '+2;' → fragment 1 (Cu, 1 atom) charged; fragment 2 (H2O4S, 5 heavy atoms) not
+    it('q layer multi-fragment: only highlights formally-charged atom in charged fragment, not uncharged fragment', () => {
+      // CuSO4-like: q '+2;' → Cu (pool 0) has +2 in struct, sulfate O- atoms are in the uncharged fragment
       const cuSo4FormulaLayer = makeLayer({ type: 'formula', text: 'Cu.H2O4S', atoms: [1, 2, 3, 4, 5, 6] });
       const cuSo4QLayer = makeLayer({ type: 'q', prefix: 'q', text: '+2;', atoms: [] });
       const cuSo4AuxMap: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
       const cuSo4Elements: Record<number, string> = { 1: 'Cu', 2: 'O', 3: 'O', 4: 'O', 5: 'O', 6: 'S' };
       const localLayers: Layer[] = [cuSo4FormulaLayer, cuSo4QLayer];
-      const struct = makeMockStruct();
-      const specs = buildHighlightSpecs(cuSo4QLayer, null, cuSo4AuxMap, cuSo4Elements, [], localLayers, struct, resolveVarFn);
+      // struct: Cu (pool 0) has +2, O atoms (pools 1-4) have -1 each
+      const cuSo4Struct: StructLike = {
+        findBondId: () => null,
+        bonds: { forEach: () => {} },
+        atoms: {
+          forEach: (cb) => {
+            cb({ charge: 2 }, 0);   // Cu²⁺
+            cb({ charge: -1 }, 1);  // O⁻
+            cb({ charge: -1 }, 2);  // O⁻
+            cb({ charge: -1 }, 3);  // O⁻
+            cb({ charge: -1 }, 4);  // O⁻
+            cb({ charge: 0 }, 5);   // S
+          },
+        },
+      };
+      const specs = buildHighlightSpecs(cuSo4QLayer, null, cuSo4AuxMap, cuSo4Elements, [], localLayers, cuSo4Struct, resolveVarFn);
       expect(specs).toHaveLength(1);
       expect(specs[0].color).toBe('--c-charge');
-      expect(specs[0].atoms).toEqual([0]); // only Cu (pool id 0)
+      expect(specs[0].atoms).toEqual([0]); // only Cu (pool id 0), not O⁻ atoms
     });
 
     it('p layer: returns empty array []', () => {

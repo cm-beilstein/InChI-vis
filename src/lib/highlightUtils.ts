@@ -251,20 +251,30 @@ export function buildHighlightSpecs(
 
     case 'q': {
       // /q text is per-fragment (semicolon-separated), e.g. "+2;" means fragment 1 charged, fragment 2 not.
-      // Highlight all atoms in fragments that carry a non-zero charge — no struct scan needed.
+      // For each fragment with a non-zero q entry, prefer atoms that carry a formal charge in the Ketcher
+      // struct (precise, e.g. quaternary N+). Fall back to all atoms in the fragment if none do (delocalized).
       const formulaLayerQ = layers.find(l => l.type === 'formula');
       const fragmentAtomCountsQ = formulaLayerQ ? formulaFragmentCounts(formulaLayerQ.text) : [];
       const qFragments = layer.text.split(';');
+
+      const poolCharges = new Map<number, number>();
+      struct.atoms.forEach((atom, poolId) => {
+        if (atom.charge != null && atom.charge !== 0) poolCharges.set(poolId, atom.charge);
+      });
+
       const chargedIds: number[] = [];
       let cumulativeOffsetQ = 0;
       qFragments.forEach((qText, fi) => {
         const trimmed = qText.trim();
         const fragCount = fragmentAtomCountsQ[fi] ?? 0;
         if (trimmed && trimmed !== '0') {
+          const fragPoolIds: number[] = [];
           for (let i = 1; i <= fragCount; i++) {
             const kId = auxMap[cumulativeOffsetQ + i];
-            if (kId !== undefined) chargedIds.push(kId);
+            if (kId !== undefined) fragPoolIds.push(kId);
           }
+          const formallyCharged = fragPoolIds.filter(id => poolCharges.has(id));
+          chargedIds.push(...(formallyCharged.length > 0 ? formallyCharged : fragPoolIds));
         }
         cumulativeOffsetQ += fragCount;
       });
