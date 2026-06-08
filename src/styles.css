@@ -190,7 +190,6 @@ body {
   background:
     radial-gradient(circle at 12px 12px, oklch(0.92 0.008 250) 1px, transparent 1.5px) 0 0 / 24px 24px,
     var(--bg-canvas);
-  overflow: hidden;
 }
 
 .canvas-wrap svg.molecule {
