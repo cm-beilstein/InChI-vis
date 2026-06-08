@@ -253,8 +253,6 @@ export function buildHighlightSpecs(
       // /q text is per-fragment (semicolon-separated), e.g. "+2;" means fragment 1 charged, fragment 2 not.
       // For each fragment with a non-zero q entry, prefer atoms that carry a formal charge in the Ketcher
       // struct (precise, e.g. quaternary N+). Fall back to all atoms in the fragment if none do (delocalized).
-      const formulaLayerQ = layers.find(l => l.type === 'formula');
-      const fragmentAtomCountsQ = formulaLayerQ ? formulaFragmentCounts(formulaLayerQ.text) : [];
       const qFragments = layer.text.split(';');
 
       const poolCharges = new Map<number, number>();
@@ -262,6 +260,20 @@ export function buildHighlightSpecs(
         if (atom.charge != null && atom.charge !== 0) poolCharges.set(poolId, atom.charge);
       });
 
+      // Single-fragment: avoid dependence on formulaFragmentCounts — use Object.values(auxMap) directly.
+      // This is robust even when the formula atom count and auxMap disagree.
+      if (qFragments.length === 1) {
+        const trimmed = qFragments[0].trim();
+        if (!trimmed || trimmed === '0') return [];
+        const formallyCharged = [...poolCharges.keys()];
+        const atoms = formallyCharged.length > 0 ? formallyCharged : Object.values(auxMap);
+        if (atoms.length === 0) return [];
+        return [{ atoms, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-charge') }];
+      }
+
+      // Multi-fragment: use formula layer to restrict to charged fragments only.
+      const formulaLayerQ = layers.find(l => l.type === 'formula');
+      const fragmentAtomCountsQ = formulaLayerQ ? formulaFragmentCounts(formulaLayerQ.text) : [];
       const chargedIds: number[] = [];
       let cumulativeOffsetQ = 0;
       qFragments.forEach((qText, fi) => {

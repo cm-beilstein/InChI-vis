@@ -341,8 +341,8 @@ describe('buildHighlightSpecs', () => {
     });
 
     it('q layer single fragment: highlights only the formally-charged atom within the fragment', () => {
-      // makeMockStructWithCharge has pool id 2 with charge +1; qLayer.text = '+1', C6H6 (6 atoms)
-      // Should pick only pool id 2, not all 6 atoms
+      // makeMockStructWithCharge has pool id 2 with charge +1; qLayer.text = '+1'
+      // Single-fragment path: formallyCharged = [2], so only pool id 2 highlighted
       const struct = makeMockStructWithCharge();
       const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toHaveLength(1);
@@ -350,13 +350,15 @@ describe('buildHighlightSpecs', () => {
       expect(specs[0].atoms).toEqual([2]);
     });
 
-    it('q layer single fragment: falls back to all fragment atoms when no formal charges in struct', () => {
-      // makeMockStruct has no charged atoms (atoms.forEach is a no-op) → delocalized charge fallback
+    it('q layer single fragment: falls back to Object.values(auxMap) when no formal charges in struct', () => {
+      // makeMockStruct has no charged atoms → single-fragment fallback uses Object.values(auxMap) = [0..5]
       const struct = makeMockStruct();
       const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toHaveLength(1);
       expect(specs[0].color).toBe('--c-charge');
-      expect(specs[0].atoms).toEqual([0, 1, 2, 3, 4, 5]);
+      // Object.values({1:0,2:1,3:2,4:3,5:4,6:5}) = [0,1,2,3,4,5]
+      expect(specs[0].atoms).toEqual(expect.arrayContaining([0, 1, 2, 3, 4, 5]));
+      expect(specs[0].atoms).toHaveLength(6);
     });
 
     it('q layer multi-fragment: only highlights formally-charged atom in charged fragment, not uncharged fragment', () => {
