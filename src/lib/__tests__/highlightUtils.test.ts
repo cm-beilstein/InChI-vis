@@ -14,7 +14,7 @@ const atomElements: Record<number, string> = {
   1: 'C', 2: 'C', 3: 'C', 4: 'C', 5: 'C', 6: 'C',
 };
 
-// Mock struct for c-layer tests
+// Mock struct for c-layer tests — no charged atoms
 function makeMockStruct(): StructLike {
   return {
     findBondId: vi.fn().mockReturnValue(99),
@@ -26,6 +26,34 @@ function makeMockStruct(): StructLike {
         cb({ begin: 3, end: 4 }, 3);
         cb({ begin: 4, end: 5 }, 4);
         cb({ begin: 5, end: 0 }, 5);
+      }),
+    },
+    atoms: { forEach: vi.fn() },
+  };
+}
+
+// Mock struct with one positively charged atom at pool id 2
+function makeMockStructWithCharge(): StructLike {
+  return {
+    findBondId: vi.fn().mockReturnValue(99),
+    bonds: {
+      forEach: vi.fn((cb) => {
+        cb({ begin: 0, end: 1 }, 0);
+        cb({ begin: 1, end: 2 }, 1);
+        cb({ begin: 2, end: 3 }, 2);
+        cb({ begin: 3, end: 4 }, 3);
+        cb({ begin: 4, end: 5 }, 4);
+        cb({ begin: 5, end: 0 }, 5);
+      }),
+    },
+    atoms: {
+      forEach: vi.fn((cb) => {
+        cb({ charge: 0 }, 0);
+        cb({ charge: 0 }, 1);
+        cb({ charge: 1 }, 2);  // N+ at pool id 2
+        cb({ charge: 0 }, 3);
+        cb({ charge: 0 }, 4);
+        cb({ charge: 0 }, 5);
       }),
     },
   };
@@ -50,6 +78,7 @@ function makeMockStructWithExplicitH(): StructLike {
         cb({ begin: 0, end: 6 }, 6); // bond 6: explicit H (pool 6) bonded to heavy atom (pool 0)
       }),
     },
+    atoms: { forEach: vi.fn() },
   };
 }
 
@@ -311,10 +340,18 @@ describe('buildHighlightSpecs', () => {
       expect(specs).toEqual([]);
     });
 
-    it('q layer: returns empty array []', () => {
-      const struct = makeMockStruct();
+    it('q layer: returns [] when no atoms have formal charge in Ketcher struct', () => {
+      const struct = makeMockStruct(); // atoms.forEach is a no-op
       const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
       expect(specs).toEqual([]);
+    });
+
+    it('q layer: highlights Ketcher atoms with non-zero formal charge', () => {
+      const struct = makeMockStructWithCharge(); // pool id 2 has charge +1
+      const specs = buildHighlightSpecs(qLayer, null, auxMap, atomElements, [], allLayers, struct, resolveVarFn);
+      expect(specs).toHaveLength(1);
+      expect(specs[0].color).toBe('--c-charge');
+      expect(specs[0].atoms).toEqual([2]);
     });
 
     it('p layer: returns empty array []', () => {

@@ -31,6 +31,7 @@ export type HighlightSpec = {
 export interface StructLike {
   findBondId(begin: number, end: number): number | null;
   bonds: { forEach(cb: (bond: { begin: number; end: number }, id: number) => void): void };
+  atoms: { forEach(cb: (atom: { charge?: number | null }, id: number) => void): void };
 }
 
 /** Production implementation: reads CSS custom property and converts to rgb for Ketcher SVG renderer.
@@ -77,7 +78,7 @@ export function buildHighlightSpecs(
   }
 
   // NON-SPATIAL layers — no canvas highlight (D-01)
-  if (['version', 'q', 'i'].includes(layer.type)) {
+  if (['version', 'i'].includes(layer.type)) {
     return [];
   }
 
@@ -227,6 +228,16 @@ export function buildHighlightSpecs(
       }
       if (heteroIds.length === 0) return [];
       return [{ atoms: heteroIds, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-proton') }];
+    }
+
+    case 'q': {
+      // /q is a net charge with no atom indices — find charged atoms from the Ketcher struct directly.
+      const chargedIds: number[] = [];
+      struct.atoms.forEach((atom, poolId) => {
+        if (atom.charge != null && atom.charge !== 0) chargedIds.push(poolId);
+      });
+      if (chargedIds.length === 0) return [];
+      return [{ atoms: chargedIds, bonds: [], rgroupAttachmentPoints: [], color: resolveVarFn('--c-charge') }];
     }
 
     case 'b': {
