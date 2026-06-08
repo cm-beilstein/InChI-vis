@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-08T08:55:11Z",
+  "timestamp": "2026-06-08T09:54:28Z",
   "phase": null,
-  "phase_name": "ad-hoc: /q and /p layer highlight fixes",
+  "phase_name": "ad-hoc: Ketcher settings modal unclip + canvas-meta formula fix",
   "phase_dir": null,
   "plan": null,
   "task": null,
@@ -11,77 +11,99 @@
   "completed_tasks": [
     {
       "id": 1,
-      "name": "Fix /q layer: multi-fragment — exclude uncharged fragments (CuSO4 O- issue)",
+      "name": "Remove overflow:hidden from module .ketcher and .canvasWrap — allows settings modal to escape clip",
       "status": "done",
-      "commit": "4e07fc7"
+      "commit": "uncommitted"
     },
     {
       "id": 2,
-      "name": "Fix /p layer: use mobile-H sites from /h layer as primary source, heteroatom fallback",
+      "name": "Restore overflow:hidden on global .ketcher (styles.css) — clips Ketcher toolbar overflow (H/CNOS/PFClBrI)",
       "status": "done",
-      "commit": "4e07fc7"
+      "commit": "uncommitted"
     },
     {
       "id": 3,
-      "name": "Fix /q layer: prefer formally-charged atoms in struct, fall back to whole fragment",
+      "name": "Add plain canvas-wrap class alongside module class on canvasWrap div — activates canvas-meta CSS positioning",
       "status": "done",
-      "commit": "7105b6a"
+      "commit": "uncommitted"
     },
     {
       "id": 4,
-      "name": "Fix /q single-fragment: Object.values(auxMap) fallback to avoid count mismatch (thiamine)",
+      "name": "Fix formula bug in App.tsx: layers[0].text → layers.find(l => l.type === formula).text",
       "status": "done",
-      "commit": "5145f45"
+      "commit": "uncommitted"
+    },
+    {
+      "id": 5,
+      "name": "Add border-radius to .canvasWrap and .mol-list to restore visual rounding",
+      "status": "done",
+      "commit": "uncommitted"
+    },
+    {
+      "id": 6,
+      "name": "Added 20 drug molecules to preset picker (aspirin, morphine, atorvastatin, etc.)",
+      "status": "done",
+      "commit": "abe3f91"
     }
   ],
   "remaining_tasks": [
     {
-      "id": 5,
-      "name": "Browser-verify /q+1 on thiamine cation — was 'nothing happens', fix committed",
-      "status": "not_started"
-    },
-    {
-      "id": 6,
-      "name": "Browser-verify /q+2; on CuSO4 — should highlight Cu only, not sulfate O- atoms",
-      "status": "not_started"
-    },
-    {
       "id": 7,
-      "name": "Browser-verify /p-2 on CuSO4 — should highlight sulfate oxygens only, not Cu or S",
+      "name": "Browser-verify: Ketcher settings modal no longer clipped at top/bottom",
+      "status": "not_started"
+    },
+    {
+      "id": 8,
+      "name": "Browser-verify: H/CNOS/PFClBrI no longer visible outside editor",
+      "status": "not_started"
+    },
+    {
+      "id": 9,
+      "name": "Browser-verify: canvas-meta shows correct formula (e.g. C10H14N2 for nicotine, not 1S)",
+      "status": "not_started"
+    },
+    {
+      "id": 10,
+      "name": "Browser-verify prior /q and /p highlight fixes (thiamine q+1, CuSO4 q+2, CuSO4 p-2)",
+      "status": "not_started"
+    },
+    {
+      "id": 11,
+      "name": "Commit the 4 modified files once browser verification passes",
       "status": "not_started"
     }
   ],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Browser-verify all three cases above (thiamine q+1, CuSO4 q+2, CuSO4 p-2)",
-      "context": "Root cause of thiamine 'nothing happens' could not be confirmed from static analysis; fix is robust (Object.values(auxMap)) but needs browser confirmation",
+      "action": "Browser-verify all cases (tasks 7-10) then commit",
+      "context": "All changes are CSS/JS — cannot verify from static analysis. Run npm run dev and test manually.",
       "blocking": false
     }
   ],
   "decisions": [
     {
-      "decision": "q-layer single-fragment: Object.values(auxMap) as fallback instead of auxMap[1..fragCount] loop",
-      "rationale": "The count-based loop silently returned nothing if formulaFragmentCounts disagreed with actual auxMap keys; Object.values(auxMap) is unconditionally correct for single-fragment",
+      "decision": "Remove overflow:hidden from module .canvasWrap and module .ketcher, but restore on global .ketcher",
+      "rationale": "Ketcher modal overlay uses position:absolute anchored to .canvasWrap (position:relative). Module overflow:hidden clipped the dialog at 460px. Global .ketcher overflow:hidden only clips Ketcher's own internal toolbar elements since the modal escapes to .canvasWrap level.",
       "phase": null
     },
     {
-      "decision": "q-layer multi-fragment: formula-range approach to exclude uncharged fragments",
-      "rationale": "CuSO4 /q+2; must not highlight sulfate O- atoms in the uncharged fragment",
+      "decision": "Add plain canvas-wrap class to canvasWrap div alongside module class",
+      "rationale": "CSS selector .canvas-wrap .canvas-meta in styles.css never matched the module-scoped element. canvas-meta was rendering in normal flow below the editor, hidden by overflow:hidden. Dual class activates position:absolute and dotted background gradient.",
       "phase": null
     },
     {
-      "decision": "q-layer: prefer formally-charged atoms from struct over all fragment atoms",
-      "rationale": "Highlights the specific atom bearing the charge (e.g. quaternary N in thiamine) rather than the whole molecule",
-      "phase": null
-    },
-    {
-      "decision": "p-layer: primary source is mobile-H sites from /h layer; fallback is all heteroatoms",
-      "rationale": "Mobile-H sites are the actual protonation sites; heteroatom fallback handles molecules without mobile-H notation",
+      "decision": "Fix formula: layers.find(l => l.type === formula)?.text instead of layers[0].text",
+      "rationale": "layers[0] is the version layer (text: 1S), not formula. Pre-existing bug masked by overflow:hidden.",
       "phase": null
     }
   ],
-  "uncommitted_files": [],
-  "next_action": "Browser-verify /q+1 on thiamine. If still broken, add console.log in buildHighlightSpecs case 'q' to inspect poolCharges, fragPoolIds, and Object.values(auxMap) at hover time.",
-  "context_notes": "All 174 tests pass. Session explored /p vs /q InChI semantics (mobile vs fixed charge). CuSO4 is the canonical multi-fragment test case. Thiamine cation is the canonical single-fragment q-layer test case."
+  "uncommitted_files": [
+    "src/App.tsx",
+    "src/components/KetcherPanel.module.css",
+    "src/components/KetcherPanel.tsx",
+    "src/styles.css"
+  ],
+  "next_action": "Run npm run dev, browser-verify all 4 cases, then: git add src/App.tsx src/components/KetcherPanel.module.css src/components/KetcherPanel.tsx src/styles.css && git commit",
+  "context_notes": "Session started with /gsd-resume-work. Prior /q /p highlight fixes were pushed (abe3f91 and earlier). Added 20 drug molecules. Then fixed Ketcher settings modal clipping — overflow:hidden chain at module level cut the settings dialog. Also uncovered and fixed a pre-existing canvas-meta formula bug (was showing 1S instead of molecular formula). 174/174 tests pass. All 4 modified files are unstaged."
 }
