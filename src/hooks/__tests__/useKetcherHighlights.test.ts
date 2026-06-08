@@ -181,6 +181,7 @@ describe('renderHBadges', () => {
     const struct: StructLike = {
       findBondId: () => null,
       bonds: { forEach: (cb) => { cb({ begin: 0, end: 5 }, 0); } },
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
@@ -199,6 +200,7 @@ describe('renderHBadges', () => {
     const struct: StructLike = {
       findBondId: () => null,
       bonds: { forEach: (cb) => { cb({ begin: 3, end: 5 }, 0); } },
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
@@ -219,6 +221,7 @@ describe('renderHBadges', () => {
     const struct: StructLike = {
       findBondId: () => null,
       bonds: { forEach: (cb) => { cb({ begin: 1, end: 5 }, 0); } }, // pool 1 has explicit H (pool 5)
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
@@ -243,6 +246,7 @@ describe('renderHBadges', () => {
     const struct: StructLike = {
       findBondId: () => null,
       bonds: { forEach: (cb) => { cb({ begin: 0, end: 5 }, 0); } },
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
@@ -267,6 +271,7 @@ describe('renderHBadges', () => {
     const struct: StructLike = {
       findBondId: () => null,
       bonds: { forEach: (cb) => { cb({ begin: 0, end: 1 }, 0); } },
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, [], struct);
@@ -295,6 +300,7 @@ describe('renderHBadges', () => {
           cb({ begin: 0, end: 6 }, 1); // pool 0 bonded to explicit H pool 6
         },
       },
+      atoms: { forEach: () => {} },
     };
 
     renderHBadges(svg, subHover, auxMap, resolveVarFn, hAtomPoolIds, struct);
