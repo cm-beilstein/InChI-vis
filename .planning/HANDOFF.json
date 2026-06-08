@@ -1,56 +1,87 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-05T12:24:14Z",
-  "phase": "08",
-  "phase_name": "hydrogen-implicit-explicit-highlight",
-  "phase_dir": ".planning/phases/08-hydrogen-implicit-explicit-highlight",
-  "plan": "post-completion bugfix (continued)",
-  "task": 2,
-  "total_tasks": 2,
+  "timestamp": "2026-06-08T08:55:11Z",
+  "phase": null,
+  "phase_name": "ad-hoc: /q and /p layer highlight fixes",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
     {
       "id": 1,
-      "description": "Three-part fix to renderHBadges: explicit-H awareness + angular-gap placement",
+      "name": "Fix /q layer: multi-fragment — exclude uncharged fragments (CuSO4 O- issue)",
       "status": "done",
-      "detail": "Fix 1: skip badge when implicitCount <= 0 (all H explicit). Fix 2: per-atom residual badge count (H/H2/H3). Fix 3: unified angular-gap algorithm — badge at midpoint of largest gap among all bond+explicit-H neighbor directions. 171 tests passing."
+      "commit": "4e07fc7"
+    },
+    {
+      "id": 2,
+      "name": "Fix /p layer: use mobile-H sites from /h layer as primary source, heteroatom fallback",
+      "status": "done",
+      "commit": "4e07fc7"
+    },
+    {
+      "id": 3,
+      "name": "Fix /q layer: prefer formally-charged atoms in struct, fall back to whole fragment",
+      "status": "done",
+      "commit": "7105b6a"
+    },
+    {
+      "id": 4,
+      "name": "Fix /q single-fragment: Object.values(auxMap) fallback to avoid count mismatch (thiamine)",
+      "status": "done",
+      "commit": "5145f45"
     }
   ],
-  "current_task": {
-    "id": 2,
-    "description": "Browser verification on the anabasine-like InChI"
-  },
-  "context_notes": {
-    "molecule_under_test": "InChI=1S/C10H14N2/c1-12-7-3-5-10(12)9-4-2-6-11-8-9/h2,4,6,8,10H,3,5,7H2,1H3/t10-/m0/s1",
-    "algorithm_detail": "For each heavy atom needing a badge: collect atan2 angles to ALL bonded neighbors in SVG (heavy atoms + explicit H). Sort, find largest gap, badge at gap midpoint. Fallback to centroid-based when no neighbor SVG positions available.",
-    "tests": "171/171 passing"
-  },
-  "uncommitted_files": [
-    "src/hooks/useKetcherHighlights.ts",
-    "src/hooks/__tests__/useKetcherHighlights.test.ts",
-    ".planning/STATE.md",
-    ".planning/config.json",
-    ".planning/phases/08-hydrogen-implicit-explicit-highlight/08-PATTERNS.md"
+  "remaining_tasks": [
+    {
+      "id": 5,
+      "name": "Browser-verify /q+1 on thiamine cation — was 'nothing happens', fix committed",
+      "status": "not_started"
+    },
+    {
+      "id": 6,
+      "name": "Browser-verify /q+2; on CuSO4 — should highlight Cu only, not sulfate O- atoms",
+      "status": "not_started"
+    },
+    {
+      "id": 7,
+      "name": "Browser-verify /p-2 on CuSO4 — should highlight sulfate oxygens only, not Cu or S",
+      "status": "not_started"
+    }
   ],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Browser verify on anabasine InChI: (a) fully-explicit atoms show no badge, (b) mixed explicit/implicit atoms show residual count badge, (c) badge does not land on a bond line, (d) methyl CH2 (1 explicit H removed) shows 'H' badge away from bond and explicit H",
-      "context": "getBBox() mocked in tests — actual visual placement requires browser verification",
-      "blocking": true
+      "action": "Browser-verify all three cases above (thiamine q+1, CuSO4 q+2, CuSO4 p-2)",
+      "context": "Root cause of thiamine 'nothing happens' could not be confirmed from static analysis; fix is robust (Object.values(auxMap)) but needs browser confirmation",
+      "blocking": false
     }
   ],
   "decisions": [
     {
-      "decision": "Unified angular-gap algorithm replaces avoidDir + centroid fallback",
-      "rationale": "avoidDir only avoided explicit H; centroid avoided rings. Neither avoided bond lines. Gap algorithm handles all three in one pass.",
-      "phase": "08"
+      "decision": "q-layer single-fragment: Object.values(auxMap) as fallback instead of auxMap[1..fragCount] loop",
+      "rationale": "The count-based loop silently returned nothing if formulaFragmentCounts disagreed with actual auxMap keys; Object.values(auxMap) is unconditionally correct for single-fragment",
+      "phase": null
     },
     {
-      "decision": "implicitCount = totalCount - bonded-explicit-H-count per atom",
-      "rationale": "Previous binary skip (any explicit H -> no badge) missed the mixed case where an atom has both explicit and remaining implicit H.",
-      "phase": "08"
+      "decision": "q-layer multi-fragment: formula-range approach to exclude uncharged fragments",
+      "rationale": "CuSO4 /q+2; must not highlight sulfate O- atoms in the uncharged fragment",
+      "phase": null
+    },
+    {
+      "decision": "q-layer: prefer formally-charged atoms from struct over all fragment atoms",
+      "rationale": "Highlights the specific atom bearing the charge (e.g. quaternary N in thiamine) rather than the whole molecule",
+      "phase": null
+    },
+    {
+      "decision": "p-layer: primary source is mobile-H sites from /h layer; fallback is all heteroatoms",
+      "rationale": "Mobile-H sites are the actual protonation sites; heteroatom fallback handles molecules without mobile-H notation",
+      "phase": null
     }
   ],
-  "next_action": "Browser verify. If OK: commit all modified files with 'fix(08): angular-gap badge placement + explicit-H-aware implicit count', then /gsd-complete-milestone"
+  "uncommitted_files": [],
+  "next_action": "Browser-verify /q+1 on thiamine. If still broken, add console.log in buildHighlightSpecs case 'q' to inspect poolCharges, fragPoolIds, and Object.values(auxMap) at hover time.",
+  "context_notes": "All 174 tests pass. Session explored /p vs /q InChI semantics (mobile vs fixed charge). CuSO4 is the canonical multi-fragment test case. Thiamine cation is the canonical single-fragment q-layer test case."
 }
