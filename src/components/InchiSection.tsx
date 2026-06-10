@@ -26,9 +26,6 @@ export function InchiSection() {
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
-  // Verbatim segments from the raw Ketcher string — never reconstruct from layer.text.
-  const rawParts = inchi ? inchi.slice('InChI='.length).split('/') : [];
-
   const isEmpty = layers.length === 0;
 
   async function handleCopy() {
@@ -81,7 +78,7 @@ export function InchiSection() {
                     }}
                   >
                     {l.prefix && <span className={styles.prefix}>{l.prefix}</span>}
-                    <LayerText layer={l} rawText={(rawParts[i] ?? l.prefix + l.text).slice(l.prefix.length)} fragCounts={fragCounts} />
+                    <LayerText layer={l} rawText={l.text} fragCounts={fragCounts} />
                   </span>
                 </React.Fragment>
               );
