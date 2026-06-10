@@ -61,9 +61,9 @@ None
 | 260610-csa | Decouple LayerText rawText from positional rawParts index in InchiSection | 2026-06-10 | 4736a28 | [260610-csa-decouple-layertext-rawtext-from-position](./quick/260610-csa-decouple-layertext-rawtext-from-position/) |
 | 260610-d2r | Fix mixed N*...;N*... hover-highlight bug in LayerText (c/h layers) — pre-existing v1.0 bug | 2026-06-10 | e212dde | [260610-d2r-fix-mixed-n-star-semicolon-hover-highlig](./quick/260610-d2r-fix-mixed-n-star-semicolon-hover-highlig/) |
 | 260610-eci | Fix canonical→pool-ID remap for multi-component molecules (coordinate matching via AuxInfo /rC:) — fixes wrong-fragment canvas highlights | 2026-06-10 | 079d12c | [260610-eci-fix-canonical-to-pool-id-remap-for-multi](./quick/260610-eci-fix-canonical-to-pool-id-remap-for-multi/) |
+| 260610-eoi | Fix readingFor multi-fragment explanation text (formula/c/h/t offsets) + t-layer `?` undefined stereocenters (highlight + interactivity) | 2026-06-10 | 4eb0fd6 | [260610-eoi-fix-readingfor-multi-fragment-text-and-t](./quick/260610-eoi-fix-readingfor-multi-fragment-text-and-t/) |
 
-Last activity: 2026-06-10 - Completed quick task 260610-eci: Fix canonical→pool-ID remap for multi-component molecules (coordinate matching)
+Last activity: 2026-06-10 - Completed quick task 260610-eoi: Fix readingFor multi-fragment text + t-layer `?` undefined stereocenters
 
-### Known Follow-ups (multi-fragment, deferred)
-- `readingFor` (layerInfo.ts) has no multi-fragment awareness: formula ignores `.`; c/h/t use un-offset atom labels and c invents a spurious cross-fragment bond → explanation-card text wrong for multi-component molecules.
-- t-layer drops `?` (undefined) stereocenters in both `readingFor` and `highlightUtils` case 't' → stereo highlight/reading incomplete.
+### Multi-fragment support (now complete)
+The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
