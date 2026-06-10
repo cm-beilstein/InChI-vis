@@ -67,7 +67,9 @@ None
 | 260610-ist | Unify H-hover: formula H-count + /h-layer tokens highlight explicit H atoms only and render implicit-H badges, fragment-scoped, no heavy-atom fill/bonds | 2026-06-10 | ff7c4ea | [260610-ist-unify-h-hover-formula-h-count-and-h-laye](./quick/260610-ist-unify-h-hover-formula-h-count-and-h-laye/) |
 | 260610-ist (fix) | /gsd-fast follow-up: /h-layer hover resolves explicit H via bond traversal from heavy atoms (benzene /h1-6H with explicit H highlighted nothing) | 2026-06-10 | eda10f5 | (see 260610-ist) |
 
-Last activity: 2026-06-10 - Fixed /h-layer explicit-H hover (bond traversal) — benzene /h1-6H now highlights its drawn H atoms
+| copy-fix | /gsd-fast: "Copied!" auto-hide → 3s, then fixed mountedRef stuck-false under StrictMode (Copied! never disappeared) | 2026-06-10 | 49253d1 | (InchiSection) |
+
+Last activity: 2026-06-10 - Fixed "Copied!" not hiding under React StrictMode (mountedRef reset on mount)
 
 ### Multi-fragment support (now complete)
 The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
