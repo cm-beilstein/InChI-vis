@@ -6,6 +6,7 @@
 // Pitfall 3: --accent always set — idle uses ink-faint, active uses layer accent.
 
 import { useInchiStore } from '../store';
+import { formulaFragmentCounts } from '../lib/parseInchi';
 import { LAYER_INFO, DEFAULT_INFO, readingFor, swatchVar } from '../lib/layerInfo';
 import { Legend } from './Legend';
 import styles from './Explanation.module.css';
@@ -22,10 +23,15 @@ export function Explanation() {
   // Idle: var(--ink-faint); active: layer accent color.
   const accentVar = layer ? `var(--c-${swatchVar(layer.type)})` : 'var(--ink-faint)';
 
+  // Per-fragment heavy-atom counts — needed for correct multi-component
+  // canonical offsetting in readingFor (c/h/t layers). Empty for single-fragment.
+  const formulaLayer = layers.find(l => l.type === 'formula');
+  const fragCounts = formulaLayer ? formulaFragmentCounts(formulaLayer.text) : [];
+
   // D-09: readingFor output — HTML string used in dangerouslySetInnerHTML.
   // readingFor() only emits <b> and <span style="color:var(--...)"> tags.
   // Inputs are parsed InChI data from WASM — no user-controlled free text.
-  const reading = layer ? readingFor(layer, atomElements) : '';
+  const reading = layer ? readingFor(layer, atomElements, fragCounts) : '';
 
   return (
     <div className={styles.explain}>

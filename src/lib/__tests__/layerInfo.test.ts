@@ -4,12 +4,10 @@ import {
   swatchVar,
   formulaReading,
   readingFor,
-  parseStereoParities,
-  parityColor,
   LAYER_INFO,
   DEFAULT_INFO,
 } from '../layerInfo';
-import { parseInchi, formulaFragmentCounts, parseStereoAtoms } from '../parseInchi';
+import { parseInchi, formulaFragmentCounts } from '../parseInchi';
 import { buildAtomElements } from '../parseAuxMapping';
 import type { Layer } from '../parseInchi';
 
@@ -119,13 +117,25 @@ describe('readingFor multi-fragment (Bug 1)', () => {
     expect(single).toBe('<b>6</b> carbons, <b>6</b> hydrogens');
   });
 
-  it('c-layer reading has no spurious A->C boundary bond (13-14) and references offset canonicals >=14', () => {
+  it('c-layer reading has no spurious A->C boundary bond (13-14)', () => {
     const cLayer = find('c');
     const result = readingFor(cLayer, atomElements, fragCounts);
     // No bond crossing fragment-1 (ends at 13) into fragment-2 (starts at 14).
     expect(result).not.toContain(`${subscript(13)}</b>–<b>${atomElements[14] ?? '#'}${subscript(14)}`);
-    // References an offset canonical from fragment C or B (subscript >= 14).
-    expect(result).toMatch(/[₁-₉]₄|₁₅|₁₆|₁₇|₁₈|₁₉|₂[₀-₉]|₃[₀₁]/);
+    // First-fragment bond labels still resolve to elements (not '#'), not absent.
+    expect(result).toContain('C');
+    expect(result).not.toContain('#');
+  });
+
+  it('c-layer enriched bonds reference offset canonicals >=14 with no 13<->14 bond', () => {
+    // The reading truncates at MAX=10 (all from fragment A), so assert offset
+    // correctness on the full enriched bond list from parseInchi instead.
+    const cLayer = find('c');
+    // Cross-boundary bond [13,14] must not exist.
+    expect(cLayer.bonds.some(([a, b]) => (a === 13 && b === 14) || (a === 14 && b === 13))).toBe(false);
+    // Fragment C/B bonds use offset canonicals >= 14.
+    expect(cLayer.bonds.some(([a, b]) => a >= 14 || b >= 14)).toBe(true);
+    expect(cLayer.bonds.some(([a, b]) => a >= 26 || b >= 26)).toBe(true); // benzene fragment
   });
 
   it('t-layer reading references offset fragment-C center 23 (10+13), not a duplicate 10', () => {
