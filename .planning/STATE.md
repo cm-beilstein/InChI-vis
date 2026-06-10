@@ -59,5 +59,6 @@ None
 |---|-------------|------|--------|-----------|
 | 260610-cho | Fix preset-highlight guard timing and stale-result guard in handleChange | 2026-06-10 | 25ddba0 | [260610-cho-fix-preset-highlight-guard-timing-and-st](./quick/260610-cho-fix-preset-highlight-guard-timing-and-st/) |
 | 260610-csa | Decouple LayerText rawText from positional rawParts index in InchiSection | 2026-06-10 | 4736a28 | [260610-csa-decouple-layertext-rawtext-from-position](./quick/260610-csa-decouple-layertext-rawtext-from-position/) |
+| 260610-d2r | Fix mixed N*...;N*... hover-highlight bug in LayerText (c/h layers) — pre-existing v1.0 bug | 2026-06-10 | e212dde | [260610-d2r-fix-mixed-n-star-semicolon-hover-highlig](./quick/260610-d2r-fix-mixed-n-star-semicolon-hover-highlig/) |
 
-Last activity: 2026-06-10 - Completed quick task 260610-csa: Decouple LayerText rawText from positional rawParts index in InchiSection
+Last activity: 2026-06-10 - Completed quick task 260610-d2r: Fix mixed N*...;N*... hover-highlight bug in LayerText (c/h layers)
