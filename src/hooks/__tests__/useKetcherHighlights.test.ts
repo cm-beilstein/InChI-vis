@@ -402,6 +402,27 @@ describe('renderFormulaHBadges — formula-H fragment-scoped badges', () => {
 
     expect(svg.querySelectorAll('[data-h-badge]').length).toBe(6);
   });
+
+  it('renders "H?" mobile-H badges for (H,5,6) groups (alanine COOH proton)', () => {
+    // InChI=1S/C3H7NO2/c1-2(4)3(5)6/h2H,4H2,1H3,(H,5,6)/t2-/m0/s1
+    // Mobile proton (H,5,6) must badge atoms 5 and 6; parseHydrogenAtoms strips it,
+    // so without the mobile pass the OH/COOH proton gets no badge.
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const alaFormula: Layer = { type: 'formula', prefix: '', text: 'C3H7NO2', atoms: [1, 2, 3, 4, 5, 6], bonds: [] };
+    const alaH: Layer = { type: 'h', prefix: 'h', text: '2H,4H2,1H3,(H,5,6)', atoms: [1, 2, 3, 4, 5, 6], bonds: [] };
+    const alaLayers: Layer[] = [alaFormula, alaH];
+    const alaAux: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+    for (let pool = 0; pool <= 5; pool++) svg.appendChild(makeAtomGroup(pool, 100 + pool * 10, 50));
+    const struct = noBondStruct();
+
+    renderFormulaHBadges(svg, undefined, alaLayers, alaAux, resolveVarFn, [], struct);
+
+    const badges = Array.from(svg.querySelectorAll('[data-h-badge]'));
+    // Implicit count badges: atom1 (H3), atom2 (H), atom4 (H2) = 3; mobile atoms 5,6 = 2 "H?".
+    const mobileBadges = badges.filter(b => b.textContent === 'H?');
+    expect(mobileBadges.length).toBe(2);
+    expect(badges.length).toBe(5);
+  });
 });
 
 describe('cleanHBadges', () => {

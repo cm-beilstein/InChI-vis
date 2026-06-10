@@ -12,6 +12,7 @@ import {
   formulaFragmentCounts,
   expandLayerText,
   parseHydrogenAtoms,
+  parseMobileHydrogens,
 } from '../lib/highlightUtils';
 import type { HighlightSpec, StructLike } from '../lib/highlightUtils';
 import type { SubHover, AuxMap, Layer } from '../lib/parseInchi';
@@ -235,7 +236,10 @@ export function renderFormulaHBadges(
   const fragmentAtomCounts = formulaLayer ? formulaFragmentCounts(formulaLayer.text) : [];
 
   // Build global-canonical → declared-H count map (mirrors case 'h' offset logic).
+  // parseHydrogenAtoms strips mobile-H groups, so collect those separately in the
+  // same pass — otherwise mobile/OH protons like (H,5,6) get no badge.
   const countByCanon = new Map<number, number>();
+  const mobileCanon: number[] = [];
   const fragmentTexts = expandLayerText(hLayer.text);
   let cumulativeOffset = 0;
   fragmentTexts.forEach((fragText, fi) => {
@@ -244,6 +248,9 @@ export function renderFormulaHBadges(
       if (count < 1) continue;
       const canon = Number(canonStr) + cumulativeOffset;
       countByCanon.set(canon, count);
+    }
+    for (const local of parseMobileHydrogens(fragText)) {
+      mobileCanon.push(local + cumulativeOffset);
     }
     cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
   });
@@ -262,6 +269,15 @@ export function renderFormulaHBadges(
   // One renderHBadges pass per count group with a synthetic hAtoms subHover.
   for (const [count, atoms] of byCount) {
     renderHBadges(svgRoot, { kind: 'hAtoms', atoms, count }, auxMap, resolveVarFn, hAtomPoolIds, struct);
+  }
+
+  // Mobile-H groups (e.g. (H,5,6)) render an "H?" badge on each in-range atom,
+  // mirroring the standalone mobile-H hover.
+  const mobileInRange = canonRange
+    ? mobileCanon.filter(c => c >= canonRange[0] && c <= canonRange[1])
+    : mobileCanon;
+  if (mobileInRange.length > 0) {
+    renderHBadges(svgRoot, { kind: 'mobileH', atoms: mobileInRange }, auxMap, resolveVarFn, hAtomPoolIds, struct);
   }
 }
 
