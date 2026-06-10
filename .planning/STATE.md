@@ -70,7 +70,9 @@ None
 | copy-fix | /gsd-fast: "Copied!" auto-hide → 3s, then fixed mountedRef stuck-false under StrictMode (Copied! never disappeared) | 2026-06-10 | 49253d1 | (InchiSection) |
 | 260610-jyj | Replace preset `cid` with hardcoded isomeric SMILES; load via setMolecule, drop runtime PubChem fetch (SMILES sourced once from PUG REST) | 2026-06-10 | 943bad1 | [260610-jyj-replace-preset-cid-with-hardcoded-smiles](./quick/260610-jyj-replace-preset-cid-with-hardcoded-smiles/) |
 
-Last activity: 2026-06-10 - Completed quick task 260610-jyj: presets load from embedded SMILES (no PubChem fetch)
+| 260610-ist (fix2) | /gsd-fast: formula-H badges now include mobile-H (H,5,6) groups — hovering H-count showed no "H?" badge for the OH/COOH proton (e.g. alanine) | 2026-06-10 | e655971 | (useKetcherHighlights) |
+
+Last activity: 2026-06-10 - Fixed formula-H badges missing mobile-H ("H?") for (H,5,6) groups
 
 ### Multi-fragment support (now complete)
 The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
