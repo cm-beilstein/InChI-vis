@@ -2,6 +2,7 @@
 // Wave 0 RED state: 'renders the inchi-display box' and 'shows placeholder text'
 // FAIL against the current InchiSection which returns null when layers is empty.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { StrictMode } from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { InchiSection } from '../components/InchiSection';
 import type { Layer } from '../lib/parseInchi';
@@ -152,6 +153,30 @@ describe('PLSH-04: copy button', () => {
     // Gone after passing 3000ms
     await act(async () => {
       vi.advanceTimersByTime(200);
+    });
+    expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('Test H: "Copied!" still hides under React.StrictMode (mountedRef reset on remount)', async () => {
+    // StrictMode double-invokes effects in dev (mount → cleanup → mount). If mountedRef
+    // is only ever set false by the cleanup and never reset true on remount, the setTimeout
+    // guard stays false and setCopied(false) never runs — "Copied!" would stick forever.
+    vi.useFakeTimers();
+    mockInchi = 'InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H';
+    mockLayers = [{ type: 'formula', prefix: '', text: 'C6H6', atoms: [1, 2, 3, 4, 5, 6], bonds: [] }];
+    render(
+      <StrictMode>
+        <InchiSection />
+      </StrictMode>,
+    );
+    const copyBtn = screen.getByRole('button', { name: /copy/i });
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+    expect(screen.getByText('Copied!')).toBeInTheDocument();
+    await act(async () => {
+      vi.advanceTimersByTime(3100);
     });
     expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
     vi.useRealTimers();

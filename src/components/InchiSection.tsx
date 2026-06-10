@@ -22,9 +22,14 @@ export function InchiSection() {
 
   const [copied, setCopied] = useState(false);
 
-  // Guard against calling setCopied on an unmounted component (WR-02)
+  // Guard against calling setCopied on an unmounted component (WR-02).
+  // Reset to true on (re)mount so StrictMode's dev double-invoke (mount → cleanup →
+  // mount) doesn't leave the ref stuck false, which would block setCopied(false).
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const isEmpty = layers.length === 0;
 
