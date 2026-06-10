@@ -196,17 +196,19 @@ function ParityText({ text, fragCounts }: { text: string; fragCounts: number[] }
   let key = 0;
 
   const renderSegment = (seg: string, offset: number) => {
-    const re = /(\d+)([\-+])/g;
+    const re = /(\d+)([\-+?])/g;
     let m: RegExpExecArray | null;
     let last = 0;
     while ((m = re.exec(seg)) !== null) {
       if (m.index > last) parts.push(<span key={key++}>{seg.slice(last, m.index)}</span>);
       const atom = parseInt(m[1], 10) + offset;
       const sign = m[2];
+      // '+' -> plus color, '-' -> minus color, '?' (undefined) -> neutral (no color class).
+      const signClass = sign === '+' ? styles.parityPlus : sign === '-' ? styles.parityMinus : '';
       parts.push(
         <span
           key={key++}
-          className={[(sign === '+' ? styles.parityPlus : styles.parityMinus), styles.inchiSubtoken].join(' ')}
+          className={[signClass, styles.inchiSubtoken].filter(Boolean).join(' ')}
           {...subHoverProps({ kind: 'stereo', atom, sign })}
         >
           {m[1]}{sign}

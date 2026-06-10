@@ -4,7 +4,7 @@
 // parseMobileHydrogens, parseConnectionBonds, parseStereoAtoms imported from parseInchi.ts (D-05).
 
 import type { Layer, LayerType } from './parseInchi';
-import { parseMobileHydrogens, parseConnectionBonds, parseStereoAtoms } from './parseInchi';
+import { parseMobileHydrogens, parseConnectionBonds, parseStereoAtoms, expandLayerText } from './parseInchi';
 
 // ---------------------------------------------------------------------------
 // LAYER_INFO — verbatim from layers-info.js lines 1-81
@@ -135,11 +135,15 @@ function atomLabel(atomElements: Record<number, string>, canon: number): string 
 // formulaReading — verbatim from layers-info.js lines 193-205
 // ---------------------------------------------------------------------------
 
-export function formulaReading(s: string): string {
+/**
+ * Renders a single (multiplier-stripped) formula segment into element-count prose.
+ * Single-segment output is byte-identical to the legacy formulaReading.
+ */
+function formulaSegmentReading(seg: string): string {
   const out: string[] = [];
   const re = /([A-Z][a-z]?)(\d*)/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(s))) {
+  while ((m = re.exec(seg))) {
     if (!m[1]) continue;
     const el = m[1];
     const n = m[2] ? parseInt(m[2], 10) : 1;
@@ -147,6 +151,26 @@ export function formulaReading(s: string): string {
     out.push(`<b>${n}</b> ${name}${n === 1 ? '' : 's'}`);
   }
   return out.join(', ');
+}
+
+export function formulaReading(s: string): string {
+  // Multi-component formulas are dot-separated (e.g. 'C12H19N.C11H17N.C6H6').
+  // A segment may carry a leading integer multiplier (e.g. '2C6H6' = two benzenes).
+  // Render each fragment separately and join with '; '. A single segment with no
+  // multiplier reproduces the legacy single-fragment output byte-for-byte.
+  const segments = s.split('.');
+  const parts: string[] = [];
+  for (const seg of segments) {
+    const multMatch = seg.match(/^(\d+)(?=[A-Z])/);
+    if (multMatch) {
+      const n = parseInt(multMatch[1], 10);
+      const base = formulaSegmentReading(seg.slice(multMatch[1].length));
+      parts.push(`<b>${n}×</b> (${base})`);
+    } else {
+      parts.push(formulaSegmentReading(seg));
+    }
+  }
+  return parts.join('; ');
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +207,7 @@ export function hydroColor(count: number | null | undefined): string | null {
 
 export function parseStereoParities(text: string): Record<number, string> {
   const out: Record<number, string> = {};
-  for (const m of text.matchAll(/(\d+)([\-+])/g)) {
+  for (const m of text.matchAll(/(\d+)([\-+?])/g)) {
     out[parseInt(m[1], 10)] = m[2];
   }
   return out;
@@ -194,7 +218,10 @@ export function parseStereoParities(text: string): Record<number, string> {
 // ---------------------------------------------------------------------------
 
 export function parityColor(sign: string): string {
-  return sign === '+' ? 'var(--c-stereo-plus)' : 'var(--c-stereo-minus)';
+  if (sign === '+') return 'var(--c-stereo-plus)';
+  if (sign === '-') return 'var(--c-stereo-minus)';
+  // '?' (undefined/unspecified) and any other sign — neutral stereo color.
+  return 'var(--c-stereo)';
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +261,16 @@ export function swatchVar(type: LayerType): string {
 // Uses parseConnectionBonds, parseMobileHydrogens, parseStereoAtoms from parseInchi.ts
 // ---------------------------------------------------------------------------
 
-export function readingFor(layer: Layer, atomElements: Record<number, string>): string {
+export function readingFor(
+  layer: Layer,
+  atomElements: Record<number, string>,
+  fragCounts: number[] = [],
+): string {
+  // Multi-fragment is active only when there is more than one fragment. With an
+  // empty (or single-element) fragCounts the per-fragment loops collapse to a
+  // single pass at offset 0, producing output byte-identical to the legacy code.
+  const multi = fragCounts.length > 1;
+
   switch (layer.type) {
     case 'version':
       return layer.text === '1S'
@@ -243,7 +279,17 @@ export function readingFor(layer: Layer, atomElements: Record<number, string>): 
     case 'formula':
       return formulaReading(layer.text);
     case 'c': {
-      const bonds = parseConnectionBonds(layer.text);
+      // Parse bonds per fragment, applying a cumulative canonical offset, so no
+      // spurious cross-fragment bond is invented and fragment 2+ labels are correct.
+      const fragmentTexts = multi ? expandLayerText(layer.text) : [layer.text];
+      const bonds: [number, number][] = [];
+      let cumulativeOffset = 0;
+      fragmentTexts.forEach((fragText, fi) => {
+        for (const [a, b] of parseConnectionBonds(fragText)) {
+          bonds.push([a + cumulativeOffset, b + cumulativeOffset]);
+        }
+        cumulativeOffset += fragCounts[fi] ?? 0;
+      });
       if (!bonds.length) return 'no heavy-atom bonds';
       const MAX = 10;
       const shown = bonds.slice(0, MAX);
@@ -255,29 +301,35 @@ export function readingFor(layer: Layer, atomElements: Record<number, string>): 
         : out;
     }
     case 'h': {
+      const fragmentTexts = multi ? expandLayerText(layer.text) : [layer.text];
       const parts: string[] = [];
-      const re = /([\d,\-]+)H(\d*)(?=,|$)/g;
-      const cleaned = layer.text.replace(/\([^)]*\)/g, '');
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(cleaned))) {
-        const count = m[2] ? parseInt(m[2], 10) : 1;
-        for (const range of m[1].split(',')) {
-          if (!range) continue;
-          if (range.includes('-')) {
-            const [a, b] = range.split('-').map(n => parseInt(n, 10));
-            for (let k = a; k <= b; k++)
-              parts.push(`<b>${atomLabel(atomElements, k)}</b> bears ${count}H`);
-          } else {
-            parts.push(`<b>${atomLabel(atomElements, parseInt(range, 10))}</b> bears ${count}H`);
+      let cumulativeOffset = 0;
+      fragmentTexts.forEach((fragText, fi) => {
+        const off = cumulativeOffset;
+        const re = /([\d,\-]+)H(\d*)(?=,|$)/g;
+        const cleaned = fragText.replace(/\([^)]*\)/g, '');
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(cleaned))) {
+          const count = m[2] ? parseInt(m[2], 10) : 1;
+          for (const range of m[1].split(',')) {
+            if (!range) continue;
+            if (range.includes('-')) {
+              const [a, b] = range.split('-').map(n => parseInt(n, 10));
+              for (let k = a; k <= b; k++)
+                parts.push(`<b>${atomLabel(atomElements, k + off)}</b> bears ${count}H`);
+            } else {
+              parts.push(`<b>${atomLabel(atomElements, parseInt(range, 10) + off)}</b> bears ${count}H`);
+            }
           }
         }
-      }
-      const mob = parseMobileHydrogens(layer.text);
-      if (mob.length) {
-        parts.push(
-          `mobile H shared by ${mob.map(n => `<b>${atomLabel(atomElements, n)}</b>`).join(' / ')}`
-        );
-      }
+        const mob = parseMobileHydrogens(fragText);
+        if (mob.length) {
+          parts.push(
+            `mobile H shared by ${mob.map(n => `<b>${atomLabel(atomElements, n + off)}</b>`).join(' / ')}`
+          );
+        }
+        cumulativeOffset += fragCounts[fi] ?? 0;
+      });
       const MAX = 8;
       const shown = parts.slice(0, MAX);
       return parts.length > MAX
@@ -285,7 +337,13 @@ export function readingFor(layer: Layer, atomElements: Record<number, string>): 
         : shown.join(' · ');
     }
     case 't': {
-      const nums = parseStereoAtoms(layer.text);
+      const fragmentTexts = multi ? expandLayerText(layer.text) : [layer.text];
+      const nums: number[] = [];
+      let cumulativeOffset = 0;
+      fragmentTexts.forEach((fragText, fi) => {
+        for (const n of parseStereoAtoms(fragText)) nums.push(n + cumulativeOffset);
+        cumulativeOffset += fragCounts[fi] ?? 0;
+      });
       return nums.length
         ? 'stereocenter at ' + nums.map(n => `<b>${atomLabel(atomElements, n)}</b>`).join(', ')
         : layer.text;

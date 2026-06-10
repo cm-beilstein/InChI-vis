@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { subscript, swatchVar, formulaReading, readingFor, LAYER_INFO, DEFAULT_INFO } from '../layerInfo';
+import {
+  subscript,
+  swatchVar,
+  formulaReading,
+  readingFor,
+  parseStereoParities,
+  parityColor,
+  LAYER_INFO,
+  DEFAULT_INFO,
+} from '../layerInfo';
+import { parseInchi, formulaFragmentCounts, parseStereoAtoms } from '../parseInchi';
+import { buildAtomElements } from '../parseAuxMapping';
 import type { Layer } from '../parseInchi';
+
+// Repro from PLAN objective: three-component InChI (two amines + benzene).
+// formulaFragmentCounts = [13, 12, 6]; fragment canonical ranges A=1-13, C=14-25, B(benzene)=26-31.
+const REPRO =
+  'InChI=1S/C12H19N.C11H17N.C6H6/c1-9(11(3)13)10(2)12-7-5-4-6-8-12;1-9(10(2)12)8-11-6-4-3-5-7-11;1-2-4-6-5-3-1/h4-11H,13H2,1-3H3;3-7,9-10H,8,12H2,1-2H3;1-6H/t9?,10?,11-;9?,10-;/m11./s1';
 
 describe('subscript', () => {
   it('converts 0 to ₀', () => expect(subscript(0)).toBe('₀'));
@@ -72,6 +88,99 @@ describe('readingFor', () => {
   it('falls back to #N when atomElements is empty', () => {
     const result = readingFor(cLayer, {});
     expect(result).toContain('#1');
+  });
+});
+
+describe('readingFor multi-fragment (Bug 1)', () => {
+  const layers = parseInchi(REPRO);
+  const atomElements = buildAtomElements(layers);
+  const formulaLayer = layers.find(l => l.type === 'formula')!;
+  const fragCounts = formulaFragmentCounts(formulaLayer.text);
+
+  const find = (type: string) => layers.find(l => l.type === type)!;
+
+  it('formulaFragmentCounts of repro is [13,12,6]', () => {
+    expect(fragCounts).toEqual([13, 12, 6]);
+  });
+
+  it('formulaReading separates dot fragments with "; "', () => {
+    const result = formulaReading('C12H19N.C11H17N.C6H6');
+    expect(result).toContain('; ');
+    // three fragment groups
+    expect(result.split('; ')).toHaveLength(3);
+    expect(result).toContain('carbon');
+    expect(result).toContain('nitrogen');
+  });
+
+  it('formulaReading single fragment is byte-identical to legacy output', () => {
+    // Legacy: comma-joined element prose, no "; "
+    const single = formulaReading('C6H6');
+    expect(single).not.toContain('; ');
+    expect(single).toBe('<b>6</b> carbons, <b>6</b> hydrogens');
+  });
+
+  it('c-layer reading has no spurious A->C boundary bond (13-14)', () => {
+    const cLayer = find('c');
+    const result = readingFor(cLayer, atomElements, fragCounts);
+    // No bond crossing fragment-1 (ends at 13) into fragment-2 (starts at 14).
+    expect(result).not.toContain(`${subscript(13)}</b>–<b>${atomElements[14] ?? '#'}${subscript(14)}`);
+    // First-fragment bond labels still resolve to elements (not '#'), not absent.
+    expect(result).toContain('C');
+    expect(result).not.toContain('#');
+  });
+
+  it('c-layer enriched bonds reference offset canonicals >=14 with no 13<->14 bond', () => {
+    // The reading truncates at MAX=10 (all from fragment A), so assert offset
+    // correctness on the full enriched bond list from parseInchi instead.
+    const cLayer = find('c');
+    // Cross-boundary bond [13,14] must not exist.
+    expect(cLayer.bonds.some(([a, b]) => (a === 13 && b === 14) || (a === 14 && b === 13))).toBe(false);
+    // Fragment C/B bonds use offset canonicals >= 14.
+    expect(cLayer.bonds.some(([a, b]) => a >= 14 || b >= 14)).toBe(true);
+    expect(cLayer.bonds.some(([a, b]) => a >= 26 || b >= 26)).toBe(true); // benzene fragment
+  });
+
+  it('t-layer reading references offset fragment-C center 23 (10+13), not a duplicate 10', () => {
+    const tLayer = find('t');
+    const result = readingFor(tLayer, atomElements, fragCounts);
+    // Fragment C center 10 (sign '-') is offset by +13 -> 23. (center 22 from '9?' covered in Bug 2 tests.)
+    expect(result).toContain(subscript(23));
+  });
+
+  it('single-fragment readingFor is byte-identical with and without empty fragCounts', () => {
+    const benzene = parseInchi('InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H');
+    const ae = buildAtomElements(benzene);
+    for (const l of benzene) {
+      expect(readingFor(l, ae, [])).toBe(readingFor(l, ae));
+      expect(readingFor(l, ae, [6])).toBe(readingFor(l, ae));
+    }
+  });
+});
+
+describe("'?' undefined stereocenters (Bug 2)", () => {
+  it("parseStereoAtoms captures '?' atoms", () => {
+    expect(parseStereoAtoms('9?,10?,11-')).toEqual([9, 10, 11]);
+  });
+
+  it("parseStereoParities returns '?' sign for undefined centers", () => {
+    expect(parseStereoParities('9?,10?,11-')).toEqual({ 9: '?', 10: '?', 11: '-' });
+  });
+
+  it('parityColor maps signs correctly', () => {
+    expect(parityColor('?')).toBe('var(--c-stereo)');
+    expect(parityColor('+')).toBe('var(--c-stereo-plus)');
+    expect(parityColor('-')).toBe('var(--c-stereo-minus)');
+  });
+
+  it("t-layer reading includes '?' centers across fragments (22 from 9?+13)", () => {
+    const layers = parseInchi(REPRO);
+    const atomElements = buildAtomElements(layers);
+    const fragCounts = formulaFragmentCounts(layers.find(l => l.type === 'formula')!.text);
+    const tLayer = layers.find(l => l.type === 't')!;
+    const result = readingFor(tLayer, atomElements, fragCounts);
+    // Fragment A '9?' -> 9, fragment C '9?' -> 22; both must appear.
+    expect(result).toContain(subscript(9));
+    expect(result).toContain(subscript(22));
   });
 });
 

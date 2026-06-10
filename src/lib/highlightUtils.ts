@@ -182,6 +182,7 @@ export function buildHighlightSpecs(
       const fragmentTextsT = expandLayerText(layer.text);
       const plusAtoms: number[] = [];
       const minusAtoms: number[] = [];
+      const undefinedAtoms: number[] = [];
       let cumulativeOffsetT = 0;
       fragmentTextsT.forEach((fragText, fi) => {
         const parities = parseStereoParities(fragText);
@@ -190,7 +191,8 @@ export function buildHighlightSpecs(
           const kId = auxMap[canon];
           if (kId === undefined) continue;
           if (sign === '+') plusAtoms.push(kId);
-          else minusAtoms.push(kId);
+          else if (sign === '-') minusAtoms.push(kId);
+          else undefinedAtoms.push(kId); // '?' — undefined/unspecified center
         }
         cumulativeOffsetT += fragmentAtomCountsT[fi] ?? 0;
       });
@@ -210,6 +212,14 @@ export function buildHighlightSpecs(
           bonds: [],
           rgroupAttachmentPoints: [],
           color: resolveVarFn('--c-stereo-minus'),
+        });
+      }
+      if (undefinedAtoms.length > 0) {
+        specs.push({
+          atoms: undefinedAtoms,
+          bonds: [],
+          rgroupAttachmentPoints: [],
+          color: resolveVarFn('--c-stereo'),
         });
       }
       return specs;
