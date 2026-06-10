@@ -68,8 +68,9 @@ None
 | 260610-ist (fix) | /gsd-fast follow-up: /h-layer hover resolves explicit H via bond traversal from heavy atoms (benzene /h1-6H with explicit H highlighted nothing) | 2026-06-10 | eda10f5 | (see 260610-ist) |
 
 | copy-fix | /gsd-fast: "Copied!" auto-hide → 3s, then fixed mountedRef stuck-false under StrictMode (Copied! never disappeared) | 2026-06-10 | 49253d1 | (InchiSection) |
+| 260610-jyj | Replace preset `cid` with hardcoded isomeric SMILES; load via setMolecule, drop runtime PubChem fetch (SMILES sourced once from PUG REST) | 2026-06-10 | 943bad1 | [260610-jyj-replace-preset-cid-with-hardcoded-smiles](./quick/260610-jyj-replace-preset-cid-with-hardcoded-smiles/) |
 
-Last activity: 2026-06-10 - Fixed "Copied!" not hiding under React StrictMode (mountedRef reset on mount)
+Last activity: 2026-06-10 - Completed quick task 260610-jyj: presets load from embedded SMILES (no PubChem fetch)
 
 ### Multi-fragment support (now complete)
 The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
