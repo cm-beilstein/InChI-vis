@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyKetcherHighlights, whiteAtomLabels, renderHBadges, cleanHBadges } from '../useKetcherHighlights';
+import { applyKetcherHighlights, whiteAtomLabels, renderHBadges, cleanHBadges, renderFormulaHBadges } from '../useKetcherHighlights';
 import type { HighlightSpec, StructLike } from '../../lib/highlightUtils';
-import type { SubHover, AuxMap } from '../../lib/parseInchi';
+import type { SubHover, AuxMap, Layer } from '../../lib/parseInchi';
 
 function makeMockEditor() {
   return {
@@ -308,6 +308,99 @@ describe('renderHBadges', () => {
     const badges = svg.querySelectorAll('[data-h-badge]');
     expect(badges.length).toBe(1);
     expect(badges[0].textContent).toBe('H'); // 3 total − 2 explicit = 1 implicit → "H"
+  });
+});
+
+// ---------------------------------------------------------------------------
+// QUICK-260610-ist: formula-H fragment-scoped implicit badges
+// renderFormulaHBadges derives global-canonical → declared-H from the /h-layer
+// (expandLayerText + formulaFragmentCounts + parseHydrogenAtoms with cumulative
+// offset), filters to canonRange, and renders one implicit-H badge per in-range
+// H-bearing heavy atom (reusing renderHBadges skip logic for fully-explicit atoms).
+// ---------------------------------------------------------------------------
+describe('renderFormulaHBadges — formula-H fragment-scoped badges', () => {
+  // Two-fragment fixture.
+  //   Fragment A (CH4 = 1 heavy atom): /h token "1H4" → global canonical 1, 4 H.
+  //   Fragment B (C6H6 = 6 heavy atoms): /h token "1-6H" → global canonicals 2..7, 1 H each.
+  // auxMap maps global canonical → pool ID (identity-ish offset).
+  const formulaLayer: Layer = {
+    type: 'formula', prefix: '', text: 'CH4.C6H6', atoms: [1, 2, 3, 4, 5, 6, 7], bonds: [],
+  };
+  const hLayer: Layer = {
+    type: 'h', prefix: 'h', text: '1H4;1-6H', atoms: [1, 2, 3, 4, 5, 6, 7], bonds: [],
+  };
+  const layers: Layer[] = [formulaLayer, hLayer];
+  // global canonical → pool: 1→10, 2→20, 3→21, ... 7→25
+  const auxMap: AuxMap = { 1: 10, 2: 20, 3: 21, 4: 22, 5: 23, 6: 24, 7: 25 };
+
+  function noBondStruct(): StructLike {
+    return { findBondId: () => null, bonds: { forEach: () => {} }, atoms: { forEach: () => {} } };
+  }
+
+  it('renders one implicit-H badge per in-range H-bearing heavy atom (fragment B, canonRange [2,7])', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    // Fragment B heavy atoms pools 20..25 present in canvas
+    for (let pool = 20; pool <= 25; pool++) svg.appendChild(makeAtomGroup(pool, 100 + pool, 50));
+    const struct = noBondStruct();
+
+    renderFormulaHBadges(svg, [2, 7], layers, auxMap, resolveVarFn, [], struct);
+
+    // 6 H-bearing heavy atoms in fragment B, all implicit → 6 badges.
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(6);
+  });
+
+  it('does NOT badge heavy atoms outside canonRange (no cross-fragment leakage)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    // Render BOTH fragment A (pool 10) and fragment B (pools 20..25) in canvas
+    svg.appendChild(makeAtomGroup(10, 100, 50));
+    for (let pool = 20; pool <= 25; pool++) svg.appendChild(makeAtomGroup(pool, 100 + pool, 50));
+    const struct = noBondStruct();
+
+    // Hover fragment A only (canonRange [1,1]) → only pool 10 should badge.
+    renderFormulaHBadges(svg, [1, 1], layers, auxMap, resolveVarFn, [], struct);
+
+    const badges = svg.querySelectorAll('[data-h-badge]');
+    expect(badges.length).toBe(1); // only fragment A's single heavy atom
+    expect(badges[0].textContent).toBe('H4'); // CH4 → 4 implicit H
+  });
+
+  it('skips an in-range heavy atom whose H are all drawn explicitly', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.appendChild(makeAtomGroup(10, 100, 50)); // fragment A heavy atom pool 10
+    // 4 explicit H atoms (pools 30..33) all bonded to pool 10 → CH4 fully drawn.
+    const hAtomPoolIds = [30, 31, 32, 33];
+    const struct: StructLike = {
+      findBondId: () => null,
+      bonds: {
+        forEach: (cb) => {
+          cb({ begin: 10, end: 30 }, 0);
+          cb({ begin: 10, end: 31 }, 1);
+          cb({ begin: 10, end: 32 }, 2);
+          cb({ begin: 10, end: 33 }, 3);
+        },
+      },
+      atoms: { forEach: () => {} },
+    };
+
+    renderFormulaHBadges(svg, [1, 1], layers, auxMap, resolveVarFn, hAtomPoolIds, struct);
+
+    // All 4 H drawn explicitly → 0 implicit remaining → no badge.
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(0);
+  });
+
+  it('undefined canonRange uses the whole /h-layer (single-fragment formula-H)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    // Single-fragment benzene: /h "1-6H", 6 heavy atoms pools 0..5.
+    const singleFormula: Layer = { type: 'formula', prefix: '', text: 'C6H6', atoms: [1, 2, 3, 4, 5, 6], bonds: [] };
+    const singleH: Layer = { type: 'h', prefix: 'h', text: '1-6H', atoms: [1, 2, 3, 4, 5, 6], bonds: [] };
+    const singleLayers: Layer[] = [singleFormula, singleH];
+    const singleAux: AuxMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+    for (let pool = 0; pool <= 5; pool++) svg.appendChild(makeAtomGroup(pool, 100 + pool * 10, 50));
+    const struct = noBondStruct();
+
+    renderFormulaHBadges(svg, undefined, singleLayers, singleAux, resolveVarFn, [], struct);
+
+    expect(svg.querySelectorAll('[data-h-badge]').length).toBe(6);
   });
 });
 
