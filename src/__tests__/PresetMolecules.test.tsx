@@ -7,13 +7,13 @@ describe('MOLECULES preset data', () => {
     expect(MOLECULES.length).toBeGreaterThanOrEqual(10);
   });
 
-  it('every entry has id, name, formula, cid fields', () => {
+  it('every entry has id, name, formula, smiles fields', () => {
     for (const mol of MOLECULES) {
       expect(mol.id).toBeTruthy();
       expect(mol.name).toBeTruthy();
       expect(mol.formula).toBeTruthy();
-      expect(typeof mol.cid).toBe('number');
-      expect(mol.cid).toBeGreaterThan(0);
+      expect(typeof mol.smiles).toBe('string');
+      expect(mol.smiles.length).toBeGreaterThan(0);
     }
   });
 
@@ -31,13 +31,13 @@ describe('MOLECULES preset data', () => {
     expect(ids).toContain('naloxone');
   });
 
-  it('has correct CIDs for stereo-sensitive molecules (PubChem verified)', () => {
+  it('has correct embedded SMILES for stereo-sensitive molecules', () => {
     const find = (id: string) => MOLECULES.find(m => m.id === id)!;
-    expect(find('methane').cid).toBe(297);
-    expect(find('benzene').cid).toBe(241);
-    expect(find('alanine').cid).toBe(5950);    // L-Alanine (2S) enantiomer
-    expect(find('nicotine').cid).toBe(89594);  // (S)-Nicotine
-    expect(find('naloxone').cid).toBe(5284596); // correct stereoisomers
+    expect(find('methane').smiles).toBe('C');
+    expect(find('benzene').smiles).toBe('C1=CC=CC=C1');
+    expect(find('alanine').smiles).toBe('C[C@@H](C(=O)O)N');    // L-Alanine (2S) enantiomer
+    expect(find('nicotine').smiles).toBe('CN1CCC[C@H]1C2=CN=CC=C2');  // (S)-Nicotine
+    expect(find('naloxone').smiles).toBe('C=CCN1CC[C@]23[C@@H]4C(=O)CC[C@]2([C@H]1CC5=C3C(=C(C=C5)O)O4)O');
   });
 
   it('MoleculePreset type has correct shape', () => {
@@ -46,7 +46,7 @@ describe('MOLECULES preset data', () => {
     expect(keys).toContain('id');
     expect(keys).toContain('name');
     expect(keys).toContain('formula');
-    expect(keys).toContain('cid');
+    expect(keys).toContain('smiles');
   });
 });
 
