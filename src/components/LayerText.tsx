@@ -148,7 +148,9 @@ function ConnectionText({ text, fragCounts }: { text: string; fragCounts: number
   };
 
   // 2* identical-fragment notation: hovering atom n highlights that atom in all fragments.
-  const multMatch = text.match(/^(\d+)\*([\s\S]*)$/);
+  // Guarded to fire ONLY for a pure `N*...` text with no `;`. When a `;` is present, control
+  // falls through to the `;`-split branch below, which computes correct cross-fragment canonicals.
+  const multMatch = !text.includes(';') ? text.match(/^(\d+)\*([\s\S]*)$/) : null;
   if (multMatch) {
     const n = parseInt(multMatch[1], 10);
     const atomsPerFrag = fragCounts[0] ?? 0;
@@ -286,7 +288,9 @@ function HLayerText({ text, fragCounts }: { text: string; fragCounts: number[] }
   };
 
   // 2* identical-fragment notation: atoms from all fragments combined into each hover target.
-  const multMatch = text.match(/^(\d+)\*([\s\S]*)$/);
+  // Guarded to fire ONLY for a pure `N*...` text with no `;`. When a `;` is present, control
+  // falls through to the `;`-split branch below, which computes correct cross-fragment canonicals.
+  const multMatch = !text.includes(';') ? text.match(/^(\d+)\*([\s\S]*)$/) : null;
   if (multMatch) {
     const n = parseInt(multMatch[1], 10);
     const pattern = multMatch[2];
