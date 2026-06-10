@@ -5,7 +5,7 @@ import { Header } from './components/Header';
 import { KetcherPanel } from './components/KetcherPanel';
 import { InchiSection } from './components/InchiSection';
 import { Explanation } from './components/Explanation';
-import { parseInchiWithAux } from './lib/parseAuxMapping';
+import { parseInchiWithAux, remapAuxToPoolIds } from './lib/parseAuxMapping';
 import { useInchiStore } from './store';
 import { useKetcherHighlights } from './hooks/useKetcherHighlights';
 import { MOLECULES } from './data/molecules';
@@ -105,11 +105,24 @@ export default function App() {
               if (atom.label === 'H') hAtomPoolIds.push(id);
             }
           );
-          const actualAuxMap: Record<number, number> = {};
-          for (const [canonStr, rank] of Object.entries(result.auxMap)) {
-            const poolId = poolIds[rank as number];
-            if (poolId !== undefined) actualAuxMap[Number(canonStr)] = poolId;
-          }
+          // Build live-atom coordinates for coordinate-based canonical→poolId remap.
+          // For multi-component molecules, AuxInfo molfile rank order (which poolIds[rank]
+          // assumes) diverges from pool-ID iteration order, so a rank→poolId index lookup
+          // mismaps fragments. remapAuxToPoolIds matches by (x, -y) coordinate instead,
+          // with iteration-order `poolIds` as the per-rank fallback (no regression).
+          const liveAtoms: { poolId: number; x: number; y: number }[] = [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (ketcher.editor as any).render.ctab.molecule.atoms.forEach(
+            (atom: { pp: { x: number; y: number } }, id: number) => {
+              liveAtoms.push({ poolId: id, x: atom.pp.x, y: atom.pp.y });
+            }
+          );
+          const actualAuxMap = remapAuxToPoolIds(
+            result.auxMap,
+            result.molfileCoords ?? [],
+            liveAtoms,
+            poolIds,
+          );
           useInchiStore.getState().setInchiData(result.inchi, result.layers, actualAuxMap, result.atomElements, hAtomPoolIds);
         } catch {
           // Discard if a newer draw event fired while this WASM call was in flight —

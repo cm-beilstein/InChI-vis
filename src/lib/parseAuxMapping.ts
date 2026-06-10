@@ -133,18 +133,98 @@ export function parseAuxMapping(auxBody: string, formulaText?: string): AuxMap {
  * If no AuxInfo section is present (shouldn't happen with getInchi(true) on a
  * non-empty canvas), returns the plain InChI with an empty auxMap.
  */
+/**
+ * Parses the AuxInfo `/rC:` field into molfile-order coordinates.
+ *
+ * Format: `/rC:x,y,z;x,y,z;.../` — semicolon-separated triples, comma-separated
+ * x,y,z. Index i (0-based) = molfile rank i. We take x and y, ignoring z.
+ * Ketcher exports molfile with y NEGATED relative to the live editor's screen y.
+ *
+ * Returns [] when the body contains no `/rC:` field. Empty triples (e.g. the
+ * placeholder `;;;` Ketcher sometimes emits with no coords) parse to NaN and are
+ * preserved positionally so rank indexing stays aligned.
+ */
+function parseRcField(auxBody: string): { x: number; y: number }[] {
+  const marker = '/rC:';
+  const start = auxBody.indexOf(marker);
+  if (start === -1) return [];
+  const after = auxBody.slice(start + marker.length);
+  const end = after.indexOf('/');
+  const body = end === -1 ? after : after.slice(0, end);
+  // Trailing ';' produces a final empty entry — drop only a single trailing empty.
+  const triples = body.split(';');
+  if (triples.length > 0 && triples[triples.length - 1] === '') triples.pop();
+  return triples.map(triple => {
+    const nums = triple.split(',');
+    return { x: parseFloat(nums[0]), y: parseFloat(nums[1]) };
+  });
+}
+
+/**
+ * Remaps an AuxMap (canonical → molfile rank) to canonical → Ketcher pool ID by
+ * matching each molfile rank's coordinate to the live editor atom at the same
+ * position. Ketcher screen y is the negation of molfile y, so a live atom matches
+ * rank r when liveAtom.x ≈ molfileCoords[r].x AND -liveAtom.y ≈ molfileCoords[r].y.
+ *
+ * Why coordinate matching: for multi-component molecules getInchi's molfile groups
+ * atoms by connected component, but pool IDs are interleaved across components, so
+ * molfile rank order != pool-ID iteration order. Coordinate matching is order-free.
+ *
+ * Fallback: when molfileCoords is empty, the rank has no coords, or no live atom is
+ * within epsilon (0.05 combined |dx|+|dy|), fall back to fallbackPoolIds[rank]
+ * (iteration-order behavior). This guarantees no regression for the single-component
+ * sequential case where rank order == iteration order.
+ *
+ * Pure: no DOM, no Ketcher imports.
+ */
+export function remapAuxToPoolIds(
+  auxMap: AuxMap,
+  molfileCoords: { x: number; y: number }[],
+  liveAtoms: { poolId: number; x: number; y: number }[],
+  fallbackPoolIds: number[],
+): Record<number, number> {
+  const EPSILON = 0.05;
+  const result: Record<number, number> = {};
+  for (const [canonStr, rank] of Object.entries(auxMap)) {
+    const canon = Number(canonStr);
+    const r = rank as number;
+    const coords = molfileCoords[r];
+    let matched: number | undefined;
+    if (coords && !Number.isNaN(coords.x) && !Number.isNaN(coords.y)) {
+      let bestDist = Infinity;
+      let bestPoolId: number | undefined;
+      for (const live of liveAtoms) {
+        const dist = Math.abs(live.x - coords.x) + Math.abs(-live.y - coords.y);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestPoolId = live.poolId;
+        }
+      }
+      if (bestPoolId !== undefined && bestDist < EPSILON) matched = bestPoolId;
+    }
+    if (matched !== undefined) {
+      result[canon] = matched;
+    } else {
+      const fb = fallbackPoolIds[r];
+      if (fb !== undefined) result[canon] = fb;
+    }
+  }
+  return result;
+}
+
 export function parseInchiWithAux(raw: string): {
   inchi: string;
   layers: Layer[];
   auxMap: AuxMap;
   atomElements: Record<number, string>;
+  molfileCoords: { x: number; y: number }[];
 } {
   const sep = '\nAuxInfo=';
   const idx = raw.indexOf(sep);
   if (idx === -1) {
     // No AuxInfo section — plain InChI (shouldn't happen with getInchi(true) on non-empty canvas)
     const layers = parseInchi(raw);
-    return { inchi: raw, layers, auxMap: {}, atomElements: buildAtomElements(layers) };
+    return { inchi: raw, layers, auxMap: {}, atomElements: buildAtomElements(layers), molfileCoords: [] };
   }
   const inchiStr = raw.slice(0, idx);
   const auxBody = raw.slice(idx + sep.length);
@@ -155,5 +235,6 @@ export function parseInchiWithAux(raw: string): {
     layers,
     auxMap: parseAuxMapping(auxBody, formulaLayer?.text ?? ''),
     atomElements: buildAtomElements(layers),
+    molfileCoords: parseRcField(auxBody),
   };
 }
