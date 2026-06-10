@@ -64,8 +64,9 @@ None
 | 260610-eoi | Fix readingFor multi-fragment explanation text (formula/c/h/t offsets) + t-layer `?` undefined stereocenters (highlight + interactivity) | 2026-06-10 | 4eb0fd6 | [260610-eoi-fix-readingfor-multi-fragment-text-and-t](./quick/260610-eoi-fix-readingfor-multi-fragment-text-and-t/) |
 
 | 260610-fn1 | Scope formula-layer 'H' hover to the hovered fragment via canonRange (was highlighting explicit H in all fragments) | 2026-06-10 | 46cc077 | [260610-fn1-scope-formula-layer-h-hover-to-the-hover](./quick/260610-fn1-scope-formula-layer-h-hover-to-the-hover/) |
+| 260610-ist | Unify H-hover: formula H-count + /h-layer tokens highlight explicit H atoms only and render implicit-H badges, fragment-scoped, no heavy-atom fill/bonds | 2026-06-10 | ff7c4ea | [260610-ist-unify-h-hover-formula-h-count-and-h-laye](./quick/260610-ist-unify-h-hover-formula-h-count-and-h-laye/) |
 
-Last activity: 2026-06-10 - Completed quick task 260610-fn1: Scope formula-layer 'H' hover to the hovered fragment
+Last activity: 2026-06-10 - Completed quick task 260610-ist: Unify H-hover (formula H-count + /h-layer → explicit-H highlight + implicit-H badges)
 
 ### Multi-fragment support (now complete)
 The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
