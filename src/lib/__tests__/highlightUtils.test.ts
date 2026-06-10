@@ -3,6 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { buildHighlightSpecs, buildSubHoverSpecs } from '../highlightUtils';
 import type { StructLike } from '../highlightUtils';
+import { parseInchi } from '../parseInchi';
 import type { Layer, AuxMap } from '../parseInchi';
 
 // Identity mock — CSS var names passed through as-is for readable assertions
@@ -298,6 +299,33 @@ describe('buildHighlightSpecs', () => {
       const minusSpec = specs.find(s => s.color === '--c-stereo-minus');
       expect(minusSpec).toBeDefined();
       expect(minusSpec!.atoms).toContain(1); // canonical 2 → ketcher 1
+    });
+
+    it("t-layer: '?' undefined stereocenters form a distinct --c-stereo group; union of all 5 repro centers is {9,10,11,22,23}", () => {
+      // Repro t-layer: '9?,10?,11-;9?,10-;' over fragments [13,12,6].
+      // Fragment A: 9?,10?,11- ; fragment C (+13): 9?->22, 10-?->23 ; fragment B: none.
+      const repro =
+        'InChI=1S/C12H19N.C11H17N.C6H6/c1-9(11(3)13)10(2)12-7-5-4-6-8-12;1-9(10(2)12)8-11-6-4-3-5-7-11;1-2-4-6-5-3-1/h4-11H,13H2,1-3H3;3-7,9-10H,8,12H2,1-2H3;1-6H/t9?,10?,11-;9?,10-;/m11./s1';
+      const reproLayers = parseInchi(repro);
+      const reproT = reproLayers.find(l => l.type === 't')!;
+      // Identity auxMap 1:1..31:31 and identity element map.
+      const idAux: AuxMap = {};
+      const idEl: Record<number, string> = {};
+      for (let i = 1; i <= 31; i++) { idAux[i] = i; idEl[i] = 'C'; }
+      const struct = makeMockStruct();
+      const specs = buildHighlightSpecs(reproT, null, idAux, idEl, [], reproLayers, struct, resolveVarFn);
+
+      const union = new Set(specs.flatMap(s => s.atoms));
+      expect([...union].sort((a, b) => a - b)).toEqual([9, 10, 11, 22, 23]);
+
+      // The undefined ('?') atoms 9,10,22 must be in a spec colored from --c-stereo,
+      // NOT lumped into the minus group.
+      const undefinedSpec = specs.find(s => s.color === '--c-stereo');
+      expect(undefinedSpec).toBeDefined();
+      expect(undefinedSpec!.atoms).toEqual(expect.arrayContaining([9, 10, 22]));
+      const minusSpec = specs.find(s => s.color === '--c-stereo-minus');
+      expect(minusSpec!.atoms).not.toContain(9);
+      expect(minusSpec!.atoms).not.toContain(22);
     });
 
     it('b-layer: highlights the double-bond atom pair and the bond with stereo-plus color', () => {

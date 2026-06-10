@@ -4,10 +4,12 @@ import {
   swatchVar,
   formulaReading,
   readingFor,
+  parseStereoParities,
+  parityColor,
   LAYER_INFO,
   DEFAULT_INFO,
 } from '../layerInfo';
-import { parseInchi, formulaFragmentCounts } from '../parseInchi';
+import { parseInchi, formulaFragmentCounts, parseStereoAtoms } from '../parseInchi';
 import { buildAtomElements } from '../parseAuxMapping';
 import type { Layer } from '../parseInchi';
 
@@ -152,6 +154,33 @@ describe('readingFor multi-fragment (Bug 1)', () => {
       expect(readingFor(l, ae, [])).toBe(readingFor(l, ae));
       expect(readingFor(l, ae, [6])).toBe(readingFor(l, ae));
     }
+  });
+});
+
+describe("'?' undefined stereocenters (Bug 2)", () => {
+  it("parseStereoAtoms captures '?' atoms", () => {
+    expect(parseStereoAtoms('9?,10?,11-')).toEqual([9, 10, 11]);
+  });
+
+  it("parseStereoParities returns '?' sign for undefined centers", () => {
+    expect(parseStereoParities('9?,10?,11-')).toEqual({ 9: '?', 10: '?', 11: '-' });
+  });
+
+  it('parityColor maps signs correctly', () => {
+    expect(parityColor('?')).toBe('var(--c-stereo)');
+    expect(parityColor('+')).toBe('var(--c-stereo-plus)');
+    expect(parityColor('-')).toBe('var(--c-stereo-minus)');
+  });
+
+  it("t-layer reading includes '?' centers across fragments (22 from 9?+13)", () => {
+    const layers = parseInchi(REPRO);
+    const atomElements = buildAtomElements(layers);
+    const fragCounts = formulaFragmentCounts(layers.find(l => l.type === 'formula')!.text);
+    const tLayer = layers.find(l => l.type === 't')!;
+    const result = readingFor(tLayer, atomElements, fragCounts);
+    // Fragment A '9?' -> 9, fragment C '9?' -> 22; both must appear.
+    expect(result).toContain(subscript(9));
+    expect(result).toContain(subscript(22));
   });
 });
 
