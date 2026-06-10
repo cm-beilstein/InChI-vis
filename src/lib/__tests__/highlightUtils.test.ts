@@ -83,6 +83,35 @@ function makeMockStructWithExplicitH(): StructLike {
   };
 }
 
+/**
+ * Benzene with 6 explicit (drawn) H atoms — reproduces InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H.
+ * Pools 0–5 are the ring carbons (bonds 0–5). Pools 6–11 are explicit H atoms, each bonded
+ * to one carbon (bonds 6–11). The /h-layer token "1-6H" lists the CARBONS (canonical 1–6 →
+ * pools 0–5), NOT the H atoms — the explicit H are bonded neighbors found via bond traversal.
+ */
+function makeBenzeneWithExplicitH(): StructLike {
+  return {
+    findBondId: vi.fn().mockReturnValue(99),
+    bonds: {
+      forEach: vi.fn((cb) => {
+        cb({ begin: 0, end: 1 }, 0);
+        cb({ begin: 1, end: 2 }, 1);
+        cb({ begin: 2, end: 3 }, 2);
+        cb({ begin: 3, end: 4 }, 3);
+        cb({ begin: 4, end: 5 }, 4);
+        cb({ begin: 5, end: 0 }, 5);
+        cb({ begin: 0, end: 6 }, 6); // C0–H6
+        cb({ begin: 1, end: 7 }, 7); // C1–H7
+        cb({ begin: 2, end: 8 }, 8); // C2–H8
+        cb({ begin: 3, end: 9 }, 9); // C3–H9
+        cb({ begin: 4, end: 10 }, 10); // C4–H10
+        cb({ begin: 5, end: 11 }, 11); // C5–H11
+      }),
+    },
+    atoms: { forEach: vi.fn() },
+  };
+}
+
 // Helper to make a basic layer
 function makeLayer(overrides: Partial<Layer>): Layer {
   return {
@@ -735,22 +764,23 @@ describe('buildSubHoverSpecs', () => {
       expect(specs[0].color).toBe('--c-stereo-minus');
     });
 
-    it('kind hAtoms: explicit-H pool IDs only, color from hydroColor(subHover.count)', () => {
-      // NEW CONTRACT (LOCKED rule 1): hAtoms specs contain ONLY explicit-H pool IDs.
-      // Map canonicals 1,2 → pools 6,7 and mark both as explicit H so a spec is emitted.
+    it('kind hAtoms: bonded explicit-H pool IDs only, color from hydroColor(subHover.count)', () => {
+      // NEW CONTRACT (LOCKED rule 1): the token lists the HEAVY atom (canonical 1 → carbon
+      // pool 0); the explicit H is its bonded neighbour (pool 6). Spec highlights the H, not
+      // the carbon, and carries no bonds.
       const struct = makeMockStructWithExplicitH();
       const specs = buildSubHoverSpecs(
-        { kind: 'hAtoms', atoms: [1, 2], count: 1 },
-        { 1: 6, 2: 7 }, // canonical 1 → pool 6, canonical 2 → pool 7
+        { kind: 'hAtoms', atoms: [1], count: 1 },
+        { 1: 0 }, // canonical 1 → carbon pool 0 (bonded to explicit H pool 6)
         atomElements,
-        [6, 7], // both are explicit H atoms
+        [6], // pool 6 is the drawn explicit H
         hLayer,
         struct,
         resolveVarFn,
       );
       expect(specs.length).toBeGreaterThan(0);
-      expect(specs[0].atoms).toContain(6); // explicit H pool
-      expect(specs[0].atoms).toContain(7); // explicit H pool
+      expect(specs[0].atoms).toContain(6); // bonded explicit H pool
+      expect(specs[0].atoms).not.toContain(0); // carbon NOT filled
       expect(specs[0].bonds).toHaveLength(0); // no bonds
       expect(specs[0].color).toBe('--c-hydro-1');
     });
@@ -759,7 +789,7 @@ describe('buildSubHoverSpecs', () => {
       const struct = makeMockStructWithExplicitH();
       const specs = buildSubHoverSpecs(
         { kind: 'hAtoms', atoms: [1], count: 3 },
-        { 1: 6 }, // canonical 1 → pool 6 (explicit H)
+        { 1: 0 }, // canonical 1 → carbon pool 0 (bonded to explicit H pool 6)
         atomElements,
         [6],
         hLayer,
@@ -924,6 +954,27 @@ describe('buildSubHoverSpecs', () => {
   // badges by the hook (renderHBadges), NOT as highlight specs.
   // -------------------------------------------------------------------------
   describe('case hAtoms — explicit-H-only contract (no heavy fill, no bonds)', () => {
+    it('REPRO benzene /h1-6H with explicit H: highlights the 6 bonded explicit H atoms, not the carbons, no bonds', () => {
+      // InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H — the token lists carbons (canonical 1–6 → pools 0–5);
+      // the explicit drawn H are bonded neighbor pools 6–11. The hover must light the H atoms,
+      // resolved by bond traversal from each heavy atom — NOT test whether the carbon is itself H.
+      const struct = makeBenzeneWithExplicitH();
+      const specs = buildSubHoverSpecs(
+        { kind: 'hAtoms', atoms: [1, 2, 3, 4, 5, 6], count: 1 },
+        { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 },
+        atomElements,
+        [6, 7, 8, 9, 10, 11], // explicit H pool IDs (bonded to carbons 0–5)
+        hLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.length).toBeGreaterThan(0);
+      const allAtoms = specs.flatMap(s => s.atoms).sort((a, b) => a - b);
+      expect(allAtoms).toEqual([6, 7, 8, 9, 10, 11]); // all explicit H, nothing else
+      for (const carbon of [0, 1, 2, 3, 4, 5]) expect(allAtoms).not.toContain(carbon);
+      expect(specs.flatMap(s => s.bonds)).toHaveLength(0);
+    });
+
     it('implicit-only token (hAtomPoolIds empty) → NO heavy atom, NO bonds (empty spec set acceptable)', () => {
       // canonical 1 → pool 0; pool 0 is NOT in hAtomPoolIds (empty) → purely implicit.
       // Under the new contract the heavy atom is NOT collected and bonds are empty.
@@ -944,31 +995,30 @@ describe('buildSubHoverSpecs', () => {
       expect(allBonds).toHaveLength(0); // no bonds ever
     });
 
-    it('explicit H token → spec.atoms includes ONLY the explicit H pool ID; excludes bonded heavy atom; bonds empty', () => {
-      // canonical 7 → pool 6; pool 6 IS in hAtomPoolIds → explicit H.
-      // bond 6 connects pool 6 (explicit H) to pool 0 (heavy atom).
+    it('explicit H token → spec.atoms includes ONLY the bonded explicit H pool ID; excludes heavy atom; bonds empty', () => {
+      // canonical 1 → carbon pool 0; bond 6 connects pool 0 to its drawn H (pool 6).
       const struct = makeMockStructWithExplicitH();
       const specs = buildSubHoverSpecs(
-        { kind: 'hAtoms', atoms: [7], count: 1 },
-        { 7: 6 }, // canonical 7 → pool 6 (explicit H)
+        { kind: 'hAtoms', atoms: [1], count: 1 },
+        { 1: 0 }, // canonical 1 → carbon pool 0 (bonded to explicit H pool 6)
         atomElements,
-        [6], // pool 6 is an explicit H atom
+        [6], // pool 6 is the drawn explicit H
         hLayer,
         struct,
         resolveVarFn,
       );
       expect(specs.length).toBeGreaterThan(0);
-      expect(specs[0].atoms).toContain(6); // explicit H pool ID
+      expect(specs[0].atoms).toContain(6); // bonded explicit H pool ID
       expect(specs[0].atoms).not.toContain(0); // heavy atom NOT filled
       expect(specs[0].bonds).toHaveLength(0); // no bonds
     });
 
-    it('mixed token → spec.atoms includes only the explicit H pool ID; excludes implicit heavy atom; bonds empty', () => {
-      // canonical 1 → pool 0 (implicit H), canonical 7 → pool 6 (explicit H)
+    it('mixed token (one carbon with drawn H, one purely implicit) → only the bonded explicit H; no heavy fill; bonds empty', () => {
+      // canonical 1 → carbon pool 0 (has drawn H pool 6); canonical 2 → carbon pool 1 (no drawn H).
       const struct = makeMockStructWithExplicitH();
       const specs = buildSubHoverSpecs(
-        { kind: 'hAtoms', atoms: [1, 7], count: 1 },
-        { 1: 0, 7: 6 }, // 1→pool 0 (implicit heavy), 7→pool 6 (explicit H)
+        { kind: 'hAtoms', atoms: [1, 2], count: 1 },
+        { 1: 0, 2: 1 }, // both carbons; only pool 0 has a bonded explicit H
         atomElements,
         [6], // only pool 6 is explicit H
         hLayer,
@@ -977,8 +1027,9 @@ describe('buildSubHoverSpecs', () => {
       );
       expect(specs.length).toBeGreaterThan(0);
       const allAtoms = specs.flatMap(s => s.atoms);
-      expect(allAtoms).toContain(6); // explicit H atom
-      expect(allAtoms).not.toContain(0); // implicit heavy atom NOT filled
+      expect(allAtoms).toContain(6); // drawn explicit H on carbon 0
+      expect(allAtoms).not.toContain(0); // carbon 0 NOT filled
+      expect(allAtoms).not.toContain(1); // carbon 1 (purely implicit) NOT filled
       const allBonds = specs.flatMap(s => s.bonds);
       expect(allBonds).toHaveLength(0); // no bonds ever
     });

@@ -452,17 +452,26 @@ export function buildSubHoverSpecs(
 
     case 'hAtoms': {
       // QUICK-260610-ist (LOCKED rule 1): explicit-H-only highlight.
-      // Emit a single spec whose atoms are ONLY the canonical atoms whose pool ID is
-      // an explicit (drawn) H — i.e. present in hAtomPoolIds. NO heavy-atom fill, NO
-      // bonds. Implicit-H count badges are rendered separately by the hook
-      // (renderHBadges), decoupled from this spec set. If no explicit H atoms are
-      // drawn for this token, return [] — the hook still renders badges from count.
+      // The /h-layer token lists the HEAVY atoms that bear H (e.g. "1-6H" = carbons
+      // 1–6), never the H atoms themselves. Resolve the explicit (drawn) H by
+      // traversing bonds from each heavy atom to neighbour pool IDs that are in
+      // hAtomPoolIds. Highlight ONLY those H atoms — NO heavy-atom fill, NO bonds.
+      // Implicit-H count badges are rendered separately by the hook (renderHBadges),
+      // decoupled from this spec set. If no explicit H are drawn for this token,
+      // return [] — the hook still renders badges from count.
       const canonAtoms = subHover.atoms ?? [];
       const explicitHKAtoms: number[] = [];
       for (const canon of canonAtoms) {
-        const kId = auxMap[canon];
-        if (kId === undefined) continue;
-        if (hAtomPoolIds.includes(kId)) explicitHKAtoms.push(kId);
+        const heavyId = auxMap[canon];
+        if (heavyId === undefined) continue;
+        struct.bonds.forEach((bond) => {
+          const neighbor =
+            bond.begin === heavyId ? bond.end : bond.end === heavyId ? bond.begin : undefined;
+          if (neighbor === undefined) return;
+          if (hAtomPoolIds.includes(neighbor) && !explicitHKAtoms.includes(neighbor)) {
+            explicitHKAtoms.push(neighbor);
+          }
+        });
       }
       if (explicitHKAtoms.length === 0) return [];
       const colorVar = hydroColor(subHover.count!) ?? 'var(--c-hydro-1)';
