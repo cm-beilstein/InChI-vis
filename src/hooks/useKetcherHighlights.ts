@@ -6,9 +6,15 @@ import { useEffect } from 'react';
 import type React from 'react';
 import type { Ketcher } from 'ketcher-core';
 import { useInchiStore } from '../store';
-import { buildHighlightSpecs, resolveVar } from '../lib/highlightUtils';
+import {
+  buildHighlightSpecs,
+  resolveVar,
+  formulaFragmentCounts,
+  expandLayerText,
+  parseHydrogenAtoms,
+} from '../lib/highlightUtils';
 import type { HighlightSpec, StructLike } from '../lib/highlightUtils';
-import type { SubHover, AuxMap } from '../lib/parseInchi';
+import type { SubHover, AuxMap, Layer } from '../lib/parseInchi';
 
 /**
  * Applies highlight specs to the Ketcher editor.
@@ -197,6 +203,69 @@ export function cleanHBadges(svgRoot: Element): void {
 }
 
 /**
+ * QUICK-260610-ist: formula-H fragment-scoped implicit-H badges.
+ *
+ * When the user hovers a formula-layer H token (e.g. "H19"), render implicit-H
+ * count badges on every H-bearing heavy atom WITHIN the hovered fragment — making
+ * formula-H behave like the union of that fragment's /h tokens.
+ *
+ * Derivation (InChI passthrough rule — never reconstruct the InChI string):
+ *  - Locate the /h-layer in `layers`.
+ *  - expandLayerText (handles ';' and 'N*') + formulaFragmentCounts recover the
+ *    GLOBAL canonical → declared-H map via cumulative per-fragment offset — the same
+ *    pattern as buildHighlightSpecs' case 'h'.
+ *  - Keep only heavy atoms whose global canonical is within canonRange [lo,hi]
+ *    (whole /h-layer if canonRange is undefined → single-fragment formula).
+ *  - Group by declared count and call renderHBadges once per count group with a
+ *    synthetic { kind:'hAtoms', atoms, count } — renderHBadges subtracts bonded
+ *    explicit H and skips atoms whose H are all drawn.
+ */
+export function renderFormulaHBadges(
+  svgRoot: Element,
+  canonRange: [number, number] | undefined,
+  layers: Layer[],
+  auxMap: AuxMap,
+  resolveVarFn: (name: string) => string,
+  hAtomPoolIds: number[] = [],
+  struct?: StructLike,
+): void {
+  const hLayer = layers.find(l => l.type === 'h');
+  if (!hLayer) return;
+  const formulaLayer = layers.find(l => l.type === 'formula');
+  const fragmentAtomCounts = formulaLayer ? formulaFragmentCounts(formulaLayer.text) : [];
+
+  // Build global-canonical → declared-H count map (mirrors case 'h' offset logic).
+  const countByCanon = new Map<number, number>();
+  const fragmentTexts = expandLayerText(hLayer.text);
+  let cumulativeOffset = 0;
+  fragmentTexts.forEach((fragText, fi) => {
+    const hydroAtoms = parseHydrogenAtoms(fragText);
+    for (const [canonStr, count] of Object.entries(hydroAtoms)) {
+      if (count < 1) continue;
+      const canon = Number(canonStr) + cumulativeOffset;
+      countByCanon.set(canon, count);
+    }
+    cumulativeOffset += fragmentAtomCounts[fi] ?? 0;
+  });
+
+  // Filter by canonRange, then group canonicals by declared count.
+  const byCount = new Map<number, number[]>();
+  for (const [canon, count] of countByCanon) {
+    if (canonRange) {
+      const [lo, hi] = canonRange;
+      if (canon < lo || canon > hi) continue;
+    }
+    if (!byCount.has(count)) byCount.set(count, []);
+    byCount.get(count)!.push(canon);
+  }
+
+  // One renderHBadges pass per count group with a synthetic hAtoms subHover.
+  for (const [count, atoms] of byCount) {
+    renderHBadges(svgRoot, { kind: 'hAtoms', atoms, count }, auxMap, resolveVarFn, hAtomPoolIds, struct);
+  }
+}
+
+/**
  * React hook that subscribes to Zustand hover state and drives Ketcher canvas highlights.
  * Called from App.tsx once Ketcher is ready (isReady = true).
  *
@@ -255,11 +324,18 @@ export function useKetcherHighlights(
       applyKetcherHighlights(highlightEditor, specs);
       const svgRoot = editorAny.render.paper.canvas as Element;
       cleanHBadges(svgRoot);
+      // whiteAtomLabels only meaningful when there are highlighted atoms.
       if (specs.length > 0) {
         whiteAtomLabels(svgRoot, specs);
-        if (subHover && (subHover.kind === 'hAtoms' || subHover.kind === 'mobileH')) {
-          renderHBadges(svgRoot, subHover, auxMap, resolveVar, hAtomPoolIds, struct);
-        }
+      }
+      // QUICK-260610-ist: badges run regardless of specs.length so purely-implicit
+      // /h tokens (zero explicit H drawn) still render count badges.
+      if (subHover && (subHover.kind === 'hAtoms' || subHover.kind === 'mobileH')) {
+        renderHBadges(svgRoot, subHover, auxMap, resolveVar, hAtomPoolIds, struct);
+      }
+      // Formula-layer H token: render implicit-H badges scoped to the hovered fragment.
+      if (subHover && subHover.kind === 'element' && subHover.el === 'H') {
+        renderFormulaHBadges(svgRoot, subHover.canonRange, layers, auxMap, resolveVar, hAtomPoolIds, struct);
       }
     } finally {
       if (_isHighlightingRef) _isHighlightingRef.current = false;

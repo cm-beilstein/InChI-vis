@@ -451,38 +451,23 @@ export function buildSubHoverSpecs(
     }
 
     case 'hAtoms': {
-      // Phase 8: split into explicit-H vs implicit-H paths (D-07)
-      // Explicit H atoms (pool ID in hAtomPoolIds) → include H pool ID, bonded heavy atom, and bond
-      // Implicit H atoms (pool ID not in hAtomPoolIds) → include only the heavy atom pool ID
+      // QUICK-260610-ist (LOCKED rule 1): explicit-H-only highlight.
+      // Emit a single spec whose atoms are ONLY the canonical atoms whose pool ID is
+      // an explicit (drawn) H — i.e. present in hAtomPoolIds. NO heavy-atom fill, NO
+      // bonds. Implicit-H count badges are rendered separately by the hook
+      // (renderHBadges), decoupled from this spec set. If no explicit H atoms are
+      // drawn for this token, return [] — the hook still renders badges from count.
       const canonAtoms = subHover.atoms ?? [];
-      const heavyKAtoms: number[] = [];
       const explicitHKAtoms: number[] = [];
-      const bondIds: number[] = [];
-
       for (const canon of canonAtoms) {
         const kId = auxMap[canon];
         if (kId === undefined) continue;
-        if (hAtomPoolIds.includes(kId)) {
-          // Explicit H atom in canvas — collect it, find bonded heavy atom and bond
-          explicitHKAtoms.push(kId);
-          struct.bonds.forEach((bond, bid) => {      // same forEach as case 'atom'
-            if (bond.begin === kId || bond.end === kId) {
-              const heavyId = bond.begin === kId ? bond.end : bond.begin;
-              if (!heavyKAtoms.includes(heavyId)) heavyKAtoms.push(heavyId);
-              bondIds.push(bid);
-            }
-          });
-        } else {
-          // Implicit H — highlight the heavy atom only (no bond)
-          heavyKAtoms.push(kId);
-        }
+        if (hAtomPoolIds.includes(kId)) explicitHKAtoms.push(kId);
       }
-
-      const allAtoms = [...heavyKAtoms, ...explicitHKAtoms];
-      if (allAtoms.length === 0) return [];
+      if (explicitHKAtoms.length === 0) return [];
       const colorVar = hydroColor(subHover.count!) ?? 'var(--c-hydro-1)';
       const color = resolveVarFn(stripVar(colorVar));
-      return [{ atoms: allAtoms, bonds: bondIds, rgroupAttachmentPoints: [], color }];
+      return [{ atoms: explicitHKAtoms, bonds: [], rgroupAttachmentPoints: [], color }];
     }
 
     case 'mobileH': {
@@ -500,4 +485,4 @@ export function buildSubHoverSpecs(
 }
 
 // Re-export utilities used by the production hook to avoid it needing to import from layerInfo directly
-export { elementColor, hydroColor, parityColor, parseStereoParities, parseHydrogenAtoms, parseMobileHydrogens, parseStereoAtoms };
+export { elementColor, hydroColor, parityColor, parseStereoParities, parseHydrogenAtoms, parseMobileHydrogens, parseStereoAtoms, formulaFragmentCounts, expandLayerText };
