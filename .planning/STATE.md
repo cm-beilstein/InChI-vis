@@ -63,7 +63,9 @@ None
 | 260610-eci | Fix canonical→pool-ID remap for multi-component molecules (coordinate matching via AuxInfo /rC:) — fixes wrong-fragment canvas highlights | 2026-06-10 | 079d12c | [260610-eci-fix-canonical-to-pool-id-remap-for-multi](./quick/260610-eci-fix-canonical-to-pool-id-remap-for-multi/) |
 | 260610-eoi | Fix readingFor multi-fragment explanation text (formula/c/h/t offsets) + t-layer `?` undefined stereocenters (highlight + interactivity) | 2026-06-10 | 4eb0fd6 | [260610-eoi-fix-readingfor-multi-fragment-text-and-t](./quick/260610-eoi-fix-readingfor-multi-fragment-text-and-t/) |
 
-Last activity: 2026-06-10 - Completed quick task 260610-eoi: Fix readingFor multi-fragment text + t-layer `?` undefined stereocenters
+| 260610-fn1 | Scope formula-layer 'H' hover to the hovered fragment via canonRange (was highlighting explicit H in all fragments) | 2026-06-10 | 46cc077 | [260610-fn1-scope-formula-layer-h-hover-to-the-hover](./quick/260610-fn1-scope-formula-layer-h-hover-to-the-hover/) |
+
+Last activity: 2026-06-10 - Completed quick task 260610-fn1: Scope formula-layer 'H' hover to the hovered fragment
 
 ### Multi-fragment support (now complete)
 The 4-task multi-component fix series (260610-d2r, -eci, -eoi) closed all known multi-fragment bugs: hover-highlight token offsets (d2r), canonical→pool-ID canvas mapping for non-sequential pools (eci), and explanation-card text + undefined-stereo handling (eoi). No outstanding multi-fragment follow-ups.
