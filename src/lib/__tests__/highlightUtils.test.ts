@@ -820,6 +820,101 @@ describe('buildSubHoverSpecs', () => {
   });
 
   // -------------------------------------------------------------------------
+  // QUICK-260610-fn1: fragment-scoped explicit-H hover
+  // -------------------------------------------------------------------------
+  describe('QUICK-260610-fn1: fragment-scoped explicit-H hover', () => {
+    // Two-fragment fixture: heavy atoms canonical 1→pool 10, canonical 2→pool 20.
+    // Explicit H pool 100 bonded to heavy pool 10; explicit H pool 200 bonded to heavy pool 20.
+    const fnAuxMap: AuxMap = { 1: 10, 2: 20 };
+    const fnAtomElements: Record<number, string> = { 1: 'C', 2: 'C' };
+    const fnHAtomPoolIds = [100, 200];
+    const fnLayer = makeLayer({ type: 'formula', atoms: [1, 2], bonds: [] });
+
+    function makeFnStruct(): StructLike {
+      return {
+        findBondId: () => null,
+        bonds: {
+          forEach: (cb) => {
+            cb({ begin: 10, end: 100 }, 0);
+            cb({ begin: 20, end: 200 }, 1);
+          },
+        },
+        atoms: { forEach: vi.fn() },
+      };
+    }
+
+    it('canonRange [2,2] → only fragment-2 explicit H (pool 200)', () => {
+      const struct = makeFnStruct();
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H', canonRange: [2, 2] },
+        fnAuxMap,
+        fnAtomElements,
+        fnHAtomPoolIds,
+        fnLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.flatMap(s => s.atoms)).toEqual([200]);
+    });
+
+    it('canonRange [1,1] → only fragment-1 explicit H (pool 100)', () => {
+      const struct = makeFnStruct();
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H', canonRange: [1, 1] },
+        fnAuxMap,
+        fnAtomElements,
+        fnHAtomPoolIds,
+        fnLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.flatMap(s => s.atoms)).toEqual([100]);
+    });
+
+    it('no canonRange → all explicit H atoms (single-fragment behavior unchanged)', () => {
+      const struct = makeFnStruct();
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H' },
+        fnAuxMap,
+        fnAtomElements,
+        fnHAtomPoolIds,
+        fnLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.flatMap(s => s.atoms)).toEqual([100, 200]);
+    });
+
+    it('canonRange [1,2] → both fragments in range', () => {
+      const struct = makeFnStruct();
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H', canonRange: [1, 2] },
+        fnAuxMap,
+        fnAtomElements,
+        fnHAtomPoolIds,
+        fnLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.flatMap(s => s.atoms)).toEqual([100, 200]);
+    });
+
+    it('empty hAtomPoolIds with canonRange [2,2] → no-op, returns []', () => {
+      const struct = makeFnStruct();
+      const specs = buildSubHoverSpecs(
+        { kind: 'element', el: 'H', canonRange: [2, 2] },
+        fnAuxMap,
+        fnAtomElements,
+        [],
+        fnLayer,
+        struct,
+        resolveVarFn,
+      );
+      expect(specs.flatMap(s => s.atoms)).toEqual([]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Phase 8: explicit-H bond path in case 'hAtoms' (RED tests)
   // -------------------------------------------------------------------------
   describe('case hAtoms — Phase 8 explicit-H bond path', () => {
