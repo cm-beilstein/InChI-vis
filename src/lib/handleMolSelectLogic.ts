@@ -17,9 +17,13 @@ export interface HandleMolSelectOpts {
  *
  * - Sets isLoading(true) before fetch; isLoading(false) in finally (D-04).
  * - Sets selectedMolId(id) optimistically; reverts to null on error (D-04).
- * - Sets isSettingMoleculeRef.current = true for the duration so handleChange in
+ * - Sets isSettingMoleculeRef.current = true before fetch so handleChange in
  *   App.tsx does NOT clear selectedMolId when the editor 'change' event fires after
- *   setMolecule() (RESEARCH.md Pitfall 4).
+ *   setMolecule() (RESEARCH.md Pitfall 4). On the SUCCESS path the ref is cleared by
+ *   the debounced handleChange in App.tsx (a 'change' event is guaranteed to fire after
+ *   setMolecule), NOT here. On the ERROR path no setMolecule() runs, so no 'change' event
+ *   fires; this function clears the ref locally in the catch block to avoid leaving it
+ *   stuck true.
  * - Returns early without fetching if id is not found in molecules array.
  * - Does NOT call getInchi() — setMolecule() triggers editor 'change' which fires
  *   handleChange → getInchi automatically. Manual call would create a race condition.
@@ -44,8 +48,10 @@ export async function handleMolSelectLogic(opts: HandleMolSelectOpts): Promise<v
   } catch (err) {
     console.error('Preset load failed:', err);
     setSelectedMolId(null); // revert active preset on error (D-04)
-  } finally {
+    // No setMolecule() ran on this path, so no 'change' event will fire to clear the
+    // guard in App.tsx's debounce — clear it here to avoid leaving it stuck true.
     isSettingMoleculeRef.current = false;
+  } finally {
     setIsLoading(false);
   }
 }

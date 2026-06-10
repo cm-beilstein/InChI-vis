@@ -71,8 +71,14 @@ export default function App() {
       if (isHighlightingRef.current) return;
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
-        // Reset selectedMolId when user draws freely (not during setMolecule())
-        if (!isSettingMoleculeRef.current) setSelectedMolId(null);
+        // Reset selectedMolId when user draws freely (not during setMolecule()).
+        // Read the guard, then release it so a subsequent genuine free-draw resets the
+        // selection. The guard is held true across the debounce window for preset loads
+        // (handleMolSelectLogic no longer clears it in finally), so this read is the one
+        // place it gets cleared on the success path.
+        const wasSettingMolecule = isSettingMoleculeRef.current;
+        isSettingMoleculeRef.current = false;
+        if (!wasSettingMolecule) setSelectedMolId(null);
         // Increment before the async call; capture for stale-result comparison after
         const thisGen = ++generationRef.current;
         try {
@@ -106,6 +112,9 @@ export default function App() {
           }
           useInchiStore.getState().setInchiData(result.inchi, result.layers, actualAuxMap, result.atomElements, hAtomPoolIds);
         } catch {
+          // Discard if a newer draw event fired while this WASM call was in flight —
+          // a stale rejection must not blank the store under a newer generation.
+          if (thisGen !== generationRef.current) return;
           // getInchi() can throw on empty or disconnected canvas — reset to empty (D-12)
           useInchiStore.getState().setInchiData('', [], {}, {}, []);
         }
