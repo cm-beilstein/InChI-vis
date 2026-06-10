@@ -426,57 +426,6 @@ body {
   font-style: italic;
 }
 
-/* ---------- Atom mapping strip ---------- */
-.mapping {
-  margin-top: 12px;
-  background: var(--bg-panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 12px 18px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-.mapping .mapping-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.mapping .pairs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  align-items: center;
-}
-.mapping .pair {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: var(--bg-canvas);
-  border: 1px solid var(--line);
-  transition: border-color 160ms, background 160ms;
-}
-.mapping .pair.identity { opacity: 0.55; }
-.mapping .pair.diverges { border-color: oklch(0.82 0.04 155); background: var(--c-conn-bg); }
-.mapping .pair .k { color: var(--ink-soft); font-weight: 500; }
-.mapping .pair .arrow { color: var(--ink-faint); font-size: 10px; }
-.mapping .pair .c { color: var(--c-conn); font-weight: 600; }
-.mapping .pair .el {
-  color: oklch(0.78 0.008 255);
-  font-size: 10px;
-  margin-left: 4px;
-  letter-spacing: 0.02em;
-}
-
 /* ---------- Explanation Panel ---------- */
 .explain {
   margin-top: 14px;
@@ -631,31 +580,6 @@ body {
 .legend-row:hover .legend-tip {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
-}
-
-/* ---------- Footnote ---------- */
-.footnote {
-  margin-top: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-faint);
-  letter-spacing: 0.02em;
-  line-height: 1.6;
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-  padding-top: 0;
-}
-.footnote .key-hint { display: inline-flex; align-items: center; gap: 6px; }
-.footnote kbd {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  border: 1px solid var(--line);
-  background: var(--bg-canvas);
-  color: var(--ink-soft);
 }
 
 @media (max-width: 900px) {
