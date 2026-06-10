@@ -139,7 +139,7 @@ export function parseMobileHydrogens(text: string): number[] {
  */
 export function parseStereoAtoms(text: string): number[] {
   const nums: number[] = [];
-  for (const m of text.matchAll(/(\d+)[\-+]/g)) nums.push(parseInt(m[1], 10));
+  for (const m of text.matchAll(/(\d+)[\-+?]/g)) nums.push(parseInt(m[1], 10));
   return nums;
 }
 

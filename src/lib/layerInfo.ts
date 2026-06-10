@@ -207,7 +207,7 @@ export function hydroColor(count: number | null | undefined): string | null {
 
 export function parseStereoParities(text: string): Record<number, string> {
   const out: Record<number, string> = {};
-  for (const m of text.matchAll(/(\d+)([\-+])/g)) {
+  for (const m of text.matchAll(/(\d+)([\-+?])/g)) {
     out[parseInt(m[1], 10)] = m[2];
   }
   return out;
@@ -218,7 +218,10 @@ export function parseStereoParities(text: string): Record<number, string> {
 // ---------------------------------------------------------------------------
 
 export function parityColor(sign: string): string {
-  return sign === '+' ? 'var(--c-stereo-plus)' : 'var(--c-stereo-minus)';
+  if (sign === '+') return 'var(--c-stereo-plus)';
+  if (sign === '-') return 'var(--c-stereo-minus)';
+  // '?' (undefined/unspecified) and any other sign — neutral stereo color.
+  return 'var(--c-stereo)';
 }
 
 // ---------------------------------------------------------------------------
