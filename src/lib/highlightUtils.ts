@@ -386,7 +386,32 @@ export function buildSubHoverSpecs(
       if (el === 'H') {
         if (hAtomPoolIds.length === 0) return []; // silent no-op per D-04
         const color = resolveVarFn(stripVar(elementColor('H')));
-        return [{ atoms: hAtomPoolIds, bonds: [], rgroupAttachmentPoints: [], color }];
+        // No canonRange → single-fragment behavior unchanged: all explicit H atoms.
+        if (subHover.canonRange === undefined) {
+          return [{ atoms: hAtomPoolIds, bonds: [], rgroupAttachmentPoints: [], color }];
+        }
+        // Fragment-scoped: keep only explicit H atoms whose bonded heavy-atom
+        // canonical falls inside the hovered fragment's [lo, hi] range.
+        const [lo, hi] = subHover.canonRange;
+        const poolToCanon = new Map<number, number>();
+        for (const [cStr, pid] of Object.entries(auxMap)) poolToCanon.set(pid, Number(cStr));
+        const scoped: number[] = [];
+        for (const hPid of hAtomPoolIds) {
+          let neighbor: number | undefined;
+          struct.bonds.forEach((bond) => {
+            const other =
+              bond.begin === hPid ? bond.end : bond.end === hPid ? bond.begin : undefined;
+            if (other === undefined) return; // bond not incident to this H
+            if (hAtomPoolIds.includes(other)) return; // defensively skip H–H
+            neighbor = other;
+          });
+          if (neighbor === undefined) continue;
+          const neighborCanon = poolToCanon.get(neighbor);
+          if (neighborCanon === undefined) continue;
+          if (neighborCanon >= lo && neighborCanon <= hi) scoped.push(hPid);
+        }
+        if (scoped.length === 0) return [];
+        return [{ atoms: scoped, bonds: [], rgroupAttachmentPoints: [], color }];
       }
       // Restrict to the canonical ID range of the hovered fragment or group.
       // Used for dot-separated formulas (e.g. C7H8.C6H6, C7H8.2C6H6).
