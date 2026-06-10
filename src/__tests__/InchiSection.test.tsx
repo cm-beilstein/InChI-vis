@@ -134,7 +134,7 @@ describe('PLSH-04: copy button', () => {
     expect(screen.getByText('Copied!')).toBeInTheDocument();
   });
 
-  it('Test G: "Copied!" text is gone after 1500ms', async () => {
+  it('Test G: "Copied!" text is gone after 3000ms', async () => {
     vi.useFakeTimers();
     mockInchi = 'InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H';
     mockLayers = [{ type: 'formula', prefix: '', text: 'C6H6', atoms: [1, 2, 3, 4, 5, 6], bonds: [] }];
@@ -144,9 +144,14 @@ describe('PLSH-04: copy button', () => {
       fireEvent.click(copyBtn);
     });
     expect(screen.getByText('Copied!')).toBeInTheDocument();
-    // Advance timers past 1500ms
+    // Still visible just before 3000ms
     await act(async () => {
-      vi.advanceTimersByTime(1600);
+      vi.advanceTimersByTime(2900);
+    });
+    expect(screen.getByText('Copied!')).toBeInTheDocument();
+    // Gone after passing 3000ms
+    await act(async () => {
+      vi.advanceTimersByTime(200);
     });
     expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
     vi.useRealTimers();

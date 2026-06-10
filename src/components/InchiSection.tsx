@@ -32,7 +32,7 @@ export function InchiSection() {
     try {
       await navigator.clipboard.writeText(inchi);
       setCopied(true);
-      setTimeout(() => { if (mountedRef.current) setCopied(false); }, 1500);
+      setTimeout(() => { if (mountedRef.current) setCopied(false); }, 3000);
     } catch {
       // Silent failure — clipboard API may be unavailable in some contexts
     }
